@@ -153,6 +153,7 @@
                                 <importMapping>CallSummary=pl.aniolstroz.audit.CallSummary</importMapping>
                                 <importMapping>ClassifierError=pl.aniolstroz.ai.ClassifierError</importMapping>
                                 <importMapping>RiskLevel=pl.aniolstroz.contracts.RiskLevel</importMapping>
+                                <importMapping>Protection=pl.aniolstroz.contracts.Protection</importMapping>
                             </importMappings>
                             <configOptions>
                                 <interfaceOnly>true</interfaceOnly>

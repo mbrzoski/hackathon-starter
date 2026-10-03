@@ -53,7 +53,7 @@ Senior i rodzina dowiadują się o podejrzanej rozmowie w jej trakcie. Widzą do
 | # | Kwestia | Dlaczego ważna |
 |---|---|---|
 | A | Mikrofon uruchamia Nasłuch, nie aplikacja seniora. Dziś przycisk „Włącz ochronę” u seniora woła `AudioService.start()`. | Dźwięk płynie tylko z Nasłuchu (krok 2). |
-| B | „Wstrzymaj dla tej rozmowy” jest w aplikacji seniora, a dźwięk wysyła inne urządzenie. | Bez ścieżki przez backend (zmiana kontraktu) albo przeniesienia przycisku do Nasłuchu pauza nic nie wstrzyma. |
+| B | Wyłączenie ochrony. Pauzy nie ma ani u seniora, ani na Nasłuchu: ochrona działa cały czas, a wyłącznik ma być w portalu administratora (jeszcze go nie ma, wymaga zmiany kontraktu i backendu). | Senior nie ma nic do klikania; wyłączenie to decyzja opiekuna. |
 | C | Nasłuch słyszy tylko dźwięk i nie wie, kiedy zaczyna się i kończy rozmowa. | W trybie LIVE trzeba ustalić, skąd biorą się `call.started` i `call.ended` (krok 3 i 8). |
 | D | Alert dociera tylko do otwartych aplikacji. Aplikacja seniora działa tylko na pierwszym planie (AND-05). | Zamknięta aplikacja oznacza brak ostrzeżenia. Docelowo push (AND-02) albo SMS (BE-13). |
 | E | Makieta Nasłuchu pokazuje „Senior otrzymał ostrzeżenie” i „Rodzina została powiadomiona”, a backend nie potwierdza doręczenia. | Bez potwierdzenia takiego komunikatu nie wolno pokazać. |

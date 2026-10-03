@@ -77,3 +77,9 @@ CREATE TABLE IF NOT EXISTS audit_records (
 );
 
 CREATE INDEX IF NOT EXISTS idx_audit_records_call ON audit_records (call_id);
+
+-- Protection switch (admin portal). One row; no row means on. Not touched by DELETE /api/data: it is a setting, not data.
+CREATE TABLE IF NOT EXISTS protection (
+    id      INTEGER PRIMARY KEY CHECK (id = 1),
+    enabled INTEGER NOT NULL
+);

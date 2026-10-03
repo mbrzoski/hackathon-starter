@@ -13,6 +13,7 @@ import java.util.concurrent.Executor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
@@ -27,15 +28,17 @@ import pl.aniolstroz.contracts.ComponentState;
 import pl.aniolstroz.contracts.Mode;
 import pl.aniolstroz.contracts.TranscriptSegment;
 import pl.aniolstroz.settings.ConsentChecker;
+import pl.aniolstroz.settings.ProtectionChanged;
+import pl.aniolstroz.settings.ProtectionService;
 
 /**
  * /ws/audio: the senior device sends binary frames (PCM 16 kHz, mono, 16-bit little endian, 3200 bytes = 100 ms) and
  * JSON control messages {@code {"type": "start" | "stop" | "pause" | "resume"}}. {@code start} opens a LIVE call and
  * starts local recognition; {@code stop}, a closed socket or a transport error end it and release the recognizer.
  *
- * <p>Refusals close the socket with a Polish reason: 1008 without consent (AUD-07) or when a call is already active
- * (BE-04), 1011 when speech recognition cannot start. Audio, its contents and what is recognised are never logged
- * and never stored (AUD-02).
+ * <p>Refusals close the socket with a Polish reason: 1008 without consent (AUD-07), when the caretaker switched
+ * protection off, or when a call is already active (BE-04); 1011 when speech recognition cannot start. Audio, its
+ * contents and what is recognised are never logged and never stored (AUD-02).
  */
 @Component
 class AudioWebSocketHandler extends BinaryWebSocketHandler {
@@ -44,6 +47,8 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
 
     static final String NO_CONSENT = "Brak zgody. Dokończ konfigurację.";
     static final String CALL_ACTIVE = "Rozmowa już trwa. Zakończ ją i spróbuj ponownie.";
+    static final String PROTECTION_OFF = "Ochrona została wyłączona przez opiekuna w panelu.";
+    static final String WAITING = "Ochrona włączona, czekam na urządzenie nasłuchujące";
     static final String NOT_STARTED = "Najpierw wyślij start.";
     static final String BAD_COMMAND = "Nieprawidłowe polecenie.";
     static final String RUNNING = "Rozpoznawanie mowy działa";
@@ -55,6 +60,7 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
     private final SttProviderFactory factory;
     private final StatusPublisher status;
     private final ConsentChecker consent;
+    private final ProtectionService protection;
     private final Clock clock;
     private final RetryScheduler retries;
     private final Executor executor;
@@ -62,12 +68,13 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
     private final Map<String, LiveAudio> sessions = new ConcurrentHashMap<>();
 
     AudioWebSocketHandler(CallService calls, SttProviderFactory factory, StatusPublisher status,
-            ConsentChecker consent, Clock clock, RetryScheduler retries,
+            ConsentChecker consent, ProtectionService protection, Clock clock, RetryScheduler retries,
             @Qualifier("sttExecutor") Executor executor, ObjectMapper mapper) {
         this.calls = calls;
         this.factory = factory;
         this.status = status;
         this.consent = consent;
+        this.protection = protection;
         this.clock = clock;
         this.retries = retries;
         this.executor = executor;
@@ -76,11 +83,13 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
 
     /** One connection with a running call. */
     private static final class LiveAudio {
+        final WebSocketSession session;
         final String callId;
         final SttSupervisor supervisor;
         volatile boolean paused;
 
-        LiveAudio(String callId, SttSupervisor supervisor) {
+        LiveAudio(WebSocketSession session, String callId, SttSupervisor supervisor) {
+            this.session = session;
             this.callId = callId;
             this.supervisor = supervisor;
         }
@@ -149,6 +158,10 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
             reject(session, CloseStatus.POLICY_VIOLATION, CALL_ACTIVE);
             return;
         }
+        if (!protection.enabled()) {
+            reject(session, CloseStatus.POLICY_VIOLATION, PROTECTION_OFF);
+            return;
+        }
         if (!consent.hasConsent()) {
             reject(session, CloseStatus.POLICY_VIOLATION, NO_CONSENT);
             return;
@@ -181,7 +194,7 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
             reject(session, CloseStatus.SERVER_ERROR, "Nie udało się uruchomić rozpoznawania mowy");
             return;
         }
-        sessions.put(session.getId(), new LiveAudio(callId, supervisor));
+        sessions.put(session.getId(), new LiveAudio(session, callId, supervisor));
         status.publish(pl.aniolstroz.contracts.Component.STT, ComponentState.OK, RUNNING);
         status.publish(pl.aniolstroz.contracts.Component.AUDIO, ComponentState.OK, LISTENING);
     }
@@ -224,6 +237,29 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
         log.debug("Transport error on /ws/audio: {}", exception.getClass().getSimpleName());
         finish(session.getId());
         session.close(CloseStatus.SERVER_ERROR);
+    }
+
+    /**
+     * The caretaker switched protection off or on. Off ends every running call and closes its socket with the reason;
+     * the audio status says so, because nothing listens any more (rule 7). On: the device is asked to come back.
+     */
+    @EventListener
+    void onProtectionChanged(ProtectionChanged event) {
+        if (event.enabled()) {
+            if (sessions.isEmpty()) {
+                status.publish(pl.aniolstroz.contracts.Component.AUDIO, ComponentState.DEGRADED, WAITING);
+            }
+            return;
+        }
+        for (LiveAudio live : List.copyOf(sessions.values())) {
+            finish(live.session.getId());
+            try {
+                reject(live.session, CloseStatus.POLICY_VIOLATION, PROTECTION_OFF);
+            } catch (IOException e) {
+                log.debug("Closing /ws/audio failed: {}", e.getClass().getSimpleName());
+            }
+        }
+        status.publish(pl.aniolstroz.contracts.Component.AUDIO, ComponentState.DEGRADED, PROTECTION_OFF);
     }
 
     @PreDestroy

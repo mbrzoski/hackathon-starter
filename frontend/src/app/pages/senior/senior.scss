@@ -32,3 +32,9 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 1
   background: var(--alarm-deep); color: #fff; font-weight: 800; }
 .notice.interrupted { background: var(--highlight); border: 4px solid var(--warn); }
 .notice .sub { font-size: 28px; font-weight: 600; }
+// Team only: small on purpose, not part of the senior's screen.
+.team-toggle { position: fixed; right: 8px; bottom: 8px; font: inherit; font-size: 14px; padding: 4px 10px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--muted); cursor: pointer; opacity: 0.7; }
+.team-toggle[aria-pressed='true'] { opacity: 1; }
+.team-panel { position: fixed; left: 0; right: 0; bottom: 0; max-height: 45dvh; display: flex; flex-direction: column;
+  padding: 10px 16px 44px; background: var(--surface); border-top: 2px solid var(--border); z-index: 10; }

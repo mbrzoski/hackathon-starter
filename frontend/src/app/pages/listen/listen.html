@@ -14,10 +14,23 @@
         <h1 role="alert">Anioł Stróż jest offline</h1>
         <p class="sub">Brak połączenia z serwerem. Rozmowa nie jest teraz sprawdzana.</p>
       }
-      @case ('idle') {
+      @case ('starting') {
         <div class="mic"><app-icon name="mic" [size]="72" /></div>
-        <h1>Ochrona jest wyłączona</h1>
-        <p class="sub">Włącz ochronę, aby urządzenie zaczęło słuchać rozmowy przy telefonie.</p>
+        <h1>Uruchamiam ochronę</h1>
+        <p class="sub">Za chwilę urządzenie zacznie słuchać rozmowy przy telefonie.</p>
+      }
+      @case ('blocked') {
+        <div class="mic warn-icon"><app-icon name="mic-off" [size]="72" /></div>
+        <h1 role="alert">Ochrona nie działa</h1>
+        @if (audio.error(); as audioError) {
+          <p class="audio-error" role="alert">
+            {{ audioError.message }}
+            @if (audioError.setupLink) {
+              <a href="/setup">Przejdź do konfiguracji</a>
+            }
+          </p>
+        }
+        <p class="sub">Próbuję ponownie co kilka sekund. Możesz też dotknąć przycisku.</p>
         <button type="button" class="start" (click)="start()">Włącz ochronę</button>
       }
       @case ('audio_lost') {

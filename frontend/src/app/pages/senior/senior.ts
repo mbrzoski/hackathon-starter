@@ -1,6 +1,5 @@
 import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import { Alert, DecisionRequestDecisionEnum, RiskLevel } from '../../api/model/models';
-import { AudioService } from '../../core/audio.service';
 import { DecisionOutbox } from '../../core/decision-outbox';
 import { EventsService } from '../../core/events.service';
 import { selectSeniorStatus } from '../../core/senior-status';
@@ -12,6 +11,7 @@ import { injectNow } from '../../shared/time';
 import { AlertView } from './alert-view';
 import { DecisionOutcome } from './decision-outcome';
 import { STATUS_VIEW } from '../../shared/status-view';
+import { TranscriptDebugPanel, keywordHighlights } from '../../shared/transcript-debug-panel';
 import { StatusPanel } from './status-panel';
 
 const ALERTING_LEVELS: ReadonlySet<RiskLevel> = new Set([RiskLevel.medium, RiskLevel.high]);
@@ -33,7 +33,7 @@ type View =
  */
 @Component({
   selector: 'app-senior',
-  imports: [AlertView, DecisionOutcome, Icon, ModeBadge, StatusPanel],
+  imports: [AlertView, DecisionOutcome, Icon, ModeBadge, StatusPanel, TranscriptDebugPanel],
   template: `
     <header>
       <div class="brand"><span class="logo"><app-icon name="shield" [size]="32" /></span><span class="name">Anioł Stróż</span></div>
@@ -91,37 +91,39 @@ type View =
             <button type="button" (click)="outbox.acknowledge()">Rozumiem</button>
           </section>
         }
-        <app-status-panel
-          [status]="status()"
-          [canPause]="callInProgress()"
-          [paused]="paused()"
-          (togglePause)="togglePause()" />
+        <app-status-panel [status]="status()" />
       }
     </main>
+    <button type="button" class="team-toggle" [attr.aria-pressed]="showTranscript()" (click)="showTranscript.set(!showTranscript())">
+      Dla zespołu
+    </button>
+    @if (showTranscript()) {
+      <!-- Team only: an overlay, so the senior screen itself never scrolls (WEB-11). -->
+      <div class="team-panel">
+        <app-transcript-debug-panel [segments]="events.segments()" [highlights]="highlights()" />
+      </div>
+    }
   `,
   styleUrl: './senior.scss',
 })
 export class Senior {
   protected readonly events = inject(EventsService);
   protected readonly settings = inject(SettingsStore);
-  private readonly audio = inject(AudioService);
   private readonly voice = inject(VoiceService);
   protected readonly outbox = inject(DecisionOutbox);
   private readonly now = injectNow();
 
   private readonly started = signal(false);
+  /** Transcript for the team, hidden unless switched on. */
+  protected readonly showTranscript = signal(false);
+  protected readonly highlights = computed(() => keywordHighlights(this.events.alerts()));
   /** Decisions taken on this screen; they apply at once, sending happens in the background. */
   private readonly decided = signal<ReadonlyMap<string, DecisionRequestDecisionEnum>>(new Map());
   /** Alerts the senior has finished with (false alarm, or "Gotowe" after a decision). */
   private readonly closed = signal<ReadonlySet<string>>(new Set());
 
   protected readonly status = computed(() =>
-    selectSeniorStatus(
-      this.events.connection(),
-      this.events.systemStatus(),
-      this.events.activeCall(),
-      this.paused() && this.callInProgress(),
-    ),
+    selectSeniorStatus(this.events.connection(), this.events.systemStatus(), this.events.activeCall()),
   );
 
   protected readonly startStatus = computed(() => STATUS_VIEW[this.status()]);
@@ -172,12 +174,9 @@ export class Senior {
     return this.restingView();
   });
 
-  /** "Pause for this call": resets when a new call starts. */
-  protected readonly paused = linkedSignal({ source: () => this.events.activeCall()?.callId, computation: () => false });
-
   protected start(): void {
+    // The microphone belongs to the Nasłuch device (/listen), not to this phone (use-cases.md, step 2).
     this.voice.unlock();
-    this.audio.start();
     this.started.set(true);
   }
 
@@ -191,15 +190,6 @@ export class Senior {
 
   protected close(alertId: string): void {
     this.closed.update((set) => new Set(set).add(alertId));
-  }
-
-  protected togglePause(): void {
-    if (this.paused()) {
-      this.audio.resume();
-    } else {
-      this.audio.pause();
-    }
-    this.paused.update((p) => !p);
   }
 
   private restingView(): View {

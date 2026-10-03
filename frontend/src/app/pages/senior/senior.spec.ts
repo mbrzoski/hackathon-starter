@@ -1,7 +1,6 @@
 import { computed, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Alert, Decision, Mode, SystemStatus, TranscriptSegment } from '../../api/model/models';
-import { AudioService } from '../../core/audio.service';
 import { DecisionOutbox } from '../../core/decision-outbox';
 import { ActiveCall, ConnectionState, EventsService } from '../../core/events.service';
 import { SettingsStore } from '../../core/settings.store';
@@ -58,7 +57,6 @@ class FakeSynth {
 
 describe('Senior', () => {
   let events: ReturnType<typeof fakeEvents>;
-  let audio: { start: ReturnType<typeof vi.fn>; pause: ReturnType<typeof vi.fn>; resume: ReturnType<typeof vi.fn> };
   let outbox: { send: ReturnType<typeof vi.fn>; unsaved: ReturnType<typeof signal<boolean>>; acknowledge: () => void };
   let settings: SettingsStore;
   let synth: FakeSynth | null;
@@ -73,7 +71,6 @@ describe('Senior', () => {
       imports: [Senior],
       providers: [
         { provide: EventsService, useValue: events },
-        { provide: AudioService, useValue: audio },
         { provide: DecisionOutbox, useValue: outbox },
         { provide: SPEECH_SYNTHESIS, useValue: synth },
       ],
@@ -110,7 +107,6 @@ describe('Senior', () => {
       },
     );
     events = fakeEvents();
-    audio = { start: vi.fn(), pause: vi.fn(), resume: vi.fn() };
     const unsaved = signal(false);
     outbox = { send: vi.fn(), unsaved, acknowledge: () => unsaved.set(false) };
     synth = new FakeSynth();
@@ -121,7 +117,7 @@ describe('Senior', () => {
   describe('resting state', () => {
     beforeEach(setup);
 
-    it('starts with "Włącz ochronę", which unlocks speech and starts audio (WEB-07)', async () => {
+    it('starts with "Włącz ochronę", which unlocks speech and unlocks speech without starting a microphone (WEB-07)', async () => {
       const fixture = TestBed.createComponent(Senior);
       await fixture.whenStable();
       expect($(fixture, 'app-status-panel')).toBeNull();
@@ -129,9 +125,22 @@ describe('Senior', () => {
       button(fixture, 'Włącz ochronę').click();
       await fixture.whenStable();
 
-      expect(audio.start).toHaveBeenCalledTimes(1);
       expect(synth!.spoken.length).toBe(1);
       expect(text(fixture)).toContain('Anioł Stróż słucha. Nic nie jest nagrywane.');
+    });
+
+    it('hides the transcript for the team until it is switched on', async () => {
+      events.segments.set([SEGMENT]);
+      const fixture = await started();
+      expect($(fixture, 'app-transcript-debug-panel')).toBeNull();
+
+      button(fixture, 'Dla zespołu').click();
+      await fixture.whenStable();
+      expect($(fixture, 'app-transcript-debug-panel')?.textContent).toContain('Proszę nikomu nie mówić.');
+
+      button(fixture, 'Dla zespołu').click();
+      await fixture.whenStable();
+      expect($(fixture, 'app-transcript-debug-panel')).toBeNull();
     });
 
     it('shows offline on the start screen too (FE-06)', async () => {
@@ -148,40 +157,18 @@ describe('Senior', () => {
       expect(text(fixture)).toContain('Anioł Stróż jest offline');
     });
 
-    it('pauses and resumes protection for the current call only', async () => {
-      const fixture = await started();
-      events.activeCall.set(CALL);
-      await fixture.whenStable();
-
-      button(fixture, 'Wstrzymaj dla tej rozmowy').click();
-      await fixture.whenStable();
-      expect(audio.pause).toHaveBeenCalledTimes(1);
-
-      button(fixture, 'Wznów ochronę').click();
-      await fixture.whenStable();
-      expect(audio.resume).toHaveBeenCalledTimes(1);
-
-      button(fixture, 'Wstrzymaj dla tej rozmowy').click();
-      events.activeCall.set({ ...CALL, callId: 'c2' });
-      await fixture.whenStable();
-      expect(button(fixture, 'Wstrzymaj dla tej rozmowy')).toBeTruthy();
-    });
-
-    it('a local pause shows "Ochrona wstrzymana" in yellow, not the green state (FF-13)', async () => {
+    it('shows "Ochrona wstrzymana" in yellow when the Nasłuch device paused, with no pause button here (FF-13)', async () => {
       const fixture = await started();
       events.activeCall.set(CALL);
       await fixture.whenStable();
       expect($(fixture, '.panel.green')).toBeTruthy();
+      expect(text(fixture)).not.toContain('Wstrzymaj');
 
-      button(fixture, 'Wstrzymaj dla tej rozmowy').click();
+      events.systemStatus.set({ audio: { component: 'audio', state: 'degraded', message: 'Ochrona wstrzymana przez użytkownika' } as SystemStatus });
       await fixture.whenStable();
       expect($(fixture, '.panel.yellow')).toBeTruthy();
       expect(text(fixture)).toContain('Ochrona wstrzymana');
-      expect(text(fixture)).not.toContain('Anioł Stróż słucha.');
-
-      button(fixture, 'Wznów ochronę').click();
-      await fixture.whenStable();
-      expect($(fixture, '.panel.green')).toBeTruthy();
+      expect(text(fixture)).not.toContain('Wstrzymaj');
     });
 
     it('says when a decision could not be saved, until "Rozumiem" (FF-11)', async () => {
@@ -198,11 +185,10 @@ describe('Senior', () => {
       expect($(fixture, '.unsaved')).toBeNull();
     });
 
-    it('a failure still outranks the local pause (FE-06)', async () => {
+    it('a failure outranks a pause (FE-06)', async () => {
       const fixture = await started();
       events.activeCall.set(CALL);
-      await fixture.whenStable();
-      button(fixture, 'Wstrzymaj dla tej rozmowy').click();
+      events.systemStatus.set({ audio: { component: 'audio', state: 'degraded', message: 'x' } as SystemStatus });
       events.connection.set('closed');
       await fixture.whenStable();
       expect($(fixture, '.panel.red')).toBeTruthy();

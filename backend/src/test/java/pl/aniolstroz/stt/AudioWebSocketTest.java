@@ -31,6 +31,7 @@ import org.springframework.web.socket.handler.AbstractWebSocketHandler;
 import pl.aniolstroz.call.CallService;
 import pl.aniolstroz.contracts.Mode;
 import pl.aniolstroz.settings.ConsentChecker;
+import pl.aniolstroz.settings.ProtectionService;
 
 /** /ws/audio end to end with the fake recognizer: no Vosk, no model (TST-02). */
 @SpringBootTest(
@@ -83,6 +84,9 @@ class AudioWebSocketTest {
 
     @Autowired
     CallService calls;
+
+    @Autowired
+    ProtectionService protection;
 
     @Autowired
     ObjectMapper mapper;
@@ -172,6 +176,7 @@ class AudioWebSocketTest {
         FACTORY.preflightError = null;
         FACTORY.created.clear();
         CONSENT.set(true);
+        protection.set(true);
     }
 
     @AfterEach
@@ -258,6 +263,39 @@ class AudioWebSocketTest {
         events.awaitEvent(e -> isType(e, "call.ended"));
         awaitNoActiveCall(); // call.ended is published just before the slot is cleared
         await().atMost(5, TimeUnit.SECONDS).until(() -> FACTORY.created.get(0).isStopped());
+    }
+
+    @Test
+    void withProtectionSwitchedOffStartIsRefusedWith1008AndNoCallStarts() throws Exception {
+        protection.set(false);
+        Client audio = connect("/ws/audio");
+
+        audio.send("{\"type\":\"start\"}");
+
+        CloseStatus status = audio.awaitClose();
+        assertThat(status.getCode()).isEqualTo(1008);
+        assertThat(status.getReason()).isEqualTo(AudioWebSocketHandler.PROTECTION_OFF);
+        assertThat(calls.active()).isEmpty();
+        assertThat(FACTORY.created).isEmpty();
+    }
+
+    @Test
+    void switchingProtectionOffEndsTheRunningCallAndSaysSo() throws Exception {
+        Client events = watchEvents();
+        Client audio = connect("/ws/audio");
+        audio.send("{\"type\":\"start\"}");
+        events.awaitEvent(e -> isType(e, "call.started"));
+        events.awaitEvent(e -> isStatus(e, "audio", "ok"));
+
+        protection.set(false);
+
+        CloseStatus status = audio.awaitClose();
+        assertThat(status.getCode()).isEqualTo(1008);
+        assertThat(status.getReason()).isEqualTo(AudioWebSocketHandler.PROTECTION_OFF);
+        events.awaitEvent(e -> isType(e, "call.ended"));
+        JsonNode degraded = events.awaitEvent(e -> isStatus(e, "audio", "degraded"));
+        assertThat(degraded.at("/payload/message").asText()).isEqualTo(AudioWebSocketHandler.PROTECTION_OFF);
+        awaitNoActiveCall();
     }
 
     @Test

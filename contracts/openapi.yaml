@@ -245,6 +245,43 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
+  /api/protection:
+    get:
+      operationId: getProtection
+      tags:
+        - protection
+      summary: Whether protection (listening) is switched on. On by default.
+      responses:
+        "200":
+          description: The current setting.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Protection"
+    put:
+      operationId: setProtection
+      tags:
+        - protection
+      summary: Switch protection on or off (admin portal only). Off closes the running audio session and refuses new ones.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Protection"
+      responses:
+        "200":
+          description: The new setting.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Protection"
+        "400":
+          description: The body is not a valid Protection.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
 components:
   schemas:
     Alert:
@@ -801,6 +838,16 @@ components:
           type: string
         instance:
           type: string
+    Protection:
+      title: Protection
+      description: Whether the device next to the phone listens. On unless the caretaker switched it off in the admin portal.
+      type: object
+      additionalProperties: false
+      required:
+        - enabled
+      properties:
+        enabled:
+          type: boolean
     ReplayRequest:
       title: ReplayRequest
       description: Body of POST /api/demo/replay.
