@@ -7,7 +7,7 @@ Ten plik zastępuje [ograniczenia-backend.md](ograniczenia-backend.md), czyli we
 | ID | Ograniczenie | Dlaczego |
 |---|---|---|
 | BE-01 | Java 21 (LTS) i Spring Boot 3.x (aktualna wersja z obsługą Javy 21). Budowanie przez Maven z wrapperem (`mvnw`) w repozytorium. | Zespół wybrał Javę. Spring Boot daje gotowe HTTP, WebSocket, konfigurację i testy. |
-| BE-02 | Wątki wirtualne włączone (`spring.threads.virtual.enabled=true`). Wywołania blokujące (Claude, STT, zapis do bazy) piszemy jako zwykły kod synchroniczny. Nie używamy WebFlux ani Reactora. | Java 21 obsłuży wiele jednoczesnych operacji I/O bez programowania reaktywnego, które trudniej wytłumaczyć jury. |
+| BE-02 | Wątki wirtualne włączone (`spring.threads.virtual.enabled=true`). Wywołania blokujące (Claude, zapis do bazy) piszemy jako zwykły kod synchroniczny. Rozpoznawanie Vosk działa na osobnym wątku platformowym (AUD-04). Nie używamy WebFlux ani Reactora. | Java 21 obsłuży wiele jednoczesnych operacji I/O bez programowania reaktywnego, które trudniej wytłumaczyć jury. |
 | BE-03 | WebSocket przez `spring-boot-starter-websocket` z własnymi `TextWebSocketHandler` / `BinaryWebSocketHandler`. NIE używamy STOMP ani SockJS. | Kontrakt `/ws/events` (JSON) i `/ws/audio` (ramki binarne) musi być identyczny jak w architekturze. STOMP zmieniłby protokół widziany przez frontend. |
 | BE-04 | Jeden proces, jedno gospodarstwo domowe, jedna aktywna rozmowa naraz. Nie robimy kont użytkowników, wielodostępności ani skalowania. | Zakres hackathonu. Ograniczenie podajemy jury otwarcie. |
 | BE-05 | Pakiety według funkcji, nie według warstw: `events`, `call`, `stt`, `risk`, `ai`, `audit`, `alerts`, `settings`, `demo`, `config`. Pakiet `ai` nie zależy od `risk`: oddaje trafienia, a resztą zajmuje się `call`. Sprawdza to test ArchUnit. | Każdą część da się wytłumaczyć i przetestować osobno. |
@@ -61,9 +61,9 @@ Jedynym źródłem prawdy o kontrakcie jest plik **`contracts/openapi.yaml`** (O
 |---|---|---|
 | AUD-01 | Kontrakt audio bez zmian: `/ws/audio`, PCM 16 kHz, mono, 16-bit LE, ramki 100 ms (3200 bajtów) jako `BinaryMessage`, sterowanie jako `TextMessage` JSON (`start`, `stop`, `pause`, `resume`). Limit rozmiaru ramki ustawiony w kontenerze WebSocket (np. 64 KB). | Web i Android wysyłają ten sam format. |
 | AUD-02 | Audio NIE MOŻE być zapisywane na dysk, logowane ani buforowane dłużej, niż wymaga przekazanie do STT. Jedyny wyjątek to nagrania zespołu w `recordings/` dla trybu REPLAY, opisane w README. | Prywatność rozmówcy i seniora. |
-| AUD-03 | STT jest schowane za interfejsem `SttProvider`. Domyślnie `AzureSttProvider` (`com.microsoft.cognitiveservices.speech:client-sdk`, `PushAudioInputStream` z formatem 16 kHz / 16 bit / mono, język `pl-PL`, region UE), a do testów `FakeSttProvider`. Wybór przez konfigurację. API sprawdzamy w dokumentacji SDK Azure dla Javy. | Wymiana dostawcy bez zmian w pipeline. |
-| AUD-04 | Callbacki STT przychodzą na wątkach SDK Azure. NIE WOLNO w nich wywoływać Claude ani robić blokującego I/O. Segment przekazujemy do executora na wątkach wirtualnych (`Executors.newVirtualThreadPerTaskExecutor()`) i od razu zwalniamy wątek SDK. | Zablokowany callback opóźnia rozpoznawanie mowy. |
-| AUD-05 | Jeśli dostawca udostępnia wyłączenie logowania danych, MUSI być wyłączone. Retencję danych u dostawcy wpisujemy do listy ujawnień. | Dane trzeciej osoby. |
+| AUD-03 | STT jest schowane za interfejsem `SttProvider`. Domyślnie `VoskSttProvider`: lokalny, offline (`com.alphacephei:vosk` i `net.java.dev.jna:jna`, `Recognizer` dla 16000 Hz, język polski), z modelem `vosk-model-small-pl-0.22` ładowanym ze ścieżki z konfiguracji (`app.stt.vosk.model-path`, zmienna `APP_STT_VOSK_MODEL_PATH`). Modelu nie ma w repozytorium. Do testów `FakeSttProvider`. Wybór przez konfigurację. API sprawdzamy w dokumentacji Vosk dla Javy. Zewnętrznego (chmurowego) dostawcy STT nie dodajemy bez wpisu w „Odstępstwach”. | Wymiana dostawcy bez zmian w pipeline. Audio zostaje na urządzeniu. |
+| AUD-04 | Rozpoznawanie Vosk to natywny kod obciążający procesor, wołany przez JNA. Każda rozmowa ma jeden dedykowany wątek platformowy, który czyta ramki z ograniczonej kolejki, woła `acceptWaveForm` i odbiera wyniki częściowe i końcowe. NIE WOLNO uruchamiać rozpoznawania na wątkach wirtualnych ani w tym wątku wywoływać Claude lub robić blokującego I/O. Gotowy segment przekazujemy do executora na wątkach wirtualnych (`Executors.newVirtualThreadPerTaskExecutor()`) i od razu wracamy do rozpoznawania. Przepełnienie kolejki ramek ustawia `stt` na `degraded`. | Natywne wywołania przypinają wątek wirtualny do wątku nośnego, a zablokowany wątek rozpoznawania gubi mowę. |
+| AUD-05 | Audio NIE opuszcza urządzenia: STT działa lokalnie, więc nie ma dostawcy STT, jego retencji ani logowania. Biblioteka Vosk, JNA i model trafiają do listy ujawnień (licencje). Zewnętrzny STT wymaga wpisu w „Odstępstwach” i ponownej oceny prywatności. | Dane trzeciej osoby. |
 | AUD-06 | Segmenty interim idą tylko do słów kluczowych i do UI. Claude dostaje wyłącznie segmenty finalne. | Koszt i stabilność cytatów. |
 | AUD-07 | Bez zgody seniora i rodziny w ustawieniach backend odrzuca audio w trybie LIVE (zamyka sesję WebSocket z kodem 1008 i komunikatem). Tryby demo działają bez zgody. | Zgoda przed przetwarzaniem. |
 
@@ -103,7 +103,7 @@ Jedynym źródłem prawdy o kontrakcie jest plik **`contracts/openapi.yaml`** (O
 | ID | Ograniczenie | Dlaczego |
 |---|---|---|
 | OBS-01 | Każda awaria publikuje `system.status` (`audio`, `stt`, `ai`, `backend`) ze stanem `ok`, `degraded` albo `down` i komunikatem po polsku. NIE WOLNO, żeby awaria przeszła po cichu. | Senior i rodzina muszą wiedzieć, że ochrona nie działa. |
-| OBS-02 | Progi: 10 s ciszy lub brak ramek → audio `down`. STT: 3 próby ponownego połączenia (1, 2, 4 s). AI: 3 kolejne błędy → `degraded`, a pierwszy sukces przywraca `ok`. | Spójne zachowanie, które da się przetestować. |
+| OBS-02 | Progi: 10 s ciszy lub brak ramek → audio `down`. STT: błąd rozpoznawania (brak modelu, wyjątek natywny) → 3 próby ponownego utworzenia rozpoznawacza (1, 2, 4 s), potem `down`. AI: 3 kolejne błędy → `degraded`, a pierwszy sukces przywraca `ok`. | Spójne zachowanie, które da się przetestować. |
 | OBS-03 | Każde wywołanie Claude trafia do audytu: model, effort, zakres segmentów, `usage` (wejście, odczyt z cache, wyjście), opóźnienie, `stopReason`, surowy wynik, walidacja każdego trafienia, poziom przed i po, wynik słów kluczowych dla tych samych segmentów. | Dowód dla jury i źródło liczb do PDF. |
 | OBS-04 | Koszt w `/api/audit/summary` liczymy z `usage` i cennika z konfiguracji (Sonnet 5.5: 2 / 0,20 / 10 USD za 1M tokenów wejście / odczyt z cache / wyjście), na `BigDecimal`. W PDF podajemy tylko zmierzone liczby. | Uczciwość i brak błędów zaokrągleń. |
 | OBS-05 | Logi przez SLF4J/Logback, bez audio, pełnych transkrypcji, kluczy i danych z ustawień. Spring Boot Actuator tylko z `health`, wystawiony w profilu `dev` albo za proxy. | Prywatność i bezpieczeństwo. |
@@ -125,14 +125,14 @@ Jedynym źródłem prawdy o kontrakcie jest plik **`contracts/openapi.yaml`** (O
 - Nie przechowuje audio i nie przechowuje transkrypcji rozmów bez alertu.
 - Nie obsługuje wielu gospodarstw, kont użytkowników ani logowania.
 - Nie używa Spring AI, LangChain4j, STOMP, WebFlux ani JPA.
-- Bez internetu nie ma STT, więc nie ma ochrony, a UI to pokazuje.
+- Bez internetu nie ma Claude, więc działają tylko słowa kluczowe („podstawowa ochrona”), a UI to pokazuje. STT działa lokalnie i nie potrzebuje internetu.
 
 ## 12. Do ujawnienia w zgłoszeniu (dodatki względem wersji Node)
 
-Licencje sprawdzamy na starcie: Spring Boot (Apache 2.0), `anthropic-java` (licencja z repozytorium SDK), Azure Speech SDK dla Javy (licencja Microsoft), sqlite-jdbc, Jackson, openapi-generator, swagger-parser, swagger-request-validator, networknt json-schema-validator, ArchUnit, WireMock, springdoc-openapi, opcjonalnie Firebase Admin SDK i Twilio Java SDK.
+Licencje sprawdzamy na starcie: Spring Boot (Apache 2.0), `anthropic-java` (licencja z repozytorium SDK), Vosk (`com.alphacephei:vosk`) z modelem `vosk-model-small-pl-0.22` i JNA (licencje do potwierdzenia w ich repozytoriach), sqlite-jdbc, Jackson, openapi-generator, swagger-parser, swagger-request-validator, networknt json-schema-validator, ArchUnit, WireMock, springdoc-openapi, opcjonalnie Firebase Admin SDK i Twilio Java SDK.
 
 ## Odstępstwa
 
 | Data | ID | Zmiana | Kto zdecydował | Dlaczego |
 |---|---|---|---|---|
-| | | | | |
+| 2026-10-03 | AUD-03, AUD-04, AUD-05, OBS-02, BE-02 | STT zmienione z Azure AI Speech na lokalny, offline Vosk (`vosk-model-small-pl-0.22`). Zmienione treści AUD-03…AUD-05, OBS-02 i BE-02, usunięte klucze `AZURE_SPEECH_*`. | Zespół | Audio nie opuszcza urządzenia, brak kluczy, regionu i retencji u dostawcy, słowa kluczowe działają bez internetu. Koszt: słabszy polski model niż chmurowe STT, jakość do zmierzenia na nagraniach zespołu. |

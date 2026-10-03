@@ -28,7 +28,7 @@ Numer to kolejność, w jakiej warto zaczynać zadania. W kolumnie „Ścieżka�
 | 13 | BE-07 | Log audytu AI | A | 12 | ⏳ do zrobienia |
 | 14 | FE-04 | Panel rodziny | D | 6, 8, 9 | ⏳ do zrobienia |
 | | | **M2: alert z dowodami od AI widoczny u seniora i rodziny** | | | |
-| 15 | BE-08 | Tryb LIVE: odbiór audio i streaming STT | B | 7 | ⏳ do zrobienia |
+| 15 | BE-08 | Tryb LIVE: odbiór audio i lokalne STT (Vosk) | B | 7 | ⏳ do zrobienia |
 | 16 | WEB-01 | Serwer WWW: HTTPS, reverse proxy, nagłówki bezpieczeństwa | C | 6, 5 | ⏳ do zrobienia |
 | 17 | FE-05 | Mikrofon i transkrypcja na żywo | C | 15, 16 | ⏳ do zrobienia |
 | | | **M3: mówienie do tabletu daje alert na żywo** | | | |
@@ -37,7 +37,7 @@ Numer to kolejność, w jakiej warto zaczynać zadania. W kolumnie „Ścieżka�
 | 20 | BE-10 | Odporność i uczciwe statusy błędów | B | 12, 15 | ⏳ do zrobienia |
 | 21 | FE-07 | Ekran audytu i wybór scenariusza demo | D | 13 | ⏳ do zrobienia |
 | 22 | EV-04 | Nagrania demo zespołu | D | 7 | ⏳ do zrobienia |
-| 23 | BE-11 | Tryb REPLAY: nagranie przez prawdziwe STT i AI | B | 15, 22 | ⏳ do zrobienia |
+| 23 | BE-11 | Tryb REPLAY: nagranie przez lokalne STT (Vosk) i prawdziwe AI | B | 15, 22 | ⏳ do zrobienia |
 | 24 | BE-12 | Runner ewaluacji: słowa kluczowe vs AI | A | 12, 4 | ⏳ do zrobienia |
 | 25 | EV-03 | Ewaluacja, mocki, tabela do PDF | A | 24 | ⏳ do zrobienia |
 | | | **M4: demo gotowe (LIVE, REPLAY, audyt, liczby do PDF)** | | | |

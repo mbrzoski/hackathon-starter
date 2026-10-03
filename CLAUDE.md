@@ -50,6 +50,12 @@ deploy/run-demo.sh                   # całość za HTTPS
 - Zawsze sprawdzaj `stopReason()` przed odczytem treści. Kształtu API nie zgaduj, sprawdź go w dokumentacji SDK.
 - Nie używamy narzędzi (function calling), agentów, RAG, MCP, Spring AI ani LangChain4j.
 
+## STT
+
+- Lokalnie i offline: Vosk (`com.alphacephei:vosk` + JNA), model `vosk-model-small-pl-0.22` ze ścieżki z `APP_STT_VOSK_MODEL_PATH` (modelu nie ma w repozytorium). Bez kluczy i bez chmury, audio nie opuszcza urządzenia.
+- Za interfejsem `SttProvider` (`VoskSttProvider`, `FakeSttProvider` do testów). Format: PCM 16 kHz, mono, 16-bit.
+- Rozpoznawanie na dedykowanym wątku platformowym na rozmowę, nie na wątku wirtualnym. Z jego wątku nie wołamy Claude.
+
 ## Styl
 
 - Kod, identyfikatory i komentarze po angielsku. Teksty dla użytkownika po polsku.

@@ -11,8 +11,8 @@ import org.springframework.validation.annotation.Validated;
 import pl.aniolstroz.contracts.Mode;
 
 /**
- * Typed application configuration (prefix {@code app}). Secrets (ANTHROPIC_API_KEY, AZURE_SPEECH_KEY,
- * AZURE_SPEECH_REGION) are deliberately not bound here; they are read from the environment where used.
+ * Typed application configuration (prefix {@code app}). Secrets (ANTHROPIC_API_KEY) are deliberately not bound here;
+ * they are read from the environment where used.
  */
 @Validated
 @ConfigurationProperties(prefix = "app")

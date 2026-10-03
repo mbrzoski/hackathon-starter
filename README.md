@@ -30,6 +30,9 @@ Configuration: copy `.env.example` to `.env` (never commit it). Secrets only com
 | Claude Sonnet 5.5 (`claude-sonnet-5-5`) via the Claude API | Anthropic terms | Stage detection with verbatim quotes (evidence only; risk, texts and decisions stay in code) |
 | `com.anthropic:anthropic-java` 2.68.0 (with OkHttp) | MIT (OkHttp: Apache 2.0) | Official Java client for the Claude API |
 | WireMock (`wiremock-standalone`) | Apache 2.0 | Tests: stands in for the Anthropic API, no real calls |
+| Vosk (`com.alphacephei:vosk`) | Apache 2.0 (verify in its repository) | Local, offline Polish speech-to-text in the backend (task BE-08); audio never leaves the device |
+| JNA (`net.java.dev.jna:jna`) | LGPL 2.1 or Apache 2.0 (dual, verify) | Native access used by Vosk |
+| Vosk model `vosk-model-small-pl-0.22` | Apache 2.0 (per the Vosk models page, verify) | Polish model for the recogniser; downloaded separately, not part of the repository |
 | Claude / Claude Code (Anthropic) | Anthropic terms | Concept, architecture notes and coding assistance (pre-event architecture document disclosed as such) |
 | Angular, Angular CLI, Angular Material, CDK | MIT | Frontend framework and UI components |
 | RxJS | Apache 2.0 | Router events in the frontend |

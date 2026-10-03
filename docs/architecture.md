@@ -2,6 +2,8 @@
 
 HackYeah 2026, Open Task "Artificial Intelligence". Prepared 3 October 2026, about 10:30, before the official start.
 
+**Update (3 October 2026): the STT decision changed.** Speech-to-text is now local and offline: Vosk (`com.alphacephei:vosk`) with the Polish model `vosk-model-small-pl-0.22`, running inside the backend. Azure AI Speech and the other cloud STT options named earlier in this document are no longer used. Consequences: no STT key or region, audio never leaves the device, no provider-side retention, and the keyword layer works without internet. Trade-off: lower accuracy than cloud STT, to be measured on the team recordings.
+
 **Assumptions (the team left these blank, so these are defaults; change them if wrong):**
 - Team: 3 to 4 people. Strongest skill is Angular + TypeScript. No dedicated ML engineer. So the backend is Node/TypeScript too, and every AI part is an API call the team can read and explain.
 - Time: the full 24-hour window, 23:00 on 3 October to 23:00 on 4 October.
@@ -19,7 +21,7 @@ The current date is 3 October and the official start is 23:00 on 3 October. The 
 |---|---|
 | The idea, problem research, public police descriptions of scams, reading the Terms | Writing any code, including the Angular skeleton, backend, prompts in code form |
 | This concept and architecture document | Generating the synthetic test transcripts |
-| Checking which STT providers support Polish streaming, and their terms | Recording demo audio, designing actual screens in Figma |
+| Checking Polish speech-to-text options (Vosk, its Polish model and licences) | Recording demo audio, designing actual screens in Figma |
 | Creating accounts and API keys (no project code) | Tuning the rubric prompt against examples |
 
 Recommended actions:
@@ -42,9 +44,9 @@ Recommended actions:
 
 ### 0.3 What this means for the design
 
-- **Allowed models/APIs:** any, if cited and used under their terms. We use the Claude API and one Polish streaming STT API.
-- **Data that may go to external services:** only synthetic or role-played audio and transcripts during the event. In the product design: audio goes to STT, text goes to Claude, nothing else leaves the device.
-- **Must disclose:** Claude API (model ID), the STT provider, AI development tools (Claude, Claude Code, any others the team uses), the synthetic dataset and how it was generated, every library and template, and this pre-event document.
+- **Allowed models/APIs:** any, if cited and used under their terms. We use the Claude API and a local, offline Polish STT (Vosk with the `vosk-model-small-pl-0.22` model).
+- **Data that may go to external services:** only synthetic or role-played transcripts during the event. In the product design: audio is recognised locally and never leaves the device, only text goes to Claude, nothing else leaves the device.
+- **Must disclose:** Claude API (model ID), the local STT library and model (Vosk, `vosk-model-small-pl-0.22`), AI development tools (Claude, Claude Code, any others the team uses), the synthetic dataset and how it was generated, every library and template, and this pre-event document.
 - **Unverified claims in the notes:** the notes say Google Scam Detection is "English only, smartphones only". Verify this on the official Google page at the start and cite it, or drop the claim from the PDF.
 
 ---
@@ -108,11 +110,11 @@ Verified against the official Anthropic models overview (platform.claude.com/doc
 | **Multi-agent** | Parallel specialists | Adds latency and cost, no quality gain for this task | — | — | Yes | **REJECT** |
 | **Memory** | Remember earlier parts of the call | Needed *within* a call: stages spread over 10 to 20 minutes | The call transcript so far is resent each time (append-only, so prompt caching works); the stage state lives in deterministic code | If the transcript exceeds a size limit, send the last N minutes plus the list of stages already hit | Yes | **USE, per call only.** No memory across calls; family feedback is stored as labelled data for the eval set and is never fed back into the model automatically (poisoning, consent). |
 | **Human approval** | Final decisions belong to the senior and family | Control, trust, legal safety | Three buttons for the senior; confirm/false-alarm for family; family alerting agreed at setup | — | Yes | **USE** |
-| **External APIs** | STT is required; alerts must reach the family | Real-time Polish transcription | One streaming STT API with Polish support (default: Azure AI Speech `pl-PL` real-time with an EU region; alternatives Google Cloud Speech-to-Text and Deepgram). **Verify Polish streaming quality and terms at the start.** Family alerts via the web app (WebSocket/web push); SMS via Twilio only if time allows. Voice readout uses the browser's built-in speech synthesis (`pl-PL`). | STT fails: show "Protection paused, cannot hear the call" (never silent); alerts: retry, then show on the senior device only | Yes | **USE (STT), OPTIONAL (SMS)** |
+| **External APIs / STT** | STT is required; alerts must reach the family | Real-time Polish transcription | **Vosk, local and offline, in the backend process** (`com.alphacephei:vosk`, model `vosk-model-small-pl-0.22`, Apache 2.0). No key, no region, audio never leaves the device. The small Polish model is weaker than cloud STT, especially on speaker-phone and elderly speech, so its quality is **measured on the team recordings before the demo** (see the limitations). Family alerts via the web app (WebSocket/web push); SMS via Twilio only if time allows. Voice readout uses the browser's built-in speech synthesis (`pl-PL`). | STT fails: show "Protection paused, cannot hear the call" (never silent); alerts: retry, then show on the senior device only | Yes | **USE (local STT), OPTIONAL (SMS)** |
 
-**Final set:** streaming STT + one Claude call with structured output + deterministic risk engine + people decide. Everything else is rejected.
+**Final set:** local streaming STT (Vosk) + one Claude call with structured output + deterministic risk engine + people decide. Everything else is rejected.
 
-**Cost per call (estimate, to be measured).** A 10-minute scam call yields about 60 to 80 finalised segments. Per Claude call: about 2k cached tokens (rubric) at $0.20/M, about 1 to 3k new transcript tokens at $2/M, about 150 output tokens at $10/M, which is roughly $0.003 to $0.008. That is roughly **$0.20 to $0.60 per 10-minute call** for Claude, plus STT minutes. Report the measured figure from the audit log, not this estimate.
+**Cost per call (estimate, to be measured).** A 10-minute scam call yields about 60 to 80 finalised segments. Per Claude call: about 2k cached tokens (rubric) at $0.20/M, about 1 to 3k new transcript tokens at $2/M, about 150 output tokens at $10/M, which is roughly $0.003 to $0.008. That is roughly **$0.20 to $0.60 per 10-minute call** for Claude. Report the measured figure from the audit log, not this estimate.
 
 **Latency budget (target, to be measured).** End of sentence → STT final result (about 0.5 to 1 s) → Claude (about 1 to 2 s with thinking off and short output) → alert on screen (under 0.1 s). Target: alert within 3 to 4 seconds of the decisive sentence. The audit log records the real p50/p95.
 
@@ -147,7 +149,7 @@ Every alert records whether it was triggered by `llm`, `keywords` or `both`.
                                      | /ws/audio  (binary frames)
                                      v
                          [Backend: Node/TypeScript (NestJS or Fastify)]
-                           ├─ SttGateway ── streaming ──> [Polish STT API]
+                           ├─ SttGateway ── PCM frames ──> [Vosk recognizer, local, in-process]
                            ├─ KeywordDetector (deterministic)
                            ├─ StageClassifier ── HTTPS ──> [Claude API, claude-sonnet-5-5]
                            ├─ QuoteValidator (deterministic)
@@ -162,7 +164,7 @@ Angular apps: one Angular workspace with three routes (senior, family, audit) is
 ### 6.2 Data flow
 
 1. Senior device streams microphone audio in 100 ms frames to `/ws/audio`. Audio is never written to disk.
-2. SttGateway forwards it to the STT stream and receives interim and final segments.
+2. SttGateway feeds the frames to the local Vosk recognizer (one dedicated thread per call) and receives interim and final segments.
 3. Every segment (interim and final) goes through KeywordDetector.
 4. Each **final** segment is appended to the in-memory call transcript and triggers StageClassifier (at most one Claude request in flight per call; if a new segment arrives meanwhile, the next request includes it).
 5. QuoteValidator checks each returned hit; invalid hits are logged and discarded.
@@ -207,7 +209,7 @@ Angular apps: one Angular workspace with three routes (senior, family, audit) is
 | Failure | System behaviour | What the user sees |
 |---|---|---|
 | No microphone / audio level flat for 10 s during a call | Status `audio_lost` | Senior: "I can't hear the call." Family: yellow status |
-| STT stream drops | Reconnect up to 3 times with backoff | "Protection paused" until reconnected; never shows green while deaf |
+| Recognizer fails (model missing, native error) | Recreate the recognizer up to 3 times with backoff; `stt` status `degraded` or `down` | "Protection paused" until it works again; never shows green while deaf |
 | Claude timeout/error/refusal | Skip cycle, keyword layer continues | After 3 failures: "Basic protection only" badge |
 | Invalid JSON or quote not found | Hit discarded, logged as `validation_failed` | Nothing; visible in the audit view |
 | Family device offline | Retry, then mark "not delivered" | Senior screen still alerts; audit shows delivery status |
@@ -217,7 +219,7 @@ Angular apps: one Angular workspace with three routes (senior, family, audit) is
 
 | Data | Goes to | Stored? |
 |---|---|---|
-| Raw call audio (both voices) | STT provider only (EU region where available) | Never stored by us. Check the provider's retention/logging settings and disable data logging if offered. |
+| Raw call audio (both voices) | The local Vosk recognizer inside our backend; it never leaves the device | Never stored by us, never logged. No third-party STT provider, so no provider-side retention or logging. |
 | Transcript text | Claude API (Anthropic) | In memory during the call. Kept only for alerted calls: cited segments ±2, for the retention period. |
 | Stage hits, risk level, decisions | Our backend | Yes, for the retention period and the audit log |
 | Names and numbers of trusted contacts | Our backend only | Yes; never sent to Claude or STT |
@@ -252,7 +254,7 @@ Synthetic Polish transcripts written with Claude from **public** police and bank
 
 - **Evidence with every alert.** Each stage shown is backed by a verbatim quote, the segment time and two segments of context. The quote is highlighted inside the transcript so anyone can compare it with what was said.
 - **No hallucinated evidence.** QuoteValidator rejects any hit whose quote is not literally present in the cited segment (after whitespace/diacritic normalisation). Rejections are visible in the audit view.
-- **No fake confidence.** We show a discrete level derived from counted, validated stages ("3 warning signs"), never an LLM-generated percentage. STT confidence is shown only if the STT provider returns it, labelled as such.
+- **No fake confidence.** We show a discrete level derived from counted, validated stages ("3 warning signs"), never an LLM-generated percentage. STT confidence is shown only if the recogniser returns it (Vosk can give a confidence per word), labelled as such.
 - **Source of each signal.** Every alert says "detected by AI", "detected by keywords" or both.
 - **People decide.** The system never hangs up, never calls anyone on its own, never blocks numbers. The senior chooses one of three actions or ignores the alert. Family alerting is agreed at setup.
 - **Edit / accept / reject.** Senior: "False alarm". Family: "Confirm scam" or "Mark false alarm", plus sensitivity in settings and a per-stage "don't count this" toggle for a single alert. Decisions are logged and become labelled cases for the next evaluation round; they never retrain or re-prompt the model automatically.
@@ -264,7 +266,7 @@ Synthetic Polish transcripts written with Claude from **public** police and bank
 
 **Does not work reliably / known failure modes:**
 - Speaker-phone microphone pickup in noise; quiet or distant voices.
-- STT errors on elderly speech, dialects, phone-band audio.
+- STT errors on elderly speech, dialects, phone-band audio. The only Polish Vosk model is a small one: expect more errors than with a cloud STT (measure on the team recordings).
 - Speaker attribution: without a line adapter, the system cannot always tell the caller from the senior or the TV.
 - New scam scripts that don't match the 8 stages.
 - False alarms when a real relative genuinely asks for money urgently.
@@ -291,7 +293,7 @@ Shared: `RiskLevelChip` (words, not percentages), `ModeBadge` (always visible), 
 
 - Validate every WebSocket message and API body against the shared types (Zod or class-validator).
 - Validate Claude output: schema (structured outputs guarantee the shape), stage enum, segment ID exists, quote is in the segment.
-- Timeouts: STT reconnect, Claude 2.5 s, alert delivery retry.
+- Timeouts: Claude 2.5 s, alert delivery retry. The STT recognizer is restarted with backoff.
 
 | Mode | Audio | STT | Claude | Badge text |
 |---|---|---|---|---|
@@ -348,7 +350,7 @@ export interface TranscriptSegment {
   tStartMs: number; tEndMs: number;
   text: string; isFinal: boolean;
   speaker: 'A' | 'B' | 'unknown';          // only if STT diarization provides it
-  sttConfidence?: number;                   // only if the STT provider returns it
+  sttConfidence?: number;                   // only if the recogniser returns it
 }
 
 export interface StageHit {
@@ -406,7 +408,7 @@ export interface Decision {
 }
 ```
 
-**Audio:** 16 kHz, mono, 16-bit little-endian PCM, 100 ms frames (3,200 bytes) on `/ws/audio`; control messages as JSON text frames. Confirm the STT provider's expected format at the start.
+**Audio:** 16 kHz, mono, 16-bit little-endian PCM, 100 ms frames (3,200 bytes) on `/ws/audio`; control messages as JSON text frames. Vosk expects exactly this format, so frames go to the recognizer without conversion.
 
 ## VERIFICATION AND CONTROL FEATURES
 - Verbatim quotes per stage, highlighted in the transcript with context.
@@ -420,12 +422,12 @@ export interface Decision {
 
 ## LIMITATIONS TO STATE
 - Noise and speaker-phone pickup reduce accuracy.
-- Speech recognition errors on elderly speech, dialects and phone audio.
+- Speech recognition errors on elderly speech, dialects and phone audio. The only Polish Vosk model is a small one, so expect more recognition errors than with a cloud STT; the team measures it on its own recordings.
 - Cannot always tell who is speaking without a line adapter.
 - New scam scripts outside the 8 stages may be missed.
 - False alarms when a real relative urgently asks for money.
 - The alert comes seconds after the decisive sentence.
-- Needs internet; audio goes to an STT provider and text to Anthropic.
+- Needs internet for Claude: audio is recognised locally and never leaves the device, only text goes to Anthropic. Without internet only the keyword layer works ("basic protection").
 - Tested only on synthetic and role-played calls, not on real victims' calls.
 - Not legal advice; GDPR assessment of processing the caller's speech is a next step.
 
@@ -438,7 +440,8 @@ Verify every licence and term on the day; "verify" marks items not confirmed her
 | Claude Sonnet 5.5 (`claude-sonnet-5-5`) via Claude API | Model / API | Anthropic Commercial Terms and Usage Policy | Stage detection with quotes |
 | Claude Haiku 4.5 (`claude-haiku-4-5`), if used | Model / API | Same | Latency comparison only |
 | `@anthropic-ai/sdk` | Library | MIT (verify) | Claude API client |
-| Azure AI Speech (or the chosen STT) | API | Provider's terms (verify data logging and region) | Polish streaming speech-to-text |
+| Vosk (`com.alphacephei:vosk`) with JNA (`net.java.dev.jna:jna`) | Library | Apache 2.0 for Vosk (verify in its repository), JNA is dual LGPL 2.1 / Apache 2.0 (verify) | Local Polish speech-to-text in the backend |
+| Vosk model `vosk-model-small-pl-0.22` | Model (not in the repository, downloaded separately) | Apache 2.0 (per the Vosk models page, verify) | Polish acoustic and language model for the recogniser |
 | Angular, Angular Material/CDK | Framework | MIT | Frontend |
 | NestJS or Fastify, `ws` | Framework / library | MIT (verify) | Backend, WebSockets |
 | Zod or class-validator | Library | MIT (verify) | Validation |
@@ -455,6 +458,8 @@ Verify every licence and term on the day; "verify" marks items not confirmed her
 
 **Why streaming STT and not recording the whole call?** A warning after the call is too late; the money is gone. Streaming gives us text within about a second of speech, and it also means audio never has to be stored, which is better for privacy.
 
+**Why local STT (Vosk) and not a cloud API?** Audio of a third party never leaves the device, there is no key, no region question and no provider-side retention, and the keyword layer keeps working without internet. The price is accuracy: the only Polish Vosk model is a small one (published WER between 11.6 and 18.4, depending on the test set), so we measure it on our own recordings and say so in the limitations.
+
 **Why an LLM with a stage rubric and not a keyword list or a trained classifier?** Scammers paraphrase and speech recognition makes errors, so keywords miss calls and fire on harmless ones; we show this in our comparison table. We have no legal dataset to train a classifier on, while an LLM with a written rubric works from public descriptions of the script, and it returns the exact quote for each stage so a person can check it.
 
 **Why Claude Sonnet 5.5 at low effort with thinking off?** It is Anthropic's "fast" tier with good Polish, and the task is short classification, so deeper reasoning only adds latency. Haiku 4.5 is faster but Anthropic lists its retirement for mid-October 2026, so we measured it only for comparison.
@@ -465,6 +470,6 @@ Verify every licence and term on the day; "verify" marks items not confirmed her
 
 **How does the user stay in control?** The system never hangs up or calls anyone; it explains why it is worried and offers three choices. False-alarm feedback is stored as test cases for us to review, not silently fed back into the model.
 
-**What about privacy and the caller's voice?** Audio is processed in real time and never stored; text is kept only for calls that raised an alert, for a limited time, and the household agrees to this at setup. We know processing a third party's speech needs a proper GDPR assessment before real deployment, and we name it as a next step rather than claim it is solved.
+**What about privacy and the caller's voice?** Audio is recognised in real time by a local recogniser inside our backend, never leaves the device and is never stored; text is kept only for calls that raised an alert, for a limited time, and the household agrees to this at setup. We know processing a third party's speech needs a proper GDPR assessment before real deployment, and we name it as a next step rather than claim it is solved.
 
 **How much does it cost and how fast is it?** Our audit log measures every call: in our tests it was [measured] seconds from sentence to alert and [measured] per 10-minute call. Fill these in from the real numbers; do not quote the estimates.
