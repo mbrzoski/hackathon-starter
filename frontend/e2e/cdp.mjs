@@ -65,6 +65,8 @@ export async function launchChrome({ port = 9555, ignoreCertificateErrors = fals
     await send('Runtime.enable');
     await send('Log.enable');
     await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 800 });
+    // Each app stands for its own device, always in the foreground: stop Chrome from throttling background tabs.
+    await send('Emulation.setFocusEmulationEnabled', { enabled: true });
     await send('Page.navigate', { url });
     const evaluate = async (expression) =>
       (await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true })).result?.value;

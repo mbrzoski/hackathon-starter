@@ -153,13 +153,16 @@ try {
   // 7. Failure states (dev only: /api/dev/emit does not exist in prod).
   const emit = (component, state) =>
     api('/api/dev/emit', { type: 'system.status', mode: 'SCRIPTED', at: new Date().toISOString(), payload: { component, state, message: `e2e ${component} ${state}`, at: new Date().toISOString() } });
+  // The senior shows "Rozmowa zakończona" for a few seconds after a call; failure states belong to the resting screen.
+  const rested = await senior.waitFor(`document.body.innerText.includes('Anioł Stróż słucha')`, 20_000);
+  if (!rested) console.log(`note  senior did not return to the resting screen: ${(await senior.text()).slice(0, 120)}`);
   if ((await emit('audio', 'down')).status === 202) {
-    await sleep(800);
-    check((await senior.text()).includes('Nie słyszę rozmowy'), 'audio down: senior "Nie słyszę rozmowy"');
-    check((await family.evaluate(`document.querySelector('app-system-status-bar')?.innerText`))?.includes('Nie słyszę rozmowy'), 'audio down: family status bar');
+    const statusBar = `document.querySelector('app-system-status-bar')?.innerText.includes('Nie słyszę rozmowy')`;
+    check(await senior.waitFor(`document.body.innerText.includes('Nie słyszę rozmowy')`, 5_000), 'audio down: senior "Nie słyszę rozmowy"', (await senior.text()).slice(0, 80));
+    check(await family.waitFor(statusBar, 5_000), 'audio down: family status bar');
+    check(await listen.waitFor(`document.body.innerText.includes('Nie słyszę rozmowy')`, 5_000), 'audio down: listen "Nie słyszę rozmowy"');
     await emit('audio', 'ok');
-    await sleep(800);
-    check((await senior.text()).includes('Anioł Stróż słucha'), 'audio back: senior green again');
+    check(await senior.waitFor(`document.body.innerText.includes('Anioł Stróż słucha')`, 5_000), 'audio back: senior green again');
   } else {
     console.log('skip  failure states (no /api/dev/emit: prod profile)');
   }
