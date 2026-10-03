@@ -107,6 +107,8 @@ Zależności i ograniczenia, o których warto wiedzieć:
 1. Nowy klient `/ws/events` dostaje snapshot: ostatnie statusy komponentów, aktywna rozmowa i ostatni alert.
 2. Snapshot zawiera alerty bieżącej rozmowy, ostatni `risk.update` i decyzje (finding F-04, naprawiony). Po `call.ended` dane tej rozmowy znikają ze snapshotu. Transkrypcji w snapshocie nadal nie ma, a frontend (FF-02) czyści stan przy każdym `call.started`, więc po ponownym połączeniu ekran traci widoczną transkrypcję, ale alerty i decyzje wracają ze snapshotu.
 
+> Aktualizacja: BE-06, BE-07 i FE-04 są już zrobione, a wiele findingów z poniższej listy naprawiono. Stan po M2: [milestone-2.md](milestone-2.md). Poniżej stan z chwili M1.
+
 ## 4. Znane luki M1
 
 Pełna lista w `tasks/backend-review-findings.md`. Naprawione: F-01 (kontrakt; wpisy do „Odstępstw” nadal do zrobienia), F-02, F-04, F-09. Otwarte najważniejsze dla M1: F-03 (heartbeat nadpisuje awarię, BE-10) i F-06 (domyślny profil `dev`, WEB-01).

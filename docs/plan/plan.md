@@ -6,7 +6,7 @@ Każde zadanie kończy się działającą funkcjonalnością, którą da się zo
 
 ## Kolejność implementacji
 
-Status: ✅ zrobione = zmergowane do `master` (wg historii git), ⏳ = brak w repozytorium. Stan na commit ce7d241. Hotfix ce7d241 dodał brakujące pliki ekranu seniora (FE-02/FE-03). Build i testy nie były uruchamiane (przegląd z kodu). Uwagi do zadań są w `tasks/backend-review-findings.md` i `tasks/frontend-review-findings.md`.
+Status: ✅ zrobione = zmergowane do `master` (wg historii git), ⏳ = brak w repozytorium. Stan na commit 4cfd095 (M1 opisuje [milestone-1.md](../milestone-1.md), M2 opisuje [milestone-2.md](../milestone-2.md)). Backend: `./mvnw verify` zielone po poprawkach F-15…F-23 (443 testy, wg findingów). Frontend i M2 nie były przeze mnie uruchamiane (przegląd z kodu i dokumentów). Uwagi do zadań są w `tasks/backend-review-findings.md` i `tasks/frontend-review-findings.md`.
 
 Numer to kolejność, w jakiej warto zaczynać zadania. W kolumnie „Ścieżka” jest osoba, która zwykle je robi, więc zadania z różnych ścieżek mogą iść równolegle. Zadanie zaczynamy dopiero wtedy, gdy wszystko z kolumny „Wymaga” jest już zmergowane.
 
@@ -24,15 +24,15 @@ Numer to kolejność, w jakiej warto zaczynać zadania. W kolumnie „Ścieżka�
 | 10 | FE-02 | Ekran seniora: stan ochrony | C | 6 | ✅ zrobione (uwaga: FF-13) |
 | 11 | FE-03 | Ekran seniora: alert, głos, trzy przyciski | C | 10, 8, 9 | ✅ zrobione (uwaga: FF-12) |
 | | | **Kamień milowy M1: scenariusz SCRIPTED kończy się alertem na ekranie seniora (bez AI)** | | | ✅ osiągnięty wg kodu (ce7d241), nie zweryfikowany uruchomieniem; uwagi FF-02, FF-12, FF-13 w `tasks/frontend-review-findings.md` |
-| 12 | BE-06 | Claude: etapy oszustwa, walidacja cytatów, tryb MOCK | A | 8, 3 | ⏳ do zrobienia |
-| 13 | BE-07 | Log audytu AI | A | 12 | ⏳ do zrobienia |
-| 14 | FE-04 | Panel rodziny | D | 6, 8, 9 | ⏳ do zrobienia |
-| | | **M2: alert z dowodami od AI widoczny u seniora i rodziny** | | | |
+| 12 | BE-06 | Claude: etapy oszustwa, walidacja cytatów, tryb MOCK | A | 8, 3 | ✅ zrobione (F-15…F-23 naprawione, F-23 z testu z prawdziwym Claude) |
+| 13 | BE-07 | Log audytu AI | A | 12 | ✅ zrobione |
+| 14 | FE-04 | Panel rodziny | D | 6, 8, 9 | ✅ zrobione (uwaga: FF-15) |
+| | | **M2: alert z dowodami od AI widoczny u seniora i rodziny** | | | ✅ osiągnięty wg kodu (4cfd095), opis w `docs/milestone-2.md`; test UC-01 w trybie MOCK, jeden przebieg z prawdziwym Claude |
 | 15 | BE-08 | Tryb LIVE: odbiór audio i lokalne STT (Vosk) | B | 7 | ⏳ do zrobienia |
 | 16 | WEB-01 | Serwer WWW: HTTPS, reverse proxy, nagłówki bezpieczeństwa | C | 6, 5 | ⏳ do zrobienia |
 | 17 | FE-05 | Mikrofon i transkrypcja na żywo | C | 15, 16 | ⏳ do zrobienia |
 | | | **M3: mówienie do tabletu daje alert na żywo** | | | |
-| 18 | BE-09 | Ustawienia, zgody, czułość, retencja | B | 8 | ⏳ do zrobienia |
+| 18 | BE-09 | Ustawienia, zgody, czułość, retencja | B | 8 | ⏳ do zrobienia (częściowo: retencja DAT-02 i `DELETE /api/data` już są; brak ustawień, zgód, czułości i kasowania `labels.jsonl`) |
 | 19 | FE-06 | Kreator konfiguracji i zgód | D | 18 | ⏳ do zrobienia |
 | 20 | BE-10 | Odporność i uczciwe statusy błędów | B | 12, 15 | ⏳ do zrobienia |
 | 21 | FE-07 | Ekran audytu i wybór scenariusza demo | D | 13 | ⏳ do zrobienia |

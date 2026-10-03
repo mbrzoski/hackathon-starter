@@ -1,6 +1,6 @@
 # Review frontendu: findingi
 
-Stan: `master`, commit 3cc9d9d (po FE-04 i poprawkach findingów frontendu). Źródła reguł: `CLAUDE.md`, `docs/ograniczenia-frontend.md`, `docs/architecture.md`, `docs/plan/plan.md`.
+Stan: `master`, commit 4cfd095 (po FE-04 i poprawkach findingów frontendu). Źródła reguł: `CLAUDE.md`, `docs/ograniczenia-frontend.md`, `docs/architecture.md`, `docs/plan/plan.md`.
 Walidacja: po sprawdzeniu każdego findingu z zadaniem w `docs/plan/plan.md`. Finding zostaje aktualny, jeśli dotyczy zadania już zmergowanego (FE-01, FE-02, FE-03, FE-04). Jeśli naprawa należy do zadania zaplanowanego później, jest w sekcji „Odroczone”.
 
 Uwagi do review:
