@@ -71,13 +71,19 @@ public class AuditService {
         addMissingColumns();
     }
 
-    /** A database file from before cache writes were recorded gets the column; schema.sql only creates new tables. */
+    /** A database file from before a column existed gets it; schema.sql only creates tables that are missing. */
     private void addMissingColumns() {
         List<String> columns = jdbc.sql("SELECT name FROM pragma_table_info('audit_records')")
                 .query(String.class).list();
-        if (!columns.isEmpty() && !columns.contains("cache_creation_input_tokens")) {
+        if (columns.isEmpty()) {
+            return;
+        }
+        if (!columns.contains("cache_creation_input_tokens")) {
             jdbc.sql("ALTER TABLE audit_records ADD COLUMN cache_creation_input_tokens INTEGER NOT NULL DEFAULT 0")
                     .update();
+        }
+        if (!columns.contains("late")) {
+            jdbc.sql("ALTER TABLE audit_records ADD COLUMN late INTEGER NOT NULL DEFAULT 0").update();
         }
     }
 
@@ -120,10 +126,10 @@ public class AuditService {
                 INSERT INTO audit_records (call_id, mode, recorded_at, segment_range, model, effort, input_tokens,
                     cache_read_input_tokens, output_tokens, cache_creation_input_tokens, latency_ms, stop_reason,
                     error, raw_output, hits_json, keyword_hits_json, level_before, level_after, hit_count,
-                    rejected_hits, text_cleared)
+                    rejected_hits, text_cleared, late)
                 VALUES (:callId, :mode, :at, :range, :model, :effort, :in, :cacheRead, :out, :cacheCreation,
                     :latency, :stop, :error, :raw, :hits, :keywordHits, :before, :after, :hitCount, :rejected,
-                    :cleared)""")
+                    :cleared, :late)""")
                 .param("callId", entry.callId())
                 .param("mode", entry.mode().name())
                 .param("at", clock.instant().toString())
@@ -143,7 +149,9 @@ public class AuditService {
                 .param("before", entry.levelBefore().name())
                 .param("after", entry.levelAfter().name())
                 .param("hitCount", result.hits().size())
-                .param("rejected", (int) result.hits().stream().filter(h -> !h.validated()).count())
+                // A late answer was never validated: its hits are not rejections.
+                .param("rejected", entry.late() ? 0 : (int) result.hits().stream().filter(h -> !h.validated()).count())
+                .param("late", entry.late() ? 1 : 0)
                 .param("cleared", textCleared ? 1 : 0)
                 .update(key);
         return key.getKey().longValue();
@@ -232,14 +240,14 @@ public class AuditService {
     public AuditSummary summary() {
         List<AuditStatistics.Sample> samples = jdbc.sql("""
                 SELECT call_id, latency_ms, input_tokens, cache_read_input_tokens, output_tokens,
-                       cache_creation_input_tokens, error, rejected_hits
+                       cache_creation_input_tokens, error, rejected_hits, late
                 FROM audit_records WHERE model <> :mock""")
                 .param("mock", MOCK_MODEL)
                 .query((rs, row) -> new AuditStatistics.Sample(rs.getString("call_id"), rs.getLong("latency_ms"),
                         new ClassifierResult.Usage(rs.getLong("input_tokens"), rs.getLong("cache_read_input_tokens"),
                                 rs.getLong("output_tokens"), rs.getLong("cache_creation_input_tokens")),
                         rs.getString("error") == null ? null : ClassifierError.valueOf(rs.getString("error")),
-                        rs.getInt("rejected_hits")))
+                        rs.getInt("rejected_hits"), rs.getInt("late") == 1))
                 .list();
         int mockCalls = jdbc.sql("SELECT count(*) FROM audit_records WHERE model = :mock").param("mock", MOCK_MODEL)
                 .query(Integer.class).single();
@@ -312,7 +320,7 @@ public class AuditService {
                 error == null ? null : ClassifierError.valueOf(error), rs.getString("raw_output"),
                 readHits(rs.getString("hits_json")), readHits(rs.getString("keyword_hits_json")),
                 RiskLevel.valueOf(rs.getString("level_before")), RiskLevel.valueOf(rs.getString("level_after")),
-                rs.getInt("text_cleared") == 1);
+                rs.getInt("text_cleared") == 1, rs.getInt("late") == 1);
     }
 
     private String json(Object value) {

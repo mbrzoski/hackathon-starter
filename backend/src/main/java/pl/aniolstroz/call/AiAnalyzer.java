@@ -104,8 +104,9 @@ public class AiAnalyzer {
         ClassifierResult finished = result;
         int valid = 0;
         RiskLevel before = call.level();
+        boolean late = activeCall(call.callId()).isEmpty();
         try {
-            if (activeCall(call.callId()).isPresent()) {
+            if (!late) {
                 if (result.failed()) {
                     recordFailure(call);
                 } else {
@@ -117,10 +118,10 @@ public class AiAnalyzer {
                     addHits(call.callId(), accepted);
                 }
             }
-            logResult(call.callId(), finished, valid);
+            logResult(call.callId(), finished, valid, late);
         } finally {
             report(new AiCallReport(call.callId(), call.mode(), finished, before, call.level(),
-                    keywordHitsIn(call, finished.segmentRange())));
+                    keywordHitsIn(call, finished.segmentRange()), late));
         }
     }
 
@@ -209,11 +210,11 @@ public class AiAnalyzer {
                 pl.aniolstroz.contracts.Component.AI, state, message, clock.instant())));
     }
 
-    private static void logResult(String callId, ClassifierResult r, int valid) {
+    private static void logResult(String callId, ClassifierResult r, int valid, boolean late) {
         ClassifierResult.Usage usage = r.usage();
         log.info("AI call finished: callId={} range={} model={} effort={} stopReason={} inputTokens={} "
-                        + "cacheReadInputTokens={} outputTokens={} latencyMs={} hits={} valid={} error={}",
+                        + "cacheReadInputTokens={} outputTokens={} latencyMs={} hits={} valid={} late={} error={}",
                 callId, r.segmentRange(), r.model(), r.effort(), r.stopReason(), usage.inputTokens(),
-                usage.cacheReadInputTokens(), usage.outputTokens(), r.latencyMs(), r.hits().size(), valid, r.error());
+                usage.cacheReadInputTokens(), usage.outputTokens(), r.latencyMs(), r.hits().size(), valid, late, r.error());
     }
 }

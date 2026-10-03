@@ -114,6 +114,19 @@ class AuditStatisticsTest {
     }
 
     @Test
+    void lateResultsAreCountedSeparatelyAndStayInTheLatencyAndCost() {
+        AuditSummary summary = AuditStatistics.summarize(List.of(
+                new Sample("c1", 100, new Usage(1000, 0, 100), null, 0, false),
+                new Sample("c1", 300, new Usage(1000, 0, 100), null, 0, true)), 0, PRICING);
+
+        assertThat(summary.lateResults()).isEqualTo(1);
+        assertThat(summary.rejectedQuotes()).isZero();
+        assertThat(summary.aiCalls()).isEqualTo(2);
+        assertThat(summary.latencyP95Ms()).isEqualTo(300);
+        assertThat(summary.avgCostPerCallUsd()).isEqualByComparingTo(usd("0.003"));
+    }
+
+    @Test
     void rejectedQuotesAreSummedAndErrorsAreCountedByCause() {
         AuditSummary summary = AuditStatistics.summarize(List.of(
                 new Sample("c1", 100, new Usage(10, 0, 10), null, 2),

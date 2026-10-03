@@ -72,7 +72,8 @@ CREATE TABLE IF NOT EXISTS audit_records (
     level_after            TEXT NOT NULL,
     hit_count              INTEGER NOT NULL,
     rejected_hits          INTEGER NOT NULL,
-    text_cleared           INTEGER NOT NULL DEFAULT 0
+    text_cleared           INTEGER NOT NULL DEFAULT 0,
+    late                   INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_audit_records_call ON audit_records (call_id);

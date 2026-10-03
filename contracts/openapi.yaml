@@ -372,6 +372,7 @@ components:
         - levelBefore
         - levelAfter
         - textCleared
+        - late
       properties:
         id:
           type: integer
@@ -431,6 +432,9 @@ components:
           $ref: "#/components/schemas/RiskLevel"
         textCleared:
           type: boolean
+        late:
+          type: boolean
+          description: The answer arrived after the call had ended. It was not validated, so its hits show validated=false without being rejected.
     AuditSummary:
       title: AuditSummary
       description: Numbers measured over real AI calls. Mock calls (model "mock") are not counted.
@@ -441,6 +445,7 @@ components:
         - conversations
         - mockCallsExcluded
         - rejectedQuotes
+        - lateResults
         - errorsByCause
         - pricing
         - costNote
@@ -467,7 +472,10 @@ components:
           description: Average over calls that have at least one AI call with usage.
         rejectedQuotes:
           type: integer
-          description: Hits whose quote QuoteValidator rejected.
+          description: Hits whose quote QuoteValidator rejected. Hits of late results are not counted here.
+        lateResults:
+          type: integer
+          description: Answers that arrived after their call had ended. They were not validated, so they are not rejections.
         errorsByCause:
           type: object
           additionalProperties:

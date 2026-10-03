@@ -7,7 +7,11 @@ import pl.aniolstroz.ai.ClassifierError;
 import pl.aniolstroz.contracts.Mode;
 import pl.aniolstroz.contracts.RiskLevel;
 
-/** One AI call as stored (OBS-03). {@code rawOutput} and the quotes are gone when {@code textCleared} is true. */
+/**
+ * One AI call as stored (OBS-03). {@code rawOutput} and the quotes are gone when {@code textCleared} is true. {@code late}
+ * means the answer arrived after the call ended: it was never validated, so its hits show {@code validated = false}
+ * without having been rejected.
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record AuditRecord(
         long id,
@@ -26,12 +30,13 @@ public record AuditRecord(
         List<AuditHit> keywordHits,
         RiskLevel levelBefore,
         RiskLevel levelAfter,
-        boolean textCleared) {
+        boolean textCleared,
+        boolean late) {
 
     /** The same record with its text filled in: used for a running call, whose text is only in memory. */
     AuditRecord withText(String newRawOutput, List<AuditHit> newHits, List<AuditHit> newKeywordHits) {
         return new AuditRecord(id, callId, mode, recordedAt, segmentRange, model, effort, usage, latencyMs, stopReason,
-                error, newRawOutput, newHits, newKeywordHits, levelBefore, levelAfter, false);
+                error, newRawOutput, newHits, newKeywordHits, levelBefore, levelAfter, false, late);
     }
 
     /** {@code cacheCreationInputTokens} are the tokens written to the prompt cache (billed above the input price). */

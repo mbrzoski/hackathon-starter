@@ -23,7 +23,12 @@ final class AuditStatistics {
     private static final int SCALE = 12;
 
     /** One real AI call. */
-    record Sample(String callId, long latencyMs, Usage usage, ClassifierError error, int rejectedHits) {
+    record Sample(String callId, long latencyMs, Usage usage, ClassifierError error, int rejectedHits, boolean late) {
+
+        Sample(String callId, long latencyMs, Usage usage, ClassifierError error, int rejectedHits) {
+            this(callId, latencyMs, usage, error, rejectedHits, false);
+        }
+
         boolean hasUsage() {
             return usage.inputTokens() + usage.cacheReadInputTokens() + usage.outputTokens()
                     + usage.cacheCreationInputTokens() > 0;
@@ -60,6 +65,7 @@ final class AuditStatistics {
                 average(total, costed.size()),
                 average(total, costedConversations.size()),
                 samples.stream().mapToInt(Sample::rejectedHits).sum(),
+                (int) samples.stream().filter(Sample::late).count(),
                 Collections.unmodifiableMap(errors),
                 new AuditSummary.Pricing(pricing.inputPerMillionUsd(), pricing.cacheReadPerMillionUsd(),
                         pricing.outputPerMillionUsd(), pricing.cacheCreationPerMillionUsd()),

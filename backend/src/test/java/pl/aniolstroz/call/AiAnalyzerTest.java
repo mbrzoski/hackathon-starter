@@ -411,9 +411,11 @@ class AiAnalyzerTest {
         assertThat(first.mode()).isEqualTo(Mode.SCRIPTED);
         assertThat(first.levelBefore()).isEqualTo(RiskLevel.LOW);
         assertThat(first.levelAfter()).isEqualTo(RiskLevel.LOW);
+        assertThat(first.late()).isFalse();
         AiCallReport second = reports.get(1);
         assertThat(second.levelBefore()).isEqualTo(RiskLevel.LOW);
         assertThat(second.levelAfter()).isEqualTo(RiskLevel.HIGH);
+        assertThat(second.late()).isFalse();
         assertThat(second.result().hits()).singleElement().satisfies(h -> assertThat(h.validated()).isTrue());
     }
 
@@ -453,7 +455,7 @@ class AiAnalyzerTest {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
-            return ok(s, List.of());
+            return ok(s, List.of(llm(StageId.MONEY_REQUEST, "s1", "Mówi policja", SpeakerRole.CALLER)));
         };
         calls.addSegment(new TranscriptSegment(call.callId(), "x", 0, 0, "Mówi policja.", true, SpeakerLabel.B, null));
         assertThat(started.await(WAIT_SECONDS, TimeUnit.SECONDS)).isTrue();
@@ -467,6 +469,9 @@ class AiAnalyzerTest {
             assertThat(r.mode()).isEqualTo(Mode.SCRIPTED);
             assertThat(r.levelBefore()).isEqualTo(RiskLevel.LOW);
             assertThat(r.levelAfter()).isEqualTo(RiskLevel.LOW);
+            // Not validated and changes nothing: marked as late instead of being counted as rejected.
+            assertThat(r.late()).isTrue();
+            assertThat(r.result().hits()).singleElement().satisfies(h -> assertThat(h.validated()).isFalse());
         });
     }
 

@@ -418,6 +418,36 @@ class AuditServiceTest {
         }
     }
 
+    @Test
+    void aLateAnswerIsStoredAsLateAndItsHitsAreNotCountedAsRejected() {
+        audit.callStarted("c1", Mode.SCRIPTED, T0);
+        audit.callEnded("c1", T0.plusSeconds(10), RiskLevel.NONE, false);
+        // an answer that came after the call ended: its hits were never validated (validated = false)
+        ClassifierResult unvalidated = result("s1-s3", List.of(
+                llmHit(StageId.SECRECY_DEMAND, "s2", "nikomu nie mów", false),
+                llmHit(StageId.MONEY_REQUEST, "s3", "wypłać pieniądze", false)));
+
+        audit.record(new AuditEntry("c1", Mode.SCRIPTED, unvalidated, RiskLevel.LOW, RiskLevel.LOW, List.of(), true));
+
+        AuditRecord record = records("c1").get(0);
+        assertThat(record.late()).isTrue();
+        assertThat(record.hits()).extracting(AuditHit::validated).containsOnly(false);
+        assertThat(audit.summary().rejectedQuotes()).isZero();
+        assertThat(audit.summary().lateResults()).isEqualTo(1);
+    }
+
+    @Test
+    void anAnswerInTimeIsNotLateAndItsRejectedQuotesAreCounted() {
+        audit.callStarted("c1", Mode.SCRIPTED, T0);
+
+        audit.record(realEntry("c1", 100, new ClassifierResult.Usage(10, 0, 10), null,
+                List.of(llmHit(StageId.MONEY_REQUEST, "s1", "zmyślony", false))));
+
+        assertThat(records("c1").get(0).late()).isFalse();
+        assertThat(audit.summary().rejectedQuotes()).isEqualTo(1);
+        assertThat(audit.summary().lateResults()).isZero();
+    }
+
     private AuditEntry realEntry(String callId, long latencyMs, ClassifierResult.Usage usage, ClassifierError error,
             List<StageHit> hits) {
         return entry(callId, new ClassifierResult("s1-s2", "claude-sonnet-5-5", "low", error == null ? "{}" : null, hits,

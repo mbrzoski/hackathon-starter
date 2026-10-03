@@ -21,7 +21,7 @@ Uwagi:
 | F-03 | Średnia | BE-10 (Odporność i uczciwe statusy błędów) | OBS-01, zasada 7 | `HeartbeatService` | Heartbeat co 10 s publikuje `BACKEND = OK` bezwarunkowo i nadpisuje `DEGRADED` z `CallService`, `RetainAlertedCallHook`, `DecisionService`. Statusy awarii już istnieją (BE-04, BE-05), więc luka jest realna. | Rozwiązać w BE-10: jawny model stanu komponentu, `OK` tylko po zdjęciu awarii. |
 | F-06 | Niska | WEB-01 (serwer WWW, HTTPS), deploy | API-05, OBS-05 | `application.yml` | `spring.profiles.default: dev`: start bez profilu włącza `/api/dev/emit`, DEBUG, szczegóły `health`, originy `localhost`. `deploy/` jeszcze nie istnieje. | Przy WEB-01 ustawić bezpieczny domyślny profil, `dev` jawnie w `Makefile` i `.env.example`. |
 
-## 2a. Findingi zamknięte (naprawione, `./mvnw verify` zielone: 440 testów)
+## 2a. Findingi zamknięte (naprawione, `./mvnw verify` zielone: 443 testy)
 
 | ID | Co zrobiono |
 |---|---|
@@ -37,6 +37,7 @@ Uwagi:
 | F-20 | Wpis o `GET /api/calls` w „Odstępstwach”. |
 | F-21 | `milestone-1.md`: opis zasady DAT-01, tabel audytu i scenariusza S1 zaktualizowany. |
 | F-22 | `QuoteValidator` odrzuca cytat krótszy niż 3 znaki po normalizacji (AI-08 zaktualizowane, testy). |
+| F-23 | Znaleziony w teście z prawdziwym Claude (scenariusz 02): ostatnia odpowiedź AI przyszła po zakończeniu rozmowy, więc nie została zwalidowana, ale audyt zapisał jej 10 trafień jako `validated=false` i `/api/audit/summary` pokazało `rejectedQuotes: 10` przy faktycznie 0 odrzuconych cytatach. Naprawione: `AiCallReport` i `AuditEntry` mają flagę `late` (wynik po końcu rozmowy), rekord audytu ma pole `late` (kolumna z automatyczną migracją), podsumowanie ma `lateResults`, a trafienia spóźnionych wyników nie są liczone w `rejectedQuotes` (`rejected_hits = 0`). Spóźnione wyniki zostają w statystykach czasu i kosztu, bo kosztowały. Kontrakt, `OBS-03` i testy zaktualizowane (443 testy). |
 
 ## 3. Findingi usunięte jako nadmiarowe (funkcja jeszcze nie jest zadaniem)
 
