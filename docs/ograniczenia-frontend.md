@@ -21,7 +21,7 @@ Dokument architektury zakłada jedną aplikację Angular z trasami `/senior`, `/
 | ID | Ograniczenie | Dlaczego |
 |---|---|---|
 | FE-01 | MUSI istnieć jedna baza kodu Angular dla web i Android. NIE WOLNO pisać osobnych ekranów w Kotlinie/Javie. | Zespół zna Angulara; dwie implementacje to podwójna praca i rozjazd zachowania. |
-| FE-02 | Typy i schematy zdarzeń MUSZĄ pochodzić z pakietu `contracts`. NIE WOLNO ich kopiować ani definiować ponownie. | Jeden kontrakt z backendem. |
+| FE-02 | Typy i serwisy HTTP MUSZĄ być generowane z `contracts/openapi.yaml` (openapi-generator, generator `typescript-angular`) do `frontend/src/app/api/`. Kod wygenerowany nie jest edytowany ręcznie. NIE WOLNO kopiować ani definiować typów API ponownie. | Jeden kontrakt z backendem. |
 | FE-03 | Frontend NIE WOLNO wywoływać Claude ani STT bezpośrednio. Wszystko idzie przez backend. | Klucze API nie mogą trafić do przeglądarki ani do APK; backend waliduje cytaty i liczy ryzyko. |
 | FE-04 | Frontend NIE WOLNO liczyć poziomu ryzyka ani generować tekstów alertów. Wyświetla `RiskUpdate`, `Alert.templateId` i tekst szablonu z backendu. | Logika deterministyczna jest w jednym miejscu (architektura, sekcja 5). |
 | FE-05 | Każdy ekran MUSI pokazywać znaczek trybu (LIVE / REPLAY / SCRIPTED / MOCK) i stan połączenia. | Uczciwość wobec jury i użytkownika (sekcja 10). |
@@ -32,7 +32,7 @@ Dokument architektury zakłada jedną aplikację Angular z trasami `/senior`, `/
 | FE-10 | Numer do oddzwonienia MUSI pochodzić z ustawień. NIE WOLNO pokazywać numeru z treści rozmowy. | Oszust podaje „numer weryfikacyjny”. |
 | FE-11 | Audio NIE MOŻE być zapisywane na urządzeniu: bez MediaRecorder, IndexedDB, plików, cache. | Prywatność (sekcja 6.7). |
 | FE-12 | `localStorage` tylko na wygodę (język, zwinięte panele), zawsze w try/catch. Ustawienia, alerty i decyzje są w backendzie. | Stan współdzielony i trwały jest po stronie serwera. |
-| FE-13 | Wszystkie wiadomości z WebSocket MUSZĄ być walidowane schematem zod; błędne są odrzucane z ostrzeżeniem w konsoli. | Odporność na zmiany kontraktu. |
+| FE-13 | Wszystkie wiadomości z WebSocket MUSZĄ być walidowane w czasie działania przez Ajv (tryb JSON Schema 2020-12) względem `components/schemas/EventEnvelope` z `openapi.yaml`; błędne są odrzucane z ostrzeżeniem w konsoli. | Odporność na zmiany kontraktu. |
 | FE-14 | Teksty dla seniora po polsku; kod, identyfikatory i komentarze po angielsku. | Spójność z backendem. |
 
 ## 3. Aplikacja webowa Angular i serwer WWW

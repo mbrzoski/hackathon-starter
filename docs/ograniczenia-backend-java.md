@@ -11,22 +11,23 @@ Ten plik zastępuje [ograniczenia-backend.md](ograniczenia-backend.md), czyli we
 | BE-03 | WebSocket przez `spring-boot-starter-websocket` z własnymi `TextWebSocketHandler` / `BinaryWebSocketHandler`. NIE używamy STOMP ani SockJS. | Kontrakt `/ws/events` (JSON) i `/ws/audio` (ramki binarne) musi być identyczny jak w architekturze. STOMP zmieniłby protokół widziany przez frontend. |
 | BE-04 | Jeden proces, jedno gospodarstwo domowe, jedna aktywna rozmowa naraz. Nie robimy kont użytkowników, wielodostępności ani skalowania. | Zakres hackathonu. Ograniczenie podajemy jury otwarcie. |
 | BE-05 | Pakiety według funkcji, nie według warstw: `events`, `call`, `stt`, `risk`, `ai`, `audit`, `alerts`, `settings`, `demo`, `config`. Pakiet `ai` nie zależy od `risk`: oddaje trafienia, a resztą zajmuje się `call`. Sprawdza to test ArchUnit. | Każdą część da się wytłumaczyć i przetestować osobno. |
-| BE-06 | Model danych jako rekordy Javy (`record`), niemutowalne. Unie typów (np. rodzaje zdarzeń) jako `sealed interface` z rekordami i `switch` z dopasowaniem wzorców. Typy wyliczeniowe (`StageId`, `RiskLevel`, `Mode`) jako `enum`. | Język Javy 21 wymusza kompletność obsługi przypadków. |
+| BE-06 | Modele API (żądania, odpowiedzi, payloady zdarzeń) generujemy z `openapi.yaml` (CON-03). Wewnętrzny model domeny (np. `CallState`, wyniki klasyfikatora) to rekordy Javy (`record`), niemutowalne. Unie typów (np. rodzaje zdarzeń) jako `sealed interface` z rekordami i `switch` z dopasowaniem wzorców. Typy wyliczeniowe (`StageId`, `RiskLevel`, `Mode`) jako `enum`. | Język Javy 21 wymusza kompletność obsługi przypadków. |
 | BE-07 | Dane trwałe w SQLite (`org.xerial:sqlite-jdbc`) przez `JdbcClient` ze Springa albo w plikach JSON / JSONL. Bez JPA/Hibernate i bez zewnętrznej bazy. | Prostota. Mało tabel i brak relacji. |
 | BE-08 | Konfiguracja przez `application.yml` i zmienne środowiskowe (`@ConfigurationProperties` z walidacją). Sekrety tylko w zmiennych środowiskowych. NIE WOLNO commitować kluczy ani ich logować. W repozytorium jest `.env.example`. | Bezpieczeństwo, publiczne repozytorium. |
 
-## 2. Kontrakt z frontendem (zmiana względem wersji Node)
+## 2. Kontrakt z frontendem: `openapi.yaml`
 
-W wersji Node frontend i backend dzieliły typy TypeScript. Przy Javie wspólnym źródłem prawdy jest **JSON Schema**.
+Jedynym źródłem prawdy o kontrakcie jest plik **`contracts/openapi.yaml`** (OpenAPI 3.1). Zespół zrezygnował z osobnych plików JSON Schema i z pakietu npm.
 
 | ID | Ograniczenie | Dlaczego |
 |---|---|---|
-| CON-01 | Kontrakty są w `contracts/schemas/*.schema.json` (JSON Schema 2020-12): `TranscriptSegment`, `StageHit`, `RiskUpdate`, `Alert`, `Decision`, `SystemStatus`, `EventEnvelope`, `Settings`, `Scenario`, `StageHits` (odpowiedź Claude). Jest to jedyne źródło prawdy. | Jeden kontrakt dla Angulara, Androida i Javy. |
-| CON-02 | Frontend generuje z nich typy TS i schematy zod (np. `json-schema-to-typescript` / `json-schema-to-zod`) do pakietu `contracts`. Dzięki temu FE-02 i FE-13 z pliku frontendu obowiązują bez zmian. | Frontend nie musi niczego zmieniać. |
-| CON-03 | Rekordy Javy piszemy ręcznie. Test kontraktowy serializuje przykładowe obiekty Jacksonem i waliduje je względem schematów (`com.networknt:json-schema-validator`). Niezgodność oznacza czerwony build. | Bez generatora kodu Javy, a rozjazd i tak wychodzi w testach. |
-| CON-04 | Jackson: pola w JSON w `camelCase`, daty jako ISO-8601 (`WRITE_DATES_AS_TIMESTAMPS=false`), enumy jako nazwy (`AUTHORITY_CLAIM`), `FAIL_ON_UNKNOWN_PROPERTIES=true` na wejściu. | Zgodność z typami frontendu, a nieznane pola od razu wychodzą na jaw. |
-| CON-05 | Normalizacja tekstu do walidacji cytatów (małe litery, bez polskich znaków diakrytycznych i interpunkcji, zredukowane spacje) istnieje w Javie (`QuoteNormalizer`, `java.text.Normalizer`, NFD) i w TS. Obie implementacje przechodzą te same wektory testowe z `contracts/test-vectors/normalize.json`. | Frontend podświetla cytaty tak samo, jak backend je zatwierdza. Uwaga na „ł”, które nie rozkłada się w NFD i wymaga ręcznej zamiany na „l”. |
-| CON-06 | Każde wejście (HTTP, WebSocket, plik scenariusza, odpowiedź Claude) przechodzi walidację: Bean Validation (`jakarta.validation`) na rekordach albo walidator JSON Schema. | Odporność na błędne dane. |
+| CON-01 | `contracts/openapi.yaml` opisuje wszystkie endpointy REST (`paths`, każda operacja z `operationId` i tagiem) i wszystkie typy (`components/schemas`): `TranscriptSegment`, `StageHit`, `RiskUpdate`, `Alert`, `Decision`, `SystemStatus`, `EventEnvelope` (oneOf z `discriminator` po `type`), `Settings`, `Scenario`, `StageHits` (odpowiedź Claude), `AudioControl`, `ProblemDetail`. WebSockety `/ws/events` i `/ws/audio` są opisane w rozszerzeniu `x-websockets` z `$ref` do tych samych schematów. | Jeden kontrakt dla Javy, Angulara i Androida. |
+| CON-02 | Kontrakt zmieniamy tylko w tej kolejności: najpierw `openapi.yaml`, potem generowanie kodu w backendzie i frontendzie, na końcu implementacja. NIE WOLNO dodawać endpointu ani pola w kodzie bez zmiany w `openapi.yaml`. | Kontrakt nie rozjeżdża się z kodem. |
+| CON-03 | Backend generuje z kontraktu interfejsy i modele: `openapi-generator-maven-plugin` (generator `spring`, `interfaceOnly=true`, `useSpringBoot3=true`, `useJakartaEe=true`, `openApiNullable=false`), kod w `target/`, bez commitowania. Kontrolery implementują wygenerowane interfejsy. Testy MockMvc z `swagger-request-validator-mockmvc` sprawdzają żądania i odpowiedzi względem `openapi.yaml`. Zdarzenia WebSocket są walidowane względem `components/schemas` (`com.networknt:json-schema-validator`, bo schematy OpenAPI 3.1 to JSON Schema 2020-12). | Rozjazd z kontraktem psuje kompilację albo testy. |
+| CON-04 | Jackson: pola w JSON w `camelCase`, daty jako ISO-8601 (`WRITE_DATES_AS_TIMESTAMPS=false`), enumy jako nazwy (`AUTHORITY_CLAIM`), `FAIL_ON_UNKNOWN_PROPERTIES=true` na wejściu. | Zgodność z kontraktem, a nieznane pola od razu wychodzą na jaw. |
+| CON-05 | Normalizacja tekstu do walidacji cytatów (małe litery, bez polskich znaków diakrytycznych i interpunkcji, zredukowane spacje) jest zaimplementowana w Javie (`QuoteNormalizer`, `java.text.Normalizer`, NFD) i w TS we frontendzie. Obie implementacje przechodzą te same wektory testowe z `contracts/test-vectors/normalize.json`. | Frontend podświetla cytaty tak samo, jak backend je zatwierdza. Uwaga na „ł”, które nie rozkłada się w NFD i wymaga ręcznej zamiany na „l”. |
+| CON-06 | Każde wejście przechodzi walidację: żądania HTTP przez Bean Validation na wygenerowanych modelach, wiadomości WebSocket i pliki scenariuszy przez walidator schematów z `openapi.yaml`, a odpowiedź Claude przez structured output i `QuoteValidator`. | Odporność na błędne dane. |
+| CON-07 | Odpowiedź Claude mapujemy na ręcznie napisany rekord `StageHitsResponse` w pakiecie `ai`, a nie na model z generatora. Test sprawdza, że jego JSON przechodzi walidację względem `components/schemas/StageHits`. | Adnotacje generatora mogłyby zmienić schemat wysyłany do API Claude. |
 
 ## 3. Granice AI (najważniejsze)
 
@@ -89,7 +90,7 @@ W wersji Node frontend i backend dzieliły typy TypeScript. Przy Javie wspólnym
 
 | ID | Ograniczenie | Dlaczego |
 |---|---|---|
-| API-01 | Endpointy i zdarzenia są dokładnie takie, jak w sekcji 6.5 architektury. Nowy endpoint wymaga wpisu w „Odstępstwach”. Opis w OpenAPI (`springdoc-openapi`) dostępny tylko w profilu `dev`. | Frontend web i Android polegają na tym samym kontrakcie. |
+| API-01 | Endpointy i zdarzenia są dokładnie takie, jak w sekcji 6.5 architektury. Nowy endpoint wymaga wpisu w „Odstępstwach”. Swagger UI serwuje plik `contracts/openapi.yaml` (nie generujemy opisu z kodu) tylko w profilu `dev`. | Frontend web i Android polegają na tym samym kontrakcie. |
 | API-02 | Każde zdarzenie i każdy rekord audytu ma pole `mode` (LIVE / REPLAY / SCRIPTED / MOCK). | Uczciwe oznaczanie demo. |
 | API-03 | Po podłączeniu klient `/ws/events` dostaje od razu aktualny stan. | Odświeżenie strony albo powrót aplikacji Android z tła nie gubi stanu. |
 | API-04 | Backend działa za reverse proxy z HTTPS na tym samym originie co frontend (`server.forward-headers-strategy=framework`). CORS jest wyłączony w produkcji, a w profilu `dev` dopuszczamy tylko `localhost`. Origin połączeń WebSocket ograniczony przez `setAllowedOrigins`. | Spójność z WEB-02, WEB-03 i AND-02. |
@@ -113,7 +114,7 @@ W wersji Node frontend i backend dzieliły typy TypeScript. Przy Javie wspólnym
 |---|---|
 | TST-01 | JUnit 5 + AssertJ + Mockito. Logika deterministyczna (RiskEngine, KeywordDetector, QuoteValidator, QuoteNormalizer, wybór szablonu, retencja, przejścia statusów) ma testy jednostkowe bez kontekstu Springa. |
 | TST-02 | Testy NIE wywołują prawdziwego Claude ani STT. Do tego służą WireMock dla HTTP Anthropic albo mock interfejsu `StageClassifier`, `FakeSttProvider` i tryb MOCK. |
-| TST-03 | Testy kontraktowe JSON Schema (CON-03) i wektory normalizacji (CON-05) muszą przechodzić w `mvn verify`. |
+| TST-03 | Testy kontraktowe z `openapi.yaml` (CON-03, CON-07) i wektory normalizacji (CON-05) muszą przechodzić w `mvn verify`. Każdy endpoint ma co najmniej jeden test MockMvc z walidatorem OpenAPI. |
 | TST-04 | Test ArchUnit pilnuje zależności między pakietami (BE-05) oraz zakazu użycia `synchronized` w pakietach `ai` i `stt` (CC-03). |
 | TST-05 | Ewaluacja: osobny profil lub klasa main (`EvalRunner`), która uruchamia 12 scenariuszy w trzech wariantach (tylko słowa kluczowe, tylko AI, oba) i zapisuje tabelę właściwości bez procentów i bez „wyniku punktowego”. |
 
@@ -128,7 +129,7 @@ W wersji Node frontend i backend dzieliły typy TypeScript. Przy Javie wspólnym
 
 ## 12. Do ujawnienia w zgłoszeniu (dodatki względem wersji Node)
 
-Licencje sprawdzamy na starcie: Spring Boot (Apache 2.0), `anthropic-java` (licencja z repozytorium SDK), Azure Speech SDK dla Javy (licencja Microsoft), sqlite-jdbc, Jackson, networknt json-schema-validator, ArchUnit, WireMock, springdoc-openapi, opcjonalnie Firebase Admin SDK i Twilio Java SDK.
+Licencje sprawdzamy na starcie: Spring Boot (Apache 2.0), `anthropic-java` (licencja z repozytorium SDK), Azure Speech SDK dla Javy (licencja Microsoft), sqlite-jdbc, Jackson, openapi-generator, swagger-parser, swagger-request-validator, networknt json-schema-validator, ArchUnit, WireMock, springdoc-openapi, opcjonalnie Firebase Admin SDK i Twilio Java SDK.
 
 ## Odstępstwa
 
