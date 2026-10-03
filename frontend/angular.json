@@ -1,0 +1,123 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "cli": {
+    "packageManager": "npm",
+    "analytics": "be5e539e-a501-4e83-8631-1a02e5414bb5"
+  },
+  "newProjectRoot": "projects",
+  "projects": {
+    "frontend": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        }
+      },
+      "root": "",
+      "sourceRoot": "src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "src/main.ts",
+            "tsConfig": "tsconfig.app.json",
+            "inlineStyleLanguage": "scss",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "public"
+              }
+            ],
+            "styles": [
+              "node_modules/@fontsource/public-sans/400.css",
+              "node_modules/@fontsource/public-sans/600.css",
+              "node_modules/@fontsource/public-sans/700.css",
+              "node_modules/@fontsource/public-sans/800.css",
+              "src/styles.scss"
+            ],
+            "allowedCommonJsDependencies": [
+              "ajv",
+              "ajv-formats"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "6kB",
+                  "maximumError": "10kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            },
+            "senior": {
+              "outputPath": "dist/senior"
+            },
+            "listen": {
+              "outputPath": "dist/listen",
+              "fileReplacements": [
+                {
+                  "replace": "src/app/target/app-target.ts",
+                  "with": "src/app/target/app-target.listen.ts"
+                }
+              ]
+            },
+            "family": {
+              "outputPath": "dist/family",
+              "fileReplacements": [
+                {
+                  "replace": "src/app/target/app-target.ts",
+                  "with": "src/app/target/app-target.family.ts"
+                }
+              ]
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "frontend:build:production"
+            },
+            "development": {
+              "buildTarget": "frontend:build:development"
+            },
+            "senior": {
+              "buildTarget": "frontend:build:development,senior",
+              "port": 4201
+            },
+            "listen": {
+              "buildTarget": "frontend:build:development,listen",
+              "port": 4202
+            },
+            "family": {
+              "buildTarget": "frontend:build:development,family",
+              "port": 4203
+            }
+          },
+          "defaultConfiguration": "senior",
+          "options": {
+            "proxyConfig": "proxy.conf.json"
+          }
+        },
+        "test": {
+          "builder": "@angular/build:unit-test"
+        }
+      }
+    }
+  }
+}

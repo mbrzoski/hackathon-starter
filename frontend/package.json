@@ -1,0 +1,42 @@
+{
+  "name": "aniol-stroz-frontend",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "generate:api": "node scripts/generate-api.mjs",
+    "start": "npm run generate:api && (ng serve -c senior & ng serve -c listen & ng serve -c family & wait)",
+    "start:senior": "npm run generate:api && ng serve -c senior",
+    "start:listen": "npm run generate:api && ng serve -c listen",
+    "start:family": "npm run generate:api && ng serve -c family",
+    "build": "npm run generate:api && ng build -c production,senior && ng build -c production,listen && ng build -c production,family",
+    "test": "npm run generate:api && ng test --watch=false"
+  },
+  "private": true,
+  "packageManager": "npm@11.19.1",
+  "dependencies": {
+    "@angular/cdk": "^22.2.1",
+    "@angular/common": "^22.2.0",
+    "@angular/compiler": "^22.2.0",
+    "@angular/core": "^22.2.0",
+    "@angular/forms": "^22.2.0",
+    "@angular/material": "^22.2.1",
+    "@angular/platform-browser": "^22.2.0",
+    "@angular/router": "^22.2.0",
+    "@fontsource/public-sans": "^5.3.0",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^22.2.1",
+    "@angular/cli": "^22.2.1",
+    "@angular/compiler-cli": "^22.2.0",
+    "@openapitools/openapi-generator-cli": "^2.41.0",
+    "jsdom": "^30.0.0",
+    "prettier": "^3.8.1",
+    "typescript": "~6.0.2",
+    "vitest": "^5.0.0",
+    "yaml": "^2.9.1"
+  }
+}

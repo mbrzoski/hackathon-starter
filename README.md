@@ -9,6 +9,7 @@ Requires JDK 21.
 ```bash
 make test           # cd backend && ./mvnw verify
 make run-backend    # dev profile, http://localhost:8080/api/status
+make run-frontend   # three apps: senior :4201, listen :4202, family :4203 (proxy /api, /ws to :8080)
 ```
 
 Configuration: copy `.env.example` to `.env` (never commit it). Secrets only come from environment variables.
@@ -24,3 +25,10 @@ Configuration: copy `.env.example` to `.env` (never commit it). Secrets only com
 | OpenAPI Generator (maven plugin, `spring` generator) | Apache 2.0 | Build-time generation of the `/api/demo/*` interface and request models from `contracts/openapi.yaml` |
 | openapi-request-validator-mockmvc (Atlassian) | Apache 2.0 | Tests: every MockMvc request and response is checked against `contracts/openapi.yaml` |
 | Claude / Claude Code (Anthropic) | Anthropic terms | Concept, architecture notes and coding assistance (pre-event architecture document disclosed as such) |
+| Angular, Angular CLI, Angular Material, CDK | MIT | Frontend framework and UI components |
+| RxJS | Apache 2.0 | Router events in the frontend |
+| Vitest, jsdom | MIT | Frontend unit tests |
+| OpenAPI Generator CLI (`typescript-angular`) | Apache 2.0 | Generates frontend models and services from `contracts/openapi.yaml` |
+| yaml | ISC | Reads the contract in `frontend/scripts/generate-api.mjs` |
+| Ajv, ajv-formats | MIT | Validates every `/ws/events` message against the contract (FE-13) |
+| Public Sans (`@fontsource/public-sans`) | OFL-1.1 | UI font from the visual system |

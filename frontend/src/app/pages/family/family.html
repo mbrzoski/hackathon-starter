@@ -1,0 +1,104 @@
+<header class="top">
+  <div class="brand">
+    <span class="logo"><app-icon name="shield" [size]="24" /></span>
+    <strong>Anioł Stróż</strong>
+    <span class="sep"></span>
+    <span class="sub">Panel rodziny</span>
+  </div>
+  <app-mode-badge />
+</header>
+
+<div class="wrap">
+  @if (alert(); as a) {
+    <section class="alarm" role="alert">
+      <app-icon name="warning" [size]="36" />
+      <div class="alarm-text">
+        <strong>{{ a.shortText }}</strong>
+        <span>{{ a.advice }}</span>
+        <span class="by">Wykryto przez: {{ triggeredBy() }}</span>
+      </div>
+      <span class="time">{{ alertTime() }}</span>
+    </section>
+  }
+
+  @if (events.activeCall(); as call) {
+    <section class="card call">
+      <div><span>Początek</span><strong>{{ callStart() }}</strong></div>
+      <div><span>Czas rozmowy</span><strong>{{ callDuration() }}</strong></div>
+      <div><span>Stan</span><strong>{{ call.endedAt ? 'Zakończona' : 'Trwa' }}</strong></div>
+    </section>
+
+    <div class="cols">
+      <section class="card transcript">
+        <div class="t-head">
+          <h2>Transkrypcja na żywo</h2>
+          @if (!call.endedAt) {
+            <span class="live"><span class="dot"></span> NA ŻYWO</span>
+          }
+        </div>
+        @for (row of rows(); track row.segId) {
+          <div class="row" [class.interim]="!row.isFinal">
+            <span class="t">{{ row.time }}</span>
+            <div>
+              <div class="who">{{ row.speaker }}</div>
+              <p>{{ row.before }}@if (row.quote) {<mark>{{ row.quote }}</mark>}{{ row.after }}</p>
+              @if (row.stage) {
+                <span class="stage-tag">{{ row.stage | stageLabel }}</span>
+              }
+            </div>
+          </div>
+        } @empty {
+          <p class="note">Czekam na pierwsze słowa rozmowy.</p>
+        }
+      </section>
+
+      <aside>
+        <section class="card">
+          <h2>Poziom ryzyka</h2>
+          @if (events.risk(); as risk) {
+            <div class="risk"><app-risk-level-chip [level]="risk.level" /></div>
+            <p class="note">Sygnały ostrzegawcze: {{ risk.warningSigns }}</p>
+          } @else {
+            <p class="note">Brak oceny.</p>
+          }
+        </section>
+
+        <section class="card">
+          <h2>Wykryte etapy</h2>
+          <ol class="stages">
+            @for (s of stages(); track s.stage; let i = $index) {
+              <li>
+                <span class="num">{{ i + 1 }}</span>
+                <div>
+                  <strong>{{ s.stage | stageLabel }}</strong>
+                  @if (s.quote) {
+                    <span class="detail">„{{ s.quote }}” · {{ s.time ?? '' }} · {{ s.source }}</span>
+                  }
+                </div>
+              </li>
+            } @empty {
+              <li class="note">Nic nie wykryto.</li>
+            }
+          </ol>
+        </section>
+
+        <section class="card actions">
+          <h2>Co możesz zrobić</h2>
+          <!-- TODO: POST /api/alerts/{id}/decision through the generated service once the contract has paths. -->
+          <button type="button" class="btn-primary btn-block" [disabled]="true">Potwierdź oszustwo</button>
+          <button type="button" class="btn-neutral btn-block" [disabled]="true">Fałszywy alarm</button>
+          <p class="note">Decyzje będą dostępne po dodaniu endpointu decyzji do kontraktu.</p>
+        </section>
+      </aside>
+    </div>
+  } @else {
+    <section class="card empty">
+      <h2>Brak trwającej rozmowy</h2>
+      <p class="note">Gdy rozmowa się zacznie, zobaczysz tu transkrypcję i ocenę ryzyka.</p>
+    </section>
+  }
+
+  <p class="privacy">
+    <app-icon name="lock" [size]="18" /> Nagrania audio nie są przechowywane. Transkrypcja służy wyłącznie do oceny ryzyka.
+  </p>
+</div>
