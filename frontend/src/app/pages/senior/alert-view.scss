@@ -1,0 +1,20 @@
+:host { flex: 1; min-height: 0; display: flex; }
+// White on --alarm-deep is 8.1:1 (WEB-11).
+.alert { flex: 1; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 16px; padding: 16px;
+  border-radius: 24px; background: var(--alarm-deep); color: #fff; }
+// Text, tools and evidence; scrolls inside itself only when a small phone cannot fit it.
+.body { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+.head { display: grid; gap: 4px; }
+.eyebrow { margin: 0; display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.12em; }
+.text { margin: 0; font-size: clamp(30px, 5vmin, 56px); line-height: 1.15; font-weight: 800; }
+.source { margin: 0; opacity: 0.95; }
+.tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.why { font: inherit; font-size: 28px; font-weight: 700; min-height: 64px; padding: 0 24px; border-radius: 14px;
+  border: 3px solid #fff; background: #fff; color: var(--alarm-deep); cursor: pointer; }
+.why:focus-visible { outline: 4px solid var(--highlight); outline-offset: 2px; }
+
+// On its side: decisions in their own column next to the text.
+@media (orientation: landscape) {
+  .alert { grid-template-columns: minmax(0, 1fr) minmax(260px, 40%); grid-template-rows: minmax(0, 1fr); }
+  app-decision-buttons { align-content: center; }
+}

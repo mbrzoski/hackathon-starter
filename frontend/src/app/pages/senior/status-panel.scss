@@ -1,0 +1,24 @@
+:host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; }
+
+// Colours checked for 7:1 (WEB-11): white on --safe-deep 7.6, white on --alarm-deep 8.1, text on --highlight 14.6.
+.panel { flex: 1; min-height: 0; border-radius: 24px; padding: 24px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 24px; text-align: center; }
+.green { background: var(--safe-deep); color: #fff; }
+.yellow { background: var(--highlight); color: var(--text); border: 4px solid var(--warn); }
+.red { background: var(--alarm-deep); color: #fff; }
+
+.icon { flex: none; width: 160px; height: 160px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, 0.16); }
+.yellow .icon { background: rgba(0, 0, 0, 0.06); }
+.text { margin: 0; font-size: clamp(36px, 6.5vmin, 64px); line-height: 1.15; font-weight: 800; max-width: 18ch; }
+
+.decision { flex: none; min-height: 72px; font-size: 28px; border-radius: 16px; width: 100%; }
+
+// Tablet or phone on its side: icon next to the sentence so nothing scrolls.
+@media (orientation: landscape) {
+  .panel { flex-direction: row; gap: 40px; }
+  .text { text-align: left; }
+}
+@media (max-height: 520px) {
+  .icon { width: 112px; height: 112px; }
+}
