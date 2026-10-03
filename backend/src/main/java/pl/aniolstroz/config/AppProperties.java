@@ -19,7 +19,12 @@ import pl.aniolstroz.contracts.Mode;
 public record AppProperties(
         @NotNull @DefaultValue("SCRIPTED") Mode mode,
         @Valid @NotNull @DefaultValue Claude claude,
-        @Valid @NotNull @DefaultValue Events events) {
+        @Valid @NotNull @DefaultValue Events events,
+        @Valid @NotNull @DefaultValue Labels labels) {
+
+    /** Where false_alarm and confirmed_scam decisions are appended as evaluation labels (AI-10). */
+    public record Labels(@NotBlank @DefaultValue("data/labels.jsonl") String file) {
+    }
 
     public record Claude(
             @NotBlank @DefaultValue("claude-sonnet-5-5") String model,

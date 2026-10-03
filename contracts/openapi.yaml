@@ -6,6 +6,74 @@ info:
   version: 0.0.1
   description: Data contract shared by backend (Java), frontend (Angular) and Android. Paths cover /api/demo/* so far; other endpoints are added task by task (CON-02). StageHits is snake_case on purpose (Claude response); everything else is camelCase.
 paths:
+  /api/alerts:
+    get:
+      operationId: listAlerts
+      tags:
+        - alerts
+      summary: Latest alerts with their decisions, newest first. The family panel loads it after a page refresh.
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Alerts of the active call and of finished calls.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlertWithDecisions"
+        "400":
+          description: Invalid limit.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+  /api/alerts/{alertId}/decision:
+    post:
+      operationId: submitDecision
+      tags:
+        - alerts
+      summary: Record a person's decision about an alert. An alert can have several decisions.
+      parameters:
+        - name: alertId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DecisionRequest"
+      responses:
+        "201":
+          description: The stored decision (alertId and at are set by the server).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Decision"
+        "400":
+          description: Invalid body, or a decision the actor cannot make, or ignoredStages from the senior.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Unknown alertId.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
   /api/demo/scenarios:
     get:
       operationId: listScenarios
@@ -146,6 +214,48 @@ components:
         at:
           type: string
           format: date-time
+    AlertWithDecisions:
+      title: AlertWithDecisions
+      description: An alert with every decision made about it so far, oldest decision first.
+      type: object
+      additionalProperties: false
+      required:
+        - alert
+        - decisions
+      properties:
+        alert:
+          $ref: "#/components/schemas/Alert"
+        decisions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Decision"
+    DecisionRequest:
+      title: DecisionRequest
+      description: Body of POST /api/alerts/{alertId}/decision. alertId comes from the path and at from the server.
+      type: object
+      additionalProperties: false
+      required:
+        - actor
+        - decision
+      properties:
+        actor:
+          type: string
+          enum:
+            - senior
+            - family
+        decision:
+          type: string
+          enum:
+            - hung_up
+            - called_trusted
+            - false_alarm
+            - confirmed_scam
+        ignoredStages:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/StageId"
+          description: Family only. Stages not to count for this call (the "don't count this" toggle).
     EventEnvelope:
       title: EventEnvelope
       description: "Every message on /ws/events: the type selects the payload, mode is always present."

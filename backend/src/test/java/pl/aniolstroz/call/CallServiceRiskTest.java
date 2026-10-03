@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -256,6 +257,113 @@ class CallServiceRiskTest {
         assertThat(last.stages()).containsExactly(StageId.AUTHORITY_CLAIM);
         assertThat(call.hits()).hasSize(2);
         assertThat(alerts()).isEmpty();
+    }
+
+    // "Don't count this stage" from the family: the one allowed way for the level to drop (DET-05 exception).
+
+    private void reachHigh() {
+        say("Mówi policja. Nikomu nie mów.");
+        say("Proszę wypłacić gotówkę.");
+        assertThat(call.level()).isEqualTo(RiskLevel.HIGH);
+    }
+
+    @Test
+    void ignoringAStageLowersTheLevelAndPublishesRiskUpdate() {
+        reachHigh();
+        int before = riskUpdates().size();
+
+        boolean applied = service.ignoreStages(call.callId(), Set.of(StageId.MONEY_REQUEST));
+
+        assertThat(applied).isTrue();
+        assertThat(call.level()).isEqualTo(RiskLevel.MEDIUM);
+        assertThat(riskUpdates()).hasSize(before + 1);
+        RiskUpdate update = riskUpdates().get(before);
+        assertThat(update.previousLevel()).isEqualTo(RiskLevel.HIGH);
+        assertThat(update.level()).isEqualTo(RiskLevel.MEDIUM);
+        assertThat(update.stages()).containsExactlyInAnyOrder(StageId.AUTHORITY_CLAIM, StageId.SECRECY_DEMAND);
+        assertThat(update.warningSigns()).isEqualTo(2);
+        assertThat(call.ignoredStages()).containsExactly(StageId.MONEY_REQUEST);
+    }
+
+    @Test
+    void ignoringStagesCanDropTheLevelAllTheWayToLow() {
+        reachHigh();
+
+        service.ignoreStages(call.callId(), Set.of(StageId.MONEY_REQUEST, StageId.SECRECY_DEMAND));
+
+        assertThat(call.level()).isEqualTo(RiskLevel.LOW);
+    }
+
+    @Test
+    void alertsAlreadyRaisedAreKeptWhenStagesAreIgnored() {
+        reachHigh();
+        List<Alert> before = call.alerts();
+
+        service.ignoreStages(call.callId(), Set.of(StageId.MONEY_REQUEST));
+
+        assertThat(call.alerts()).isEqualTo(before);
+        assertThat(alerts()).hasSize(2);
+    }
+
+    @Test
+    void ignoredStagesStayIgnoredForLaterHitsOfTheSameCall() {
+        reachHigh();
+        service.ignoreStages(call.callId(), Set.of(StageId.MONEY_REQUEST));
+
+        say("Przelew na moje konto, proszę.");
+
+        assertThat(call.level()).isEqualTo(RiskLevel.MEDIUM);
+        assertThat(riskUpdates().get(riskUpdates().size() - 1).stages())
+                .doesNotContain(StageId.MONEY_REQUEST);
+    }
+
+    @Test
+    void levelRisingAgainAfterAnIgnoreDoesNotRaiseASecondAlertForThatLevel() {
+        reachHigh();
+        service.ignoreStages(call.callId(), Set.of(StageId.MONEY_REQUEST));
+        assertThat(alerts()).hasSize(2);
+
+        say("Kod BLIK proszę podać.");
+
+        assertThat(call.level()).isEqualTo(RiskLevel.HIGH);
+        assertThat(alerts()).hasSize(2);
+    }
+
+    @Test
+    void ignoringAnAlreadyIgnoredStageChangesNothingAndPublishesNothing() {
+        reachHigh();
+        service.ignoreStages(call.callId(), Set.of(StageId.MONEY_REQUEST));
+        int before = riskUpdates().size();
+
+        assertThat(service.ignoreStages(call.callId(), Set.of(StageId.MONEY_REQUEST))).isTrue();
+
+        assertThat(riskUpdates()).hasSize(before);
+    }
+
+    @Test
+    void ignoringStagesOfAnotherOrFinishedCallDoesNothing() {
+        reachHigh();
+        int before = riskUpdates().size();
+
+        assertThat(service.ignoreStages("other-call", Set.of(StageId.MONEY_REQUEST))).isFalse();
+        service.end();
+        assertThat(service.ignoreStages(call.callId(), Set.of(StageId.MONEY_REQUEST))).isFalse();
+
+        assertThat(riskUpdates()).hasSize(before);
+        assertThat(call.level()).isEqualTo(RiskLevel.HIGH);
+    }
+
+    @Test
+    void liveAlertsAreThoseOfTheActiveCall() {
+        assertThat(service.alerts()).isEmpty();
+
+        say("Mówi policja. Nikomu nie mów.");
+
+        assertThat(service.alerts()).containsExactlyElementsOf(call.alerts()).hasSize(1);
+
+        service.end();
+
+        assertThat(service.alerts()).isEmpty();
     }
 
     @Test

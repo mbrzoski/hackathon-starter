@@ -22,3 +22,6 @@ Thumbs.db
 
 ### Local SQLite database (alert excerpts) ###
 *.db
+
+### Evaluation labels written at runtime ###
+backend/data/

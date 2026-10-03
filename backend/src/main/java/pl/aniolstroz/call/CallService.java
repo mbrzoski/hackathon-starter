@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import pl.aniolstroz.alerts.AlertFactory;
+import pl.aniolstroz.alerts.LiveCallAccess;
 import pl.aniolstroz.contracts.Alert;
 import pl.aniolstroz.contracts.CallEnded;
 import pl.aniolstroz.contracts.CallStarted;
@@ -40,7 +41,7 @@ import pl.aniolstroz.risk.SensitivitySource;
  * never logged.
  */
 @Service
-public class CallService {
+public class CallService implements LiveCallAccess {
 
     private static final Logger log = LoggerFactory.getLogger(CallService.class);
 
@@ -181,22 +182,73 @@ public class CallService {
         if (!changed) {
             return;
         }
-        List<StageHit> all = call.hits();
-        RiskAssessment assessment = RiskEngine.computeLevel(all, sensitivity.current());
+        List<StageHit> considered = withoutIgnoredStages(call);
+        RiskAssessment assessment = RiskEngine.computeLevel(considered, sensitivity.current());
         RiskLevel previous = call.level();
         RiskLevel level = assessment.level().compareTo(previous) > 0 ? assessment.level() : previous;
         call.setLevel(level);
 
-        List<StageHit> counted = RiskEngine.countedHits(all);
-        Set<StageId> stages = RiskEngine.stagesOf(counted);
-        eventBus.publish(new RiskUpdateEvent(call.mode(), clock.instant(),
-                new RiskUpdate(call.callId(), level, previous, List.copyOf(stages), stages.size())));
+        List<StageHit> counted = RiskEngine.countedHits(considered);
+        publishRiskUpdate(call, level, previous, counted);
 
-        if (level.compareTo(previous) > 0 && level.compareTo(RiskLevel.MEDIUM) >= 0) {
+        // One alert per level and call, also when the level fell (ignored stage) and rises again.
+        if (level.compareTo(previous) > 0 && level.compareTo(RiskLevel.MEDIUM) >= 0 && !call.hasAlertAt(level)) {
             Alert alert = alertFactory.create(call.callId(), call.mode(), level, counted, assessment.triggeredBy());
             call.recordAlert(alert);
             eventBus.publish(new AlertCreatedEvent(call.mode(), clock.instant(), alert));
         }
+    }
+
+    /** Alerts of the active call, for the decision endpoints. Empty if no call is active. */
+    @Override
+    public List<Alert> alerts() {
+        return active().map(CallState::alerts).orElse(List.of());
+    }
+
+    /**
+     * The family's "don't count this stage": stops counting the stages for this call only, recomputes the level
+     * without them and publishes risk.update.
+     *
+     * <p>This is the one exception to DET-05 (the level only grows) besides a change of sensitivity: the recomputed
+     * level replaces the current one even if it is lower. Alerts already raised stay as they are. Stages ignored here
+     * stay ignored until the call ends.
+     *
+     * @return false if the call is not the active one
+     */
+    @Override
+    public boolean ignoreStages(String callId, Set<StageId> stages) {
+        CallState call = active().filter(c -> c.callId().equals(callId)).orElse(null);
+        if (call == null) {
+            return false;
+        }
+        call.lock().lock();
+        try {
+            if (call.isEnded()) {
+                return false;
+            }
+            if (!call.addIgnoredStages(stages)) {
+                return true;
+            }
+            List<StageHit> considered = withoutIgnoredStages(call);
+            RiskLevel previous = call.level();
+            RiskLevel level = RiskEngine.computeLevel(considered, sensitivity.current()).level();
+            call.setLevel(level);
+            publishRiskUpdate(call, level, previous, RiskEngine.countedHits(considered));
+            return true;
+        } finally {
+            call.lock().unlock();
+        }
+    }
+
+    private static List<StageHit> withoutIgnoredStages(CallState call) {
+        Set<StageId> ignored = call.ignoredStages();
+        return call.hits().stream().filter(h -> !ignored.contains(h.stage())).toList();
+    }
+
+    private void publishRiskUpdate(CallState call, RiskLevel level, RiskLevel previous, List<StageHit> counted) {
+        Set<StageId> stages = RiskEngine.stagesOf(counted);
+        eventBus.publish(new RiskUpdateEvent(call.mode(), clock.instant(),
+                new RiskUpdate(call.callId(), level, previous, List.copyOf(stages), stages.size())));
     }
 
     /** Caller holds the slot lock. A failing hook must not keep the call alive or hide that the call ended. */

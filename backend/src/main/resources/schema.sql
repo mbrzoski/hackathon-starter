@@ -23,3 +23,17 @@ CREATE TABLE IF NOT EXISTS alert_segments (
     cited      INTEGER NOT NULL,
     PRIMARY KEY (alert_id, seg_id)
 );
+
+-- Decisions of people about an alert. An alert can have several. No foreign key: the alert of an active call is
+-- decided before it is written to alerts (which happens when the call ends).
+CREATE TABLE IF NOT EXISTS decisions (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    alert_id       TEXT NOT NULL,
+    actor          TEXT NOT NULL,
+    decision       TEXT NOT NULL,
+    decided_at     TEXT NOT NULL,
+    mode           TEXT NOT NULL,
+    ignored_stages TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_decisions_alert ON decisions (alert_id);
