@@ -38,9 +38,21 @@ public record AppProperties(
     public record Stt(
             @NotNull @DefaultValue("vosk") Provider provider,
             @Valid @NotNull @DefaultValue Vosk vosk,
-            @Valid @NotNull @DefaultValue Silence silence) {
+            @Valid @NotNull @DefaultValue Silence silence,
+            @Valid @NotNull @DefaultValue Call call) {
 
         public enum Provider { VOSK, FAKE }
+
+        /**
+         * When a LIVE call begins and ends on an armed /ws/audio session. A frame is speech when its RMS (of 32768) is at
+         * least {@code speechRms}; {@code speechFrames} speech frames in a row open a call, and {@code silenceMs} without
+         * speech end it (env APP_STT_CALL_SPEECH_RMS, APP_STT_CALL_SPEECH_FRAMES, APP_STT_CALL_SILENCE_MS).
+         */
+        public record Call(
+                @Positive @DefaultValue("10000") long silenceMs,
+                @Min(0) @DefaultValue("300") int speechRms,
+                @Positive @DefaultValue("3") int speechFrames) {
+        }
 
         /**
          * OBS-02: no frames, or only flat ones, for {@code timeoutMs} (10 s) mean the audio is lost; the check runs

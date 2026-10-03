@@ -303,7 +303,7 @@ components:
   schemas:
     AudioControl:
       title: AudioControl
-      description: "Control message on /ws/audio (text frame). start opens a LIVE call, stop ends it, pause drops the audio until resume."
+      description: "Control message on /ws/audio (text frame). start arms the session: a LIVE call opens when speech is heard and ends after 10 s without speech (the session stays armed), stop ends the session and its call, pause drops the audio until resume."
       type: object
       additionalProperties: false
       required:

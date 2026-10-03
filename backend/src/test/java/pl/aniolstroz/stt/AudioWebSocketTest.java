@@ -120,8 +120,18 @@ class AudioWebSocketTest {
 
         void sendFrames(int count) throws Exception {
             for (int i = 0; i < count; i++) {
-                session.sendMessage(new BinaryMessage(new byte[3200]));
+                session.sendMessage(new BinaryMessage(speechFrame()));
             }
+        }
+
+        /** Sound loud enough to count as speech (a constant 1000 on every sample). */
+        static byte[] speechFrame() {
+            byte[] frame = new byte[3200];
+            for (int i = 0; i < frame.length; i += 2) {
+                frame[i] = (byte) 0xE8;
+                frame[i + 1] = 0x03;
+            }
+            return frame;
         }
 
         CloseStatus awaitClose() throws Exception {
@@ -202,15 +212,15 @@ class AudioWebSocketTest {
         Client audio = connect("/ws/audio");
 
         audio.send("{\"type\":\"start\"}");
+        events.awaitEvent(e -> isStatus(e, "stt", "ok"));
+        events.awaitEvent(e -> isStatus(e, "audio", "ok"));
+        assertThat(calls.active()).isEmpty(); // armed, but nobody speaks yet: no call
+        audio.sendFrames(4);
 
         JsonNode started = events.awaitEvent(e -> isType(e, "call.started"));
         assertThat(started.get("mode").asText()).isEqualTo("LIVE");
-        events.awaitEvent(e -> isStatus(e, "stt", "ok"));
-        events.awaitEvent(e -> isStatus(e, "audio", "ok"));
         assertThat(calls.active()).isPresent();
         assertThat(calls.active().get().mode()).isEqualTo(Mode.LIVE);
-
-        audio.sendFrames(4);
 
         JsonNode interim = events.awaitEvent(e -> isType(e, "transcript.segment"));
         assertThat(interim.at("/payload/text").asText()).isEqualTo("dzień dobry");
@@ -237,11 +247,12 @@ class AudioWebSocketTest {
 
     @Test
     void pauseStopsAudioReachingTheRecognizerAndResumeRestoresIt() throws Exception {
-        FACTORY.script = List.of("pierwszy", "drugi", "trzeci");
+        FACTORY.script = List.of("pierwszy", "drugi", "trzeci", "czwarty", "piaty");
         FACTORY.framesPerUtterance = 1;
         Client events = watchEvents();
         Client audio = connect("/ws/audio");
         audio.send("{\"type\":\"start\"}");
+        audio.sendFrames(3); // speech opens the call
         events.awaitEvent(e -> isType(e, "call.started"));
 
         audio.send("{\"type\":\"pause\"}");
@@ -252,8 +263,10 @@ class AudioWebSocketTest {
         events.awaitEvent(e -> isStatus(e, "audio", "ok"));
         audio.sendFrames(1);
 
-        JsonNode segment = events.awaitEvent(e -> isType(e, "transcript.segment"));
-        assertThat(segment.at("/payload/text").asText()).isEqualTo("pierwszy");
+        // The three frames that opened the call gave the first three utterances; the dropped ones gave nothing.
+        events.awaitEvent(e -> isType(e, "transcript.segment") && "czwarty".equals(e.at("/payload/text").asText()));
+        Thread.sleep(300);
+        assertThat(events.events).noneMatch(e -> "piaty".equals(e.at("/payload/text").asText()));
     }
 
     @Test
@@ -261,6 +274,7 @@ class AudioWebSocketTest {
         Client events = watchEvents();
         Client audio = connect("/ws/audio");
         audio.send("{\"type\":\"start\"}");
+        audio.sendFrames(3); // speech opens the call
         events.awaitEvent(e -> isType(e, "call.started"));
 
         audio.session.close();
@@ -290,6 +304,8 @@ class AudioWebSocketTest {
         Client audio = connect("/ws/audio");
         audio.send("{\"type\":\"start\"}");
         events.awaitEvent(e -> isStatus(e, "audio", "ok"));
+        audio.sendFrames(3);
+        events.awaitEvent(e -> isType(e, "call.started"));
 
         audio.session.close(); // no stop: the tablet lost the network, the page was closed
 
@@ -305,6 +321,8 @@ class AudioWebSocketTest {
         Client audio = connect("/ws/audio");
         audio.send("{\"type\":\"start\"}");
         events.awaitEvent(e -> isStatus(e, "audio", "ok"));
+        audio.sendFrames(3);
+        events.awaitEvent(e -> isType(e, "call.started"));
 
         audio.send("{\"type\":\"stop\"}");
 
@@ -330,8 +348,8 @@ class AudioWebSocketTest {
         Client events = watchEvents();
         Client audio = connect("/ws/audio");
         audio.send("{\"type\":\"start\"}");
+        audio.sendFrames(3); // speech opens the call
         events.awaitEvent(e -> isType(e, "call.started"));
-        events.awaitEvent(e -> isStatus(e, "audio", "ok"));
 
         protection.set(false);
 
@@ -382,6 +400,7 @@ class AudioWebSocketTest {
     void aSecondStartWhileACallIsActiveIsRejectedInPolish() throws Exception {
         Client first = connect("/ws/audio");
         first.send("{\"type\":\"start\"}");
+        first.sendFrames(3); // speech opens the call
         await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> assertThat(calls.active()).isPresent());
         String callId = calls.active().get().callId();
         Client second = connect("/ws/audio");
@@ -426,6 +445,7 @@ class AudioWebSocketTest {
     void messagesOver64KbAreRefusedByTheContainer() throws Exception {
         Client audio = connect("/ws/audio");
         audio.send("{\"type\":\"start\"}");
+        audio.sendFrames(3); // speech opens the call
         await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> assertThat(calls.active()).isPresent());
 
         audio.session.sendMessage(new BinaryMessage(new byte[70 * 1024]));

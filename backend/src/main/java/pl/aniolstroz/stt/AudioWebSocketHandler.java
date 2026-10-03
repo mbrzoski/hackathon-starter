@@ -8,10 +8,13 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -38,8 +41,11 @@ import pl.aniolstroz.settings.ProtectionService;
 
 /**
  * /ws/audio: the senior device sends binary frames (PCM 16 kHz, mono, 16-bit little endian, 3200 bytes = 100 ms) and
- * JSON control messages {@code {"type": "start" | "stop" | "pause" | "resume"}}. {@code start} opens a LIVE call and
- * starts local recognition; {@code stop}, a closed socket or a transport error end it and release the recognizer.
+ * JSON control messages {@code {"type": "start" | "stop" | "pause" | "resume"}}. {@code start} arms the session: the
+ * device listens, but a LIVE call (and local recognition) only opens when speech is heard, and ends after
+ * {@code app.stt.call.silence-ms} (10 s) without speech; the session stays armed for the next call. {@code stop}, a
+ * closed socket or a transport error end the call and release the recognizer. The half second before speech is kept in
+ * memory only, so the first words reach the recognizer too (AUD-02).
  *
  * <p>Refusals close the socket with a Polish reason: 1008 without consent (AUD-07), when the caretaker switched
  * protection off, or when a call is already active (BE-04); 1011 when speech recognition cannot start. Audio, its
@@ -72,6 +78,9 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
     private final Executor executor;
     private final ObjectReader controlReader;
     private final Duration silenceTimeout;
+    private final Duration callSilence;
+    private final double speechRms;
+    private final int speechFrames;
     private final Map<String, LiveAudio> sessions = new ConcurrentHashMap<>();
 
     AudioWebSocketHandler(CallService calls, SttProviderFactory factory, StatusPublisher status,
@@ -88,22 +97,34 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
         // Strict, like the schema AudioControl (additionalProperties: false, CON-04).
         this.controlReader = mapper.readerFor(AudioControl.class).with(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         this.silenceTimeout = Duration.ofMillis(properties.stt().silence().timeoutMs());
+        this.callSilence = Duration.ofMillis(properties.stt().call().silenceMs());
+        this.speechRms = properties.stt().call().speechRms();
+        this.speechFrames = properties.stt().call().speechFrames();
     }
 
-    /** One connection with a running call. */
+    /** Frames kept before speech opens a call (500 ms), so the first words are not lost. Memory only (AUD-02). */
+    static final int PRE_ROLL_FRAMES = 5;
+
+    /** One armed connection; {@code callId} and {@code supervisor} are set while a call runs (guarded by lock). */
     private static final class LiveAudio {
         final WebSocketSession session;
-        final String callId;
-        final SttSupervisor supervisor;
         final SilenceWatch silence;
+        final ReentrantLock lock = new ReentrantLock();
+        final ArrayDeque<byte[]> preRoll = new ArrayDeque<>();
         volatile boolean paused;
+        String callId;
+        SttSupervisor supervisor;
+        int speechRun;
+        Instant lastSpeechAt;
 
-        LiveAudio(WebSocketSession session, String callId, SttSupervisor supervisor, SilenceWatch silence) {
+        LiveAudio(WebSocketSession session, SilenceWatch silence) {
             this.session = session;
-            this.callId = callId;
-            this.supervisor = supervisor;
             this.silence = silence;
         }
+    }
+
+    /** A running call taken off its session, to be stopped outside the lock. */
+    private record RunningCall(String callId, SttSupervisor supervisor) {
     }
 
     @Override
@@ -141,6 +162,12 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
                 if (live == null) {
                     reject(session, CloseStatus.POLICY_VIOLATION, NOT_STARTED);
                 } else if (live.paused) {
+                    live.lock.lock();
+                    try {
+                        live.lastSpeechAt = clock.instant(); // a pause is not silence of the call either
+                    } finally {
+                        live.lock.unlock();
+                    }
                     live.paused = false;
                     live.silence.resume();
                     status.publish(pl.aniolstroz.contracts.Component.AUDIO, ComponentState.OK, LISTENING);
@@ -165,18 +192,129 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
         if (live.silence.onFrame(pcm) == SilenceWatch.Change.RECOVERED) {
             status.publish(pl.aniolstroz.contracts.Component.AUDIO, ComponentState.OK, LISTENING);
         }
-        live.supervisor.write(pcm);
+        boolean speech = rms(pcm) >= speechRms;
+        SttSupervisor target;
+        List<byte[]> toWrite;
+        live.lock.lock();
+        try {
+            if (live.supervisor != null) {
+                if (speech) {
+                    live.lastSpeechAt = clock.instant();
+                }
+                target = live.supervisor;
+                toWrite = List.of(pcm);
+            } else {
+                live.preRoll.addLast(pcm);
+                if (live.preRoll.size() > PRE_ROLL_FRAMES) {
+                    live.preRoll.removeFirst();
+                }
+                live.speechRun = speech ? live.speechRun + 1 : 0;
+                if (live.speechRun < speechFrames || !openCall(live)) {
+                    return;
+                }
+                target = live.supervisor;
+                toWrite = List.copyOf(live.preRoll);
+                live.preRoll.clear();
+                live.speechRun = 0;
+            }
+        } finally {
+            live.lock.unlock();
+        }
+        toWrite.forEach(target::write);
+    }
+
+    /**
+     * Speech on an armed session: opens a LIVE call and starts recognition. False when no call could open (another
+     * call is running, for example a demo), so the session stays armed and tries again on the next speech. Caller
+     * holds the session lock.
+     */
+    private boolean openCall(LiveAudio live) {
+        CallState call;
+        try {
+            call = calls.start(Mode.LIVE);
+        } catch (CallAlreadyActiveException e) {
+            live.speechRun = 0;
+            return false;
+        }
+        String callId = call.callId();
+        var supervisor = new SttSupervisor(factory, segment -> forward(callId, segment), status, clock, retries,
+                executor);
+        try {
+            supervisor.start();
+        } catch (RuntimeException | Error e) {
+            log.error("Speech recognition did not start: {}", e.getClass().getName());
+            status.publish(pl.aniolstroz.contracts.Component.STT, ComponentState.DOWN, SttSupervisor.DOWN);
+            calls.end(callId);
+            live.speechRun = 0;
+            return false;
+        }
+        live.callId = callId;
+        live.supervisor = supervisor;
+        live.lastSpeechAt = clock.instant();
+        return true;
+    }
+
+    /** Takes the running call off the session, if any. The caller stops it outside the lock. */
+    private static RunningCall takeCall(LiveAudio live) {
+        live.lock.lock();
+        try {
+            if (live.supervisor == null) {
+                return null;
+            }
+            var running = new RunningCall(live.callId, live.supervisor);
+            live.callId = null;
+            live.supervisor = null;
+            live.speechRun = 0;
+            live.preRoll.clear();
+            return running;
+        } finally {
+            live.lock.unlock();
+        }
+    }
+
+    /** Stops recognition, then ends the call, so the last segments still belong to it. */
+    private void endCall(RunningCall running) {
+        try {
+            running.supervisor().stop();
+        } finally {
+            calls.end(running.callId());
+        }
+    }
+
+    /** RMS of 16-bit little endian samples, in 0..32768. Only a number is kept, never the audio (AUD-02). */
+    static double rms(byte[] pcm) {
+        long sum = 0;
+        int count = pcm.length / 2;
+        for (int i = 0; i + 1 < pcm.length; i += 2) {
+            int sample = (short) ((pcm[i] & 0xFF) | (pcm[i + 1] << 8));
+            sum += (long) sample * sample;
+        }
+        return count == 0 ? 0 : Math.sqrt((double) sum / count);
     }
 
     /**
      * OBS-02: every few seconds, checks that sound still arrives. A stream without frames, or with only flat ones,
-     * for the whole timeout makes {@code audio} down, so a muted microphone never shows "Ochrona działa".
+     * for the whole timeout makes {@code audio} down, so a muted microphone never shows "Ochrona działa". A call
+     * without speech for {@code app.stt.call.silence-ms} ends; the session stays armed (a pause does not count).
      */
     @Scheduled(fixedDelayString = "${app.stt.silence.check-interval-ms:1000}")
     void checkSilence() {
         for (LiveAudio live : sessions.values()) {
             if (live.silence.check() == SilenceWatch.Change.SILENT) {
                 status.publish(pl.aniolstroz.contracts.Component.AUDIO, ComponentState.DOWN, NO_SOUND);
+            }
+            RunningCall quiet = null;
+            live.lock.lock();
+            try {
+                if (live.supervisor != null && !live.paused
+                        && Duration.between(live.lastSpeechAt, clock.instant()).compareTo(callSilence) >= 0) {
+                    quiet = takeCall(live);
+                }
+            } finally {
+                live.lock.unlock();
+            }
+            if (quiet != null) {
+                endCall(quiet);
             }
         }
     }
@@ -197,33 +335,17 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
         try {
             factory.preflight();
         } catch (SttUnavailableException e) {
-            // No call is created, but the family must see that protection does not work (rule 7).
+            // No call can open, but the family must see that protection does not work (rule 7).
             status.publish(pl.aniolstroz.contracts.Component.STT, ComponentState.DOWN, e.getMessage());
             reject(session, CloseStatus.SERVER_ERROR, e.getMessage());
             return;
         }
-        CallState call;
-        try {
-            call = calls.start(Mode.LIVE);
-        } catch (CallAlreadyActiveException e) {
+        // One listening device at a time, and none while another call (for example a demo) runs (BE-04).
+        if (!sessions.isEmpty() || calls.active().isPresent()) {
             reject(session, CloseStatus.POLICY_VIOLATION, CALL_ACTIVE);
             return;
         }
-        String callId = call.callId();
-        var supervisor = new SttSupervisor(factory, segment -> forward(callId, segment), status, clock, retries,
-                executor);
-        try {
-            supervisor.start();
-        } catch (RuntimeException | Error e) {
-            log.error("Speech recognition did not start: {}", e.getClass().getName());
-            status.publish(pl.aniolstroz.contracts.Component.STT, ComponentState.DOWN,
-                    SttSupervisor.DOWN);
-            calls.end(callId);
-            reject(session, CloseStatus.SERVER_ERROR, "Nie udało się uruchomić rozpoznawania mowy");
-            return;
-        }
-        sessions.put(session.getId(),
-                new LiveAudio(session, callId, supervisor, new SilenceWatch(clock, silenceTimeout)));
+        sessions.put(session.getId(), new LiveAudio(session, new SilenceWatch(clock, silenceTimeout)));
         status.publish(pl.aniolstroz.contracts.Component.STT, ComponentState.OK, RUNNING);
         status.publish(pl.aniolstroz.contracts.Component.AUDIO, ComponentState.OK, LISTENING);
     }
@@ -251,10 +373,12 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
         if (live == null) {
             return;
         }
+        RunningCall running = takeCall(live);
         try {
-            live.supervisor.stop();
+            if (running != null) {
+                endCall(running);
+            }
         } finally {
-            calls.end(live.callId);
             if (lost) {
                 status.publish(pl.aniolstroz.contracts.Component.AUDIO, ComponentState.DOWN, CONNECTION_LOST);
             } else if (live.paused) {

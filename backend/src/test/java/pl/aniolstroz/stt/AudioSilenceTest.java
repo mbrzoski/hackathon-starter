@@ -24,7 +24,8 @@ import pl.aniolstroz.call.CallService;
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {"app.events.heartbeat-interval-ms=3600000", "app.stt.provider=fake",
-                "app.stt.silence.timeout-ms=600", "app.stt.silence.check-interval-ms=50"})
+                "app.stt.silence.timeout-ms=600", "app.stt.silence.check-interval-ms=50",
+                "app.stt.call.silence-ms=800"})
 class AudioSilenceTest {
 
     private static final class Client extends AbstractWebSocketHandler {
@@ -126,5 +127,61 @@ class AudioSilenceTest {
 
         assertThat(events.events).noneMatch(e -> "audio".equals(e.at("/payload/component").asText())
                 && "down".equals(e.at("/payload/state").asText()));
+    }
+
+    private static byte[] speechFrame() {
+        byte[] frame = new byte[3200];
+        for (int i = 0; i < frame.length; i += 2) {
+            frame[i] = (byte) 0xE8;
+            frame[i + 1] = 0x03;
+        }
+        return frame;
+    }
+
+    private static boolean isType(JsonNode event, String type) {
+        return type.equals(event.get("type").asText());
+    }
+
+    private static JsonNode awaitType(Client events, String type) throws Exception {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        while (System.nanoTime() < deadline) {
+            JsonNode e = events.events.poll(100, TimeUnit.MILLISECONDS);
+            if (e != null && isType(e, type)) {
+                return e;
+            }
+        }
+        throw new AssertionError(type + " did not arrive within 5 s");
+    }
+
+    @Test
+    void aCallOpensOnSpeechEndsAfterSilenceAndTheSessionStaysArmed() throws Exception {
+        Client events = connect("/ws/events?role=family");
+        Thread.sleep(300);
+        Client audio = connect("/ws/audio");
+        audio.session.sendMessage(new TextMessage("{\"type\":\"start\"}"));
+        events.awaitStatus("audio", "ok");
+        audio.session.sendMessage(new BinaryMessage(new byte[3200]));
+        assertThat(calls.active()).isEmpty(); // listening is not a call
+
+        for (int i = 0; i < 4; i++) {
+            audio.session.sendMessage(new BinaryMessage(speechFrame()));
+        }
+        awaitType(events, "call.started");
+
+        // Sound that is not speech (hiss, a hum) does not keep the call open: no speech for silence-ms ends it.
+        for (int i = 0; i < 12; i++) {
+            audio.session.sendMessage(new BinaryMessage(loudFrame()));
+            Thread.sleep(100);
+        }
+        JsonNode ended = awaitType(events, "call.ended");
+        assertThat(ended.at("/payload/hadAlert").asBoolean()).isFalse();
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> assertThat(calls.active()).isEmpty());
+        assertThat(audio.session.isOpen()).isTrue();
+
+        // Still armed: the next speech opens a new call.
+        for (int i = 0; i < 4; i++) {
+            audio.session.sendMessage(new BinaryMessage(speechFrame()));
+        }
+        awaitType(events, "call.started");
     }
 }
