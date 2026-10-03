@@ -111,7 +111,8 @@
           },
           "defaultConfiguration": "senior",
           "options": {
-            "proxyConfig": "proxy.conf.json"
+            "proxyConfig": "proxy.conf.json",
+            "prebundle": false
           }
         },
         "test": {

@@ -1,16 +1,7 @@
 import { Component, computed, input, output } from '@angular/core';
 import { SeniorStatus } from '../../core/senior-status';
-import { Icon, IconName } from '../../shared/icon';
-
-type Tone = 'green' | 'yellow' | 'red';
-
-export const STATUS_VIEW: Record<SeniorStatus, { tone: Tone; icon: IconName; text: string }> = {
-  protected: { tone: 'green', icon: 'shield', text: 'Anioł Stróż słucha. Nic nie jest nagrywane.' },
-  basic: { tone: 'yellow', icon: 'warning', text: 'Podstawowa ochrona (bez AI)' },
-  paused: { tone: 'yellow', icon: 'pause', text: 'Ochrona wstrzymana' },
-  not_hearing: { tone: 'red', icon: 'mic-off', text: 'Nie słyszę rozmowy' },
-  offline: { tone: 'red', icon: 'cloud-off', text: 'Anioł Stróż jest offline' },
-};
+import { Icon } from '../../shared/icon';
+import { STATUS_VIEW } from '../../shared/status-view';
 
 /** One large sentence and icon for the resting state; the state is never colour only (WEB-11). */
 @Component({
