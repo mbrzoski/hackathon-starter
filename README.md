@@ -65,7 +65,9 @@ The script is idempotent and unpacks into `backend/models/` (git-ignored). Anoth
 
 The backend starts without the model; SCRIPTED and MOCK need none. A LIVE call without it is refused: `system.status` `stt` = `down` ("Brak modelu rozpoznawania mowy") and the `/ws/audio` session is closed with code 1011; no call is created.
 
-The senior device connects to `/ws/audio` and sends JSON text frames `{"type":"start"|"stop"|"pause"|"resume"}` and binary frames of PCM (16 kHz, mono, 16-bit little endian, 3200 bytes = 100 ms). Close codes: 1008 no consent or a call is already active, 1009 message over 64 KB, 1011 recognition cannot start.
+The senior device connects to `/ws/audio` and sends JSON text frames `{"type":"start"|"stop"|"pause"|"resume"}` and binary frames of PCM (16 kHz, mono, 16-bit little endian, 3200 bytes = 100 ms). Close codes: 1008 no consent or a call is already active, 1009 message over 64 KB, 1011 recognition cannot start. The messages are the schema `AudioControl` in `contracts/openapi.yaml` (`x-websockets`); an unknown command or field closes the session with 1008.
+
+The audio path never fails silently: if no sound arrives for 10 s (no frames, or only flat ones, as from a muted microphone) `system.status` `audio` goes `down`, and it returns to `ok` when sound comes back (`app.stt.silence.timeout-ms`, `app.stt.silence.check-interval-ms`); a connection that drops without `stop` ends the call and also sets `audio` to `down`. A pause is not silence.
 
 ### Trying it without a microphone: `SendWavTool`
 

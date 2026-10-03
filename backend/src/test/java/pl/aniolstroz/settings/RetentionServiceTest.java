@@ -48,7 +48,8 @@ class RetentionServiceTest {
                 new AppProperties.Events(List.of(), 1000, 1000, 1000), new AppProperties.Labels("x"),
                 new AppProperties.Audit(new AppProperties.Audit.Pricing(
                         java.math.BigDecimal.ONE, java.math.BigDecimal.ONE, java.math.BigDecimal.ONE, java.math.BigDecimal.ONE)),
-                new AppProperties.Stt(AppProperties.Stt.Provider.FAKE, new AppProperties.Stt.Vosk("m")),
+                new AppProperties.Stt(AppProperties.Stt.Provider.FAKE, new AppProperties.Stt.Vosk("m"),
+                        new AppProperties.Stt.Silence(10_000, 1_000)),
                 new AppProperties.Retention(30));
         return new RetentionService(jdbc, tx, props, bus, Clock.fixed(NOW, ZoneOffset.UTC));
     }
