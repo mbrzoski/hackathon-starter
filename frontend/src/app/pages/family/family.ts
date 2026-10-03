@@ -63,6 +63,18 @@ export class Family {
     });
   }
 
+  /**
+   * "Zakończ połączenie" on an alert of the ongoing call: ends the simulated phone call, so /listen stops listening
+   * and the call ends everywhere; a scripted demo call is stopped too. Nothing is dialled or cut (FE-09).
+   */
+  protected endCall(): void {
+    this.simulateError.set(null);
+    this.demo.setPhoneCall({ active: false }).subscribe({
+      error: (err: unknown) => this.simulateError.set(`Nie udało się zakończyć połączenia. ${problemDetailText(err)}`),
+    });
+    this.demo.stopReplay().subscribe({ error: () => undefined });
+  }
+
   /** Demo: switches the simulated incoming call on or off. It shows on /senior and makes /listen listen. */
   protected toggleCall(): void {
     this.simulating.set(true);

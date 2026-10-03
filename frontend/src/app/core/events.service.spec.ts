@@ -130,6 +130,29 @@ describe('EventsService', () => {
     expect(service.phoneCall()).toBeNull();
   });
 
+  it('is recording only while the phone call is on and the audio path came up after it began', () => {
+    const s = lastSocket();
+    const audio = (state: string, at: string) =>
+      event('system.status', { component: 'audio', state, message: 'x', at });
+    expect(service.recording()).toBe(false);
+
+    // An "ok" left over from an earlier session does not count.
+    s.serverSend(audio('ok', '2026-10-04T09:00:00Z'));
+    s.serverSend({ type: 'phone.call', mode: 'SCRIPTED', at: '2026-10-04T10:00:00Z', payload: { active: true, number: '+48 600 100 200' } });
+    expect(service.recording()).toBe(false);
+
+    s.serverSend(audio('ok', '2026-10-04T10:00:03Z'));
+    expect(service.recording()).toBe(true);
+
+    s.serverSend(audio('down', '2026-10-04T10:00:20Z'));
+    expect(service.recording()).toBe(false);
+
+    s.serverSend(audio('ok', '2026-10-04T10:00:30Z'));
+    expect(service.recording()).toBe(true);
+    s.serverSend({ type: 'phone.call', mode: 'SCRIPTED', at: '2026-10-04T10:01:00Z', payload: { active: false, number: '+48 600 100 200' } });
+    expect(service.recording()).toBe(false);
+  });
+
   it('rejects invalid messages with a console warning', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const s = lastSocket();

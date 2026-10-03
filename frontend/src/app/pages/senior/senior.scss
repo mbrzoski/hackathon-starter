@@ -41,3 +41,5 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 1
 
 .phone-call { flex: none; margin: 0; display: flex; align-items: center; gap: 12px; padding: 10px 16px;
   background: var(--primary); color: #fff; font-weight: 800; }
+.recording { flex: none; margin: 0; display: flex; align-items: center; gap: 12px; padding: 10px 16px;
+  background: var(--alarm-deep); color: #fff; font-weight: 800; }

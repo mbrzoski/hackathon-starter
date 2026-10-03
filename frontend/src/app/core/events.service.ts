@@ -17,6 +17,7 @@ import {
   RiskUpdateEvent,
   SystemStatus,
   SystemStatusComponentEnum,
+  SystemStatusStateEnum,
   SystemStatusEvent,
   TranscriptSegment,
   TranscriptSegmentEvent,
@@ -81,6 +82,8 @@ export class EventsService {
   private readonly _alerts = signal<Alert[]>([]);
   private readonly _decisions = signal<Decision[]>([]);
   private readonly _phoneCall = signal<PhoneCall | null>(null);
+  /** When the simulated phone call was switched on (the `at` of its event). */
+  private readonly _phoneCallAt = signal<string | null>(null);
 
   readonly connection = this._connection.asReadonly();
   readonly mode = this._mode.asReadonly();
@@ -92,6 +95,22 @@ export class EventsService {
   readonly decisions = this._decisions.asReadonly();
   /** The simulated incoming phone call (demo) while it is on, else null. */
   readonly phoneCall = this._phoneCall.asReadonly();
+  /**
+   * The listening device is streaming right now: the phone call is on and the backend reported the audio path ok
+   * after the call began (an older "ok" is left over from an earlier session). A lost, paused or silent stream is
+   * not "recording" (OBS-01).
+   */
+  readonly recording = computed(() => {
+    const call = this._phoneCall();
+    const since = this._phoneCallAt();
+    const audio = this._systemStatus().audio;
+    return (
+      !!call &&
+      !!since &&
+      audio?.state === SystemStatusStateEnum.ok &&
+      Date.parse(audio.at) >= Date.parse(since)
+    );
+  });
   readonly online = computed(() => this._connection() === 'open');
 
   private readonly validator = createEventValidator();
@@ -258,6 +277,7 @@ export class EventsService {
       case 'phone.call': {
         const call = (event as PhoneCallEvent).payload;
         this._phoneCall.set(call.active ? call : null);
+        this._phoneCallAt.set(call.active ? event.at : null);
         break;
       }
       case 'alert.decision':

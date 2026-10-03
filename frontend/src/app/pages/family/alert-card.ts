@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import {
   Decision,
   DecisionActorEnum,
@@ -11,6 +11,7 @@ import {
 import { TRIGGERED_BY_LABEL } from '../../core/call-view';
 import { DecisionOutbox } from '../../core/decision-outbox';
 import { SettingsStore } from '../../core/settings.store';
+import { Icon } from '../../shared/icon';
 import { RiskLevelChip } from '../../shared/risk-level-chip';
 import { formatClock } from '../../shared/time';
 import { DecisionBar } from './decision-bar';
@@ -34,7 +35,7 @@ const FAMILY_CHOICE: Record<DecisionDecisionEnum, string> = {
 /** One alert for the family: level in words (FE-07), evidence (FE-08), what the senior chose, and the decision bar. */
 @Component({
   selector: 'app-alert-card',
-  imports: [DecisionBar, RiskLevelChip, StageTimeline, TranscriptExcerpt],
+  imports: [DecisionBar, Icon, RiskLevelChip, StageTimeline, TranscriptExcerpt],
   templateUrl: './alert-card.html',
   styleUrl: './alert-card.scss',
 })
@@ -47,6 +48,8 @@ export class AlertCard {
   readonly segments = input<TranscriptSegment[]>([]);
   /** True while the alert's call is still ongoing: only then the backend accepts ignored stages (FF-14). */
   readonly live = input(false);
+  /** The family asks to end the ongoing call (the panel ends the simulated call and so the listening). */
+  readonly endCall = output<void>();
 
   protected readonly ignored = signal<ReadonlySet<StageId>>(new Set());
   /** Sent from this card, waiting for alert.decision from the backend. */
@@ -70,6 +73,8 @@ export class AlertCard {
     const d = this.familyDecision();
     return d ? `Rodzina: ${FAMILY_CHOICE[d.decision]}` : null;
   });
+  /** The family confirmed the scam (and the backend stored it): the card says what happens with the number. */
+  protected readonly scamConfirmed = computed(() => this.familyDecision()?.decision === DecisionDecisionEnum.confirmed_scam);
   protected readonly pending = computed(() => !!this.sent() && !this.familyDecision());
   protected readonly canIgnore = computed(() => this.live() && !this.familyDecision());
 

@@ -77,7 +77,7 @@ describe('Family', () => {
   let posted: { alertId: string; body: DecisionRequest }[];
   let notifier: { beep: ReturnType<typeof vi.fn> };
   let submit: () => Observable<unknown>;
-  let demo: { setPhoneCall: ReturnType<typeof vi.fn> };
+  let demo: { setPhoneCall: ReturnType<typeof vi.fn>; stopReplay: ReturnType<typeof vi.fn> };
   let config: { getSeniorConfig: ReturnType<typeof vi.fn>; setSeniorConfig: ReturnType<typeof vi.fn> };
 
   const el = (f: ComponentFixture<Family>) => f.nativeElement as HTMLElement;
@@ -98,7 +98,7 @@ describe('Family', () => {
     posted = [];
     submit = () => of({});
     notifier = { beep: vi.fn() };
-    demo = { setPhoneCall: vi.fn(() => of({})) };
+    demo = { setPhoneCall: vi.fn(() => of({})), stopReplay: vi.fn(() => of({})) };
     config = {
       getSeniorConfig: vi.fn(() => of({ familyPhone: '+48 602 000 222' })),
       setSeniorConfig: vi.fn((c: { familyPhone: string }) => of(c)),
@@ -407,6 +407,61 @@ describe('Family', () => {
       submit(fixture).click();
       await fixture.whenStable();
       expect(text(el(fixture).querySelector('.config [role="alert"]'))).toContain('Nie udało się zapisać');
+    });
+  });
+
+  describe('ending the call from an alert', () => {
+    const endButton = (f: ComponentFixture<Family>) => button(el(f), 'Zakończ połączenie');
+
+    it('is offered on the alert of the ongoing call only', async () => {
+      events.alerts.set([alert('live', T0, 'high', 'c1')]);
+      const fixture = await render();
+      expect(endButton(fixture)).toBeUndefined();
+
+      events.activeCall.set({ callId: 'c1', startedAt: T0, endedAt: null, hadAlert: true });
+      await fixture.whenStable();
+      expect(endButton(fixture)).toBeTruthy();
+
+      events.activeCall.set({ callId: 'c1', startedAt: T0, endedAt: T0, hadAlert: true });
+      await fixture.whenStable();
+      expect(endButton(fixture)).toBeUndefined();
+    });
+
+    it('ends the simulated phone call, so /listen stops listening', async () => {
+      events.alerts.set([alert('live', T0, 'high', 'c1')]);
+      events.activeCall.set({ callId: 'c1', startedAt: T0, endedAt: null, hadAlert: true });
+      const fixture = await render();
+
+      endButton(fixture).click();
+      await fixture.whenStable();
+
+      expect(demo.setPhoneCall).toHaveBeenCalledWith({ active: false });
+      expect(demo.stopReplay).toHaveBeenCalled();
+    });
+  });
+
+  describe('confirming a scam', () => {
+    const MESSAGE =
+      'Numer został wysłany do bazy numerów podejrzanych. Jeśli masz więcej pytań, możesz także zgłosić sprawę na policję.';
+
+    it('tells what happens with the number once "Potwierdzam oszustwo" is stored', async () => {
+      events.alerts.set([alert('a1', T0)]);
+      const fixture = await render();
+      expect(text(el(fixture))).not.toContain('bazy numerów podejrzanych');
+
+      button(cards(fixture)[0], 'Potwierdzam oszustwo').click();
+      await fixture.whenStable();
+      events.decisions.set([{ alertId: 'a1', actor: 'family', decision: 'confirmed_scam', at: T0 } as Decision]);
+      await fixture.whenStable();
+
+      expect(text(cards(fixture)[0].querySelector('.confirmed'))).toBe(MESSAGE);
+    });
+
+    it('does not show it after other decisions', async () => {
+      events.alerts.set([alert('a1', T0)]);
+      events.decisions.set([{ alertId: 'a1', actor: 'family', decision: 'false_alarm', at: T0 } as Decision]);
+      const fixture = await render();
+      expect(cards(fixture)[0].querySelector('.confirmed')).toBeNull();
     });
   });
 });

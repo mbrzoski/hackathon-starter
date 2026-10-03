@@ -25,6 +25,7 @@ function fakeEvents() {
     alerts: signal<Alert[]>([]),
     decisions: signal<Decision[]>([]),
     phoneCall: signal<{ active: boolean; number: string } | null>(null),
+    recording: signal(false),
   };
 }
 
@@ -153,6 +154,19 @@ describe('Senior', () => {
       events.phoneCall.set(null);
       await fixture.whenStable();
       expect($(fixture, '.phone-call')).toBeNull();
+    });
+
+    it('says that recording is going on only while the listening device streams', async () => {
+      const fixture = await started();
+      expect($(fixture, '.recording')).toBeNull();
+
+      events.recording.set(true);
+      await fixture.whenStable();
+      expect($(fixture, '.recording[role="status"]')?.textContent).toContain('Trwa nagrywanie rozmowy.');
+
+      events.recording.set(false);
+      await fixture.whenStable();
+      expect($(fixture, '.recording')).toBeNull();
     });
 
     it('hides the transcript for the team until it is switched on', async () => {

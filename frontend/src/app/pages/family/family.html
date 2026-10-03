@@ -49,7 +49,7 @@
   }
 
   @for (item of feed.items(); track item.alert.alertId) {
-    <app-alert-card [item]="item" [segments]="segmentsFor(item.alert.callId)" [live]="isLive(item.alert.callId)" />
+    <app-alert-card [item]="item" [segments]="segmentsFor(item.alert.callId)" [live]="isLive(item.alert.callId)" (endCall)="endCall()" />
   } @empty {
     @if (feed.loading()) {
       <p class="note">Wczytuję alerty…</p>

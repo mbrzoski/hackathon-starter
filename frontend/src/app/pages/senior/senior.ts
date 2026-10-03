@@ -46,6 +46,12 @@ type View =
         <app-icon name="phone" [size]="36" /> Trwa połączenie telefoniczne z numerem {{ call.number }}
       </p>
     }
+    @if (events.recording()) {
+      <!-- The listening device streams the call to the backend. The sound itself is not stored (rule 4). -->
+      <p class="recording" role="status">
+        <app-icon name="mic" [size]="36" /> Trwa nagrywanie rozmowy. Dźwięk nie jest zapisywany.
+      </p>
+    }
     @if (!events.online() && (v.kind === 'alert' || v.kind === 'outcome' || v.kind === 'ended')) {
       <!-- FE-06: the warning stays on screen, but the senior must know that nothing new can arrive. -->
       <p class="offline" role="alert"><app-icon name="cloud-off" [size]="32" /> Anioł Stróż jest offline</p>
