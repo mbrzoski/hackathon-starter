@@ -1,0 +1,90 @@
+{
+  "scenarioId": "06-tv-background",
+  "title": "Telewizor o oszustwach w tle",
+  "description": "Senior rozmawia z koleżanką, a w tle lektor w telewizji opowiada o oszustwach „na policjanta”. Nie powinno być alertu, cytaty powinny trafić do tła.",
+  "mode": "SCRIPTED",
+  "source": "Syntetyczne, napisane przez zespół z pomocą Claude podczas HackYeah 2026 na podstawie publicznych opisów oszustw",
+  "expected": {
+    "maxLevel": "low",
+    "mustHitStages": [],
+    "mustNotHitStages": [
+      "AUTHORITY_CLAIM",
+      "URGENT_THREAT",
+      "SECRECY_DEMAND",
+      "MONEY_REQUEST",
+      "PAYMENT_CHANNEL"
+    ]
+  },
+  "segments": [
+    {
+      "speaker": "B",
+      "text": "Halo, Zosia? Cześć, to Krysia, dzwonię, czy wpadniesz jutro na kawę?",
+      "delayMs": 1800
+    },
+    {
+      "speaker": "A",
+      "text": "Krysia! Cześć! Wpadnę, wpadnę, tylko poczekaj, ściszę telewizor.",
+      "delayMs": 2200
+    },
+    {
+      "speaker": "unknown",
+      "text": "Uwaga seniorzy. Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi.",
+      "delayMs": 3000
+    },
+    {
+      "speaker": "A",
+      "text": "Jeszcze nie znalazłam pilota, poczekaj chwilę.",
+      "delayMs": 2000
+    },
+    {
+      "speaker": "unknown",
+      "text": "Przestępcy każą zachować rozmowę w tajemnicy i nikomu o niej nie mówić. To zawsze oszustwo.",
+      "delayMs": 3200
+    },
+    {
+      "speaker": "B",
+      "text": "Co oni tam gadają, w tym telewizorze?",
+      "delayMs": 1500
+    },
+    {
+      "speaker": "A",
+      "text": "A, program o tych oszustach, co dzwonią do starszych ludzi. Straszne rzeczy.",
+      "delayMs": 2400
+    },
+    {
+      "speaker": "unknown",
+      "text": "Nigdy nie podawaj kodu BLIK obcej osobie. Prawdziwy policjant nie żąda pieniędzy przez telefon.",
+      "delayMs": 3000
+    },
+    {
+      "speaker": "B",
+      "text": "No właśnie, mnie też kiedyś dzwonili, ale od razu się rozłączyłam.",
+      "delayMs": 2300
+    },
+    {
+      "speaker": "A",
+      "text": "Ja bym chyba też. Dobra, ściszyłam. Na którą jutro przyjść?",
+      "delayMs": 2100
+    },
+    {
+      "speaker": "B",
+      "text": "Na piętnastą, upiekłam sernik.",
+      "delayMs": 1500
+    },
+    {
+      "speaker": "A",
+      "text": "Sernik! To na pewno będę. Przyniosę herbatę.",
+      "delayMs": 1700
+    },
+    {
+      "speaker": "B",
+      "text": "No to do jutra, Zosiu.",
+      "delayMs": 1000
+    },
+    {
+      "speaker": "A",
+      "text": "Do jutra, Krysiu, pa pa.",
+      "delayMs": 1000
+    }
+  ]
+}

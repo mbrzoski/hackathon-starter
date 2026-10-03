@@ -17,7 +17,17 @@ public record Scenario(
         @NotNull String description,
         @NotNull Mode mode,
         String audioFile,
+        String source,
+        String sourceUrl,
+        @Valid Expected expected,
         @NotEmpty List<@Valid Segment> segments) {
+
+    /** Expected properties for the evaluation run, not scores. */
+    public record Expected(
+            @NotNull RiskLevel maxLevel,
+            @NotNull List<StageId> mustHitStages,
+            @NotNull List<StageId> mustNotHitStages) {
+    }
 
     public record Segment(
             @NotNull SpeakerLabel speaker,

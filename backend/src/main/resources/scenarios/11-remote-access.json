@@ -1,0 +1,87 @@
+{
+  "scenarioId": "11-remote-access",
+  "title": "Zdalny dostęp do komputera",
+  "description": "Rozmówca z „pomocy technicznej” prosi o zainstalowanie aplikacji do zdalnego sterowania, żeby „chronić konto”.",
+  "mode": "SCRIPTED",
+  "source": "Syntetyczne, napisane przez zespół z pomocą Claude podczas HackYeah 2026 na podstawie publicznych opisów oszustw",
+  "expected": {
+    "maxLevel": "high",
+    "mustHitStages": [
+      "AUTHORITY_CLAIM",
+      "REMOTE_ACCESS"
+    ],
+    "mustNotHitStages": []
+  },
+  "segments": [
+    {
+      "speaker": "A",
+      "text": "Dzień dobry, tu pomoc techniczna Banku Przykładowego. Rozmawiam z panią Irenką Testową?",
+      "delayMs": 2000
+    },
+    {
+      "speaker": "B",
+      "text": "Tak, to ja. Co się stało?",
+      "delayMs": 1400
+    },
+    {
+      "speaker": "A",
+      "text": "Wykryliśmy w pani komputerze wirusa, który podsłuchuje hasła do bankowości.",
+      "delayMs": 2700
+    },
+    {
+      "speaker": "B",
+      "text": "Wirusa? Ale ja mało co używam tego komputera, wnuk mi go zostawił.",
+      "delayMs": 2400
+    },
+    {
+      "speaker": "A",
+      "text": "To wystarczy. Proszę włączyć komputer, pomogę pani krok po kroku.",
+      "delayMs": 2400
+    },
+    {
+      "speaker": "B",
+      "text": "Dobrze, już włączam... on tak długo się ładuje. Poczeka pan?",
+      "delayMs": 3500
+    },
+    {
+      "speaker": "A",
+      "text": "Oczywiście. Proszę otworzyć przeglądarkę i wpisać adres, który podyktuję. To adres fikcyjny, przykład kropka test.",
+      "delayMs": 3300
+    },
+    {
+      "speaker": "B",
+      "text": "Wolniej, bo ja nie nadążam. Jak to się pisze?",
+      "delayMs": 2200
+    },
+    {
+      "speaker": "A",
+      "text": "Proszę pobrać program i zainstalować go, żebyśmy mogli zdalnie połączyć się z pani komputerem i go zabezpieczyć.",
+      "delayMs": 3400
+    },
+    {
+      "speaker": "B",
+      "text": "Zainstalować? A czy to bezpieczne? Wnuk mówił, żeby niczego nie ściągać.",
+      "delayMs": 2700
+    },
+    {
+      "speaker": "A",
+      "text": "To nasz oficjalny program do ochrony konta. Po zainstalowaniu poda mi pani dziewięciocyfrowy numer z ekranu.",
+      "delayMs": 3200
+    },
+    {
+      "speaker": "B",
+      "text": "Numer z ekranu... a po co panu ten numer?",
+      "delayMs": 2000
+    },
+    {
+      "speaker": "A",
+      "text": "Dzięki niemu zobaczę pani ekran i usunę wirusa. Proszę podać numer, a ja zrobię resztę.",
+      "delayMs": 3000
+    },
+    {
+      "speaker": "B",
+      "text": "No dobrze, już klikam. Jakieś okienko wyskoczyło.",
+      "delayMs": 2300
+    }
+  ]
+}

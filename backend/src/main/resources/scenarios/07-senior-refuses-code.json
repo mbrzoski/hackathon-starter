@@ -1,0 +1,81 @@
+{
+  "scenarioId": "07-senior-refuses-code",
+  "title": "Senior odmawia podania kodu",
+  "description": "Senior opowiada córce o wczorajszym podejrzanym telefonie i mówi, że żadnego kodu BLIK nie poda. Prośba o pieniądze nie pochodzi od rozmówcy.",
+  "mode": "SCRIPTED",
+  "source": "Syntetyczne, napisane przez zespół z pomocą Claude podczas HackYeah 2026 na podstawie publicznych opisów oszustw",
+  "expected": {
+    "maxLevel": "low",
+    "mustHitStages": [],
+    "mustNotHitStages": [
+      "MONEY_REQUEST"
+    ]
+  },
+  "segments": [
+    {
+      "speaker": "A",
+      "text": "Cześć mamo, jak się czujesz? Dzwonię na chwilę, jestem w pracy.",
+      "delayMs": 1600
+    },
+    {
+      "speaker": "B",
+      "text": "Dobrze, dobrze, córuś. Słuchaj, bo miałam wczoraj dziwny telefon.",
+      "delayMs": 2200
+    },
+    {
+      "speaker": "A",
+      "text": "Dziwny? Jaki dziwny?",
+      "delayMs": 1100
+    },
+    {
+      "speaker": "B",
+      "text": "Jakiś pan z banku dzwonił i chciał ode mnie kod. Ten, co się w telefonie wyświetla.",
+      "delayMs": 2900
+    },
+    {
+      "speaker": "A",
+      "text": "Mamo! I podałaś?",
+      "delayMs": 1300
+    },
+    {
+      "speaker": "B",
+      "text": "Ależ skąd. Powiedziałam, że ja żadnego kodu BLIK nie podam, bo ty mi tak kazałaś.",
+      "delayMs": 2800
+    },
+    {
+      "speaker": "A",
+      "text": "I dobrze zrobiłaś. A co on na to?",
+      "delayMs": 1800
+    },
+    {
+      "speaker": "B",
+      "text": "Dalej gadał, że to pilne, ale ja się rozłączyłam. Ręce mi się trzęsły.",
+      "delayMs": 2600
+    },
+    {
+      "speaker": "A",
+      "text": "Brawo mamo. Zapisałaś numer, z którego dzwonił?",
+      "delayMs": 2000
+    },
+    {
+      "speaker": "B",
+      "text": "Zapisałam na kartce przy telefonie. Jakieś cyfry, nie pamiętam.",
+      "delayMs": 2300
+    },
+    {
+      "speaker": "A",
+      "text": "To wieczorem wpadnę i zobaczymy, dobrze? Zgłosimy to.",
+      "delayMs": 2000
+    },
+    {
+      "speaker": "B",
+      "text": "Dobrze, przyjdź. Zrobię herbaty.",
+      "delayMs": 1400
+    },
+    {
+      "speaker": "A",
+      "text": "To do wieczora, mamo, ściskam.",
+      "delayMs": 1100
+    }
+  ]
+}

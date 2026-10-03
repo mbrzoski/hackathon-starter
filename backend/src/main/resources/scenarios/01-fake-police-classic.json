@@ -1,0 +1,100 @@
+{
+  "scenarioId": "01-fake-police-classic",
+  "title": "Klasyczny fałszywy policjant",
+  "description": "Rozmówca podaje się za policjanta, straszy, żąda dyskrecji, prosi o wypłatę gotówki i odbiór przez kuriera.",
+  "mode": "SCRIPTED",
+  "source": "Syntetyczne, napisane przez zespół z pomocą Claude podczas HackYeah 2026 na podstawie publicznych opisów oszustw",
+  "expected": {
+    "maxLevel": "high",
+    "mustHitStages": [
+      "AUTHORITY_CLAIM",
+      "URGENT_THREAT",
+      "SECRECY_DEMAND",
+      "MONEY_REQUEST",
+      "PAYMENT_CHANNEL"
+    ],
+    "mustNotHitStages": []
+  },
+  "segments": [
+    {
+      "speaker": "B",
+      "text": "Dzień dobry, czy rozmawiam z panią Zofią Testową?",
+      "delayMs": 1200
+    },
+    {
+      "speaker": "A",
+      "text": "Tak, tak, a kto mówi?",
+      "delayMs": 1500
+    },
+    {
+      "speaker": "B",
+      "text": "Mówi podkomisarz Jan Fikcyjny, policja, komenda numer zero zero zero. Dzwonię w ważnej sprawie.",
+      "delayMs": 2200
+    },
+    {
+      "speaker": "A",
+      "text": "Policja? A co się stało? Ja nic nie zrobiłam.",
+      "delayMs": 1800
+    },
+    {
+      "speaker": "B",
+      "text": "Pani nic, spokojnie. Ale wykryliśmy, że ktoś próbuje wyczyścić pani konto w banku. Mamy ich na oku.",
+      "delayMs": 2600
+    },
+    {
+      "speaker": "A",
+      "text": "Jezus Maria, jak to wyczyścić? Ale jak?",
+      "delayMs": 1400
+    },
+    {
+      "speaker": "B",
+      "text": "Muszę działać szybko, proszę słuchać. Oszuści są w banku, pracownik z nimi współpracuje, to dzieje się teraz, w tej chwili.",
+      "delayMs": 3000
+    },
+    {
+      "speaker": "A",
+      "text": "Ojej... a co ja mam robić? Zaraz, zaraz, trochę wolniej proszę.",
+      "delayMs": 2500
+    },
+    {
+      "speaker": "B",
+      "text": "Pani Zofio, o tej rozmowie nikomu pani nie mówi. Ani córce, ani sąsiadce, ani w banku. Inaczej akcja się nie uda.",
+      "delayMs": 3200
+    },
+    {
+      "speaker": "A",
+      "text": "Nawet córce? No ale... dobrze, nikomu. A co z moimi pieniędzmi?",
+      "delayMs": 2000
+    },
+    {
+      "speaker": "B",
+      "text": "Pieniądze trzeba zabezpieczyć. Ile ma pani na koncie? Proszę iść do banku i wypłacić wszystko, co pani ma, w gotówce.",
+      "delayMs": 3400
+    },
+    {
+      "speaker": "A",
+      "text": "Wszystko? Mam coś koło trzydziestu tysięcy... a bank dziś czynny do szesnastej.",
+      "delayMs": 2600
+    },
+    {
+      "speaker": "B",
+      "text": "No właśnie, to proszę się pospieszyć. Gotówkę włoży pani do koperty, a po odbiór przyjedzie nasz kurier, pan w cywilu.",
+      "delayMs": 3000
+    },
+    {
+      "speaker": "A",
+      "text": "Do koperty... A jak ja go poznam tego pana?",
+      "delayMs": 1700
+    },
+    {
+      "speaker": "B",
+      "text": "Poda hasło „Anioł”. Proszę o nic nie pytać pracowników banku, powiedzieć, że to remont mieszkania.",
+      "delayMs": 3100
+    },
+    {
+      "speaker": "A",
+      "text": "No dobrze, dobrze. Już się ubieram. Tylko niech pan nie odkłada słuchawki.",
+      "delayMs": 2200
+    }
+  ]
+}

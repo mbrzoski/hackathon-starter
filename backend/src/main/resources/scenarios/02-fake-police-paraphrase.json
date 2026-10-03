@@ -1,0 +1,100 @@
+{
+  "scenarioId": "02-fake-police-paraphrase",
+  "title": "Ten sam scenariusz, bez słów kluczowych",
+  "description": "Przebieg jak w scenariuszu 1, ale sformułowany omownie, bez słów ze słownika. Przypadek, w którym wartość daje AI.",
+  "mode": "SCRIPTED",
+  "source": "Syntetyczne, napisane przez zespół z pomocą Claude podczas HackYeah 2026 na podstawie publicznych opisów oszustw",
+  "expected": {
+    "maxLevel": "high",
+    "mustHitStages": [
+      "AUTHORITY_CLAIM",
+      "URGENT_THREAT",
+      "SECRECY_DEMAND",
+      "MONEY_REQUEST",
+      "PAYMENT_CHANNEL"
+    ],
+    "mustNotHitStages": []
+  },
+  "segments": [
+    {
+      "speaker": "A",
+      "text": "Dobry wieczór. Czy to pani Zofia Testowa?",
+      "delayMs": 1200
+    },
+    {
+      "speaker": "B",
+      "text": "Tak, słucham? Kto dzwoni?",
+      "delayMs": 1400
+    },
+    {
+      "speaker": "A",
+      "text": "Nazywam się Jan Fikcyjny, jestem funkcjonariuszem komendy numer zero zero zero, wydział do walki z przestępczością.",
+      "delayMs": 2400
+    },
+    {
+      "speaker": "B",
+      "text": "Funkcjonariuszem? Z komendy? Ale o co chodzi?",
+      "delayMs": 1700
+    },
+    {
+      "speaker": "A",
+      "text": "Ktoś właśnie próbuje opróżnić pani oszczędności. Ludzie z banku są w to zamieszani. Trwa to w tej minucie.",
+      "delayMs": 2800
+    },
+    {
+      "speaker": "B",
+      "text": "O Boże... Ale jak to, w tej minucie? Co ja mam zrobić?",
+      "delayMs": 1800
+    },
+    {
+      "speaker": "A",
+      "text": "Proszę nie panikować, ale nie ma czasu. Jeśli pani nie zareaguje, do jutra nic pani nie zostanie.",
+      "delayMs": 3000
+    },
+    {
+      "speaker": "B",
+      "text": "Nic nie zostanie? Ale ja te pieniądze zbierałam całe życie...",
+      "delayMs": 2300
+    },
+    {
+      "speaker": "A",
+      "text": "Dlatego ta rozmowa musi zostać tylko między nami. Córka, sąsiadka, pani z banku, nikt nie może wiedzieć.",
+      "delayMs": 3300
+    },
+    {
+      "speaker": "B",
+      "text": "Nikt? No... jak pan mówi. Ale co zrobić z oszczędnościami?",
+      "delayMs": 2100
+    },
+    {
+      "speaker": "A",
+      "text": "Trzeba je zabezpieczyć. Proszę dziś pójść do oddziału i zabrać z konta całą gotówkę, jaką pani ma.",
+      "delayMs": 3300
+    },
+    {
+      "speaker": "B",
+      "text": "Całą? To jakieś trzydzieści tysięcy. Oddział zamykają o szesnastej.",
+      "delayMs": 2400
+    },
+    {
+      "speaker": "A",
+      "text": "To proszę się pospieszyć. Pieniądze w kopercie, a po godzinie podjedzie nasz człowiek i je od pani odbierze.",
+      "delayMs": 3100
+    },
+    {
+      "speaker": "B",
+      "text": "Człowiek? Jaki człowiek? Jak go poznam?",
+      "delayMs": 1800
+    },
+    {
+      "speaker": "A",
+      "text": "Powie, że przyjechał od Anioła. W banku proszę mówić, że to na remont, i niczego więcej.",
+      "delayMs": 3000
+    },
+    {
+      "speaker": "B",
+      "text": "Dobrze, już się zbieram. Niech pan zostanie na linii.",
+      "delayMs": 2000
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "scenarioId": "12-callback-trap",
+  "title": "Pułapka z oddzwonieniem na 112",
+  "description": "Rozmówca każe nie odkładać słuchawki i zadzwonić pod 112, zostając na linii. Izoluje seniora od prawdziwej pomocy. Porada ma zawierać instrukcję odłożenia słuchawki.",
+  "mode": "SCRIPTED",
+  "source": "Syntetyczne, napisane przez zespół z pomocą Claude podczas HackYeah 2026 na podstawie publicznych opisów oszustw",
+  "expected": {
+    "maxLevel": "high",
+    "mustHitStages": [
+      "ISOLATION"
+    ],
+    "mustNotHitStages": []
+  },
+  "segments": [
+    {
+      "speaker": "B",
+      "text": "Dzień dobry, mówi inspektor Piotr Fikcyjny z centrali policji. Czy to pani Wanda Wzorcowa?",
+      "delayMs": 2200
+    },
+    {
+      "speaker": "A",
+      "text": "Tak, a co się dzieje?",
+      "delayMs": 1300
+    },
+    {
+      "speaker": "B",
+      "text": "Pani konto jest zagrożone, a pani sąsiad został już zatrzymany jako wspólnik oszustów.",
+      "delayMs": 2900
+    },
+    {
+      "speaker": "A",
+      "text": "Sąsiad? Pan Henryk? Nie wierzę!",
+      "delayMs": 1800
+    },
+    {
+      "speaker": "B",
+      "text": "Rozumiem, że to szok. Pani może mi nie ufać, więc proszę sprawdzić. Proszę zadzwonić pod numer sto dwanaście.",
+      "delayMs": 3200
+    },
+    {
+      "speaker": "A",
+      "text": "Pod sto dwanaście? A pan?",
+      "delayMs": 1500
+    },
+    {
+      "speaker": "B",
+      "text": "Ja zostanę na linii. Proszę w żadnym wypadku nie odkładać słuchawki, bo straci pani połączenie ze mną.",
+      "delayMs": 3300
+    },
+    {
+      "speaker": "A",
+      "text": "Ale jak ja mam zadzwonić, jak mam nie odkładać słuchawki? Mam jeden telefon.",
+      "delayMs": 2700
+    },
+    {
+      "speaker": "B",
+      "text": "To nieistotne, proszę po prostu trzymać słuchawkę i słuchać moich poleceń. Ja pani wszystko wyjaśnię.",
+      "delayMs": 3300
+    },
+    {
+      "speaker": "A",
+      "text": "Ja nie rozumiem, panie. Mnie wnuczka mówiła, że jak ktoś dzwoni, to się odkłada.",
+      "delayMs": 2800
+    },
+    {
+      "speaker": "B",
+      "text": "Pani wnuczka się myli. Jeśli pani się rozłączy, oszuści zablokują pani konto na zawsze.",
+      "delayMs": 3000
+    },
+    {
+      "speaker": "A",
+      "text": "Naprawdę? Ja już się boję. Dobrze, nie odkładam.",
+      "delayMs": 2200
+    },
+    {
+      "speaker": "B",
+      "text": "Bardzo dobrze. Teraz proszę czekać na moje dalsze instrukcje i z nikim innym nie rozmawiać.",
+      "delayMs": 3100
+    }
+  ]
+}

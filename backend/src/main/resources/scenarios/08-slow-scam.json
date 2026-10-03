@@ -1,0 +1,128 @@
+{
+  "scenarioId": "08-slow-scam",
+  "title": "Powolne oszustwo rozłożone w czasie",
+  "description": "Etapy rozłożone na długiej rozmowie z wieloma neutralnymi wymianami. Wysokie ryzyko dopiero przy prośbie o pieniądze, wcześniejsze etapy mają być policzone.",
+  "mode": "SCRIPTED",
+  "source": "Syntetyczne, napisane przez zespół z pomocą Claude podczas HackYeah 2026 na podstawie publicznych opisów oszustw",
+  "expected": {
+    "maxLevel": "high",
+    "mustHitStages": [
+      "AUTHORITY_CLAIM",
+      "SECRECY_DEMAND",
+      "MONEY_REQUEST"
+    ],
+    "mustNotHitStages": []
+  },
+  "segments": [
+    {
+      "speaker": "B",
+      "text": "Dzień dobry pani Haniu, tu Marta z infolinii Towarzystwa Przykładowego, pamięta mnie pani?",
+      "delayMs": 2000
+    },
+    {
+      "speaker": "A",
+      "text": "Marta? A, coś kojarzę, z ubezpieczenia chyba.",
+      "delayMs": 1800
+    },
+    {
+      "speaker": "B",
+      "text": "Tak, dokładnie. Dzwonię zapytać, jak się pani czuje po zimie.",
+      "delayMs": 2200
+    },
+    {
+      "speaker": "A",
+      "text": "Oj, różnie, nogi mnie bolą, ale jakoś żyję.",
+      "delayMs": 2000
+    },
+    {
+      "speaker": "B",
+      "text": "To pani musi o siebie dbać. A syn dalej mieszka za granicą?",
+      "delayMs": 2300
+    },
+    {
+      "speaker": "A",
+      "text": "Dalej, w Niemczech. Dzwoni w niedziele.",
+      "delayMs": 1800
+    },
+    {
+      "speaker": "B",
+      "text": "To miło. Ja z kolei jestem oficerem w wydziale gospodarczym prokuratury, tak się składa, prowadzę sprawę, w której pani nazwisko się przewijało.",
+      "delayMs": 3800
+    },
+    {
+      "speaker": "A",
+      "text": "Prokuratury? Ale ja przecież z Towarzystwa pamiętam panią...",
+      "delayMs": 2200
+    },
+    {
+      "speaker": "B",
+      "text": "Tak, to moja druga praca, to długa historia. Proszę się nie martwić, to tylko formalność.",
+      "delayMs": 2800
+    },
+    {
+      "speaker": "A",
+      "text": "No dobrze, skoro formalność. A pogoda dziś ładna, prawda?",
+      "delayMs": 2100
+    },
+    {
+      "speaker": "B",
+      "text": "Ładna. Pani Haniu, proszę, żeby to zostało między nami, na razie sprawa jest poufna.",
+      "delayMs": 2900
+    },
+    {
+      "speaker": "A",
+      "text": "Poufna? No to dobrze, nikomu nie powiem.",
+      "delayMs": 2000
+    },
+    {
+      "speaker": "B",
+      "text": "Jeszcze zadzwonię jutro i pojutrze, żeby panią informować. Dobrze?",
+      "delayMs": 2300
+    },
+    {
+      "speaker": "A",
+      "text": "Dobrze. Tylko ja o tej porze zwykle oglądam serial.",
+      "delayMs": 2000
+    },
+    {
+      "speaker": "B",
+      "text": "Rozumiem. To do jutra. Aha, jeszcze jedno.",
+      "delayMs": 1600
+    },
+    {
+      "speaker": "A",
+      "text": "Tak, słucham?",
+      "delayMs": 1000
+    },
+    {
+      "speaker": "B",
+      "text": "Żeby pani oszczędności nie zostały zamrożone, trzeba je będzie przekazać na konto depozytowe.",
+      "delayMs": 3600
+    },
+    {
+      "speaker": "A",
+      "text": "Zamrożone? Ale jak to zamrożone? Ile?",
+      "delayMs": 1900
+    },
+    {
+      "speaker": "B",
+      "text": "Proszę przygotować dwadzieścia tysięcy złotych i przelać je na rachunek, który podam.",
+      "delayMs": 3500
+    },
+    {
+      "speaker": "A",
+      "text": "Dwadzieścia tysięcy... to wszystko, co mam odłożone na pogrzeb.",
+      "delayMs": 2700
+    },
+    {
+      "speaker": "B",
+      "text": "To dlatego, żeby je ochronić. Zadzwonię jutro po numer rachunku, proszę być gotową.",
+      "delayMs": 3300
+    },
+    {
+      "speaker": "A",
+      "text": "Dobrze, spróbuję. Ale muszę się zastanowić.",
+      "delayMs": 2000
+    }
+  ]
+}

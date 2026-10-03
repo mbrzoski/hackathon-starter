@@ -1,0 +1,84 @@
+{
+  "scenarioId": "04-real-grandson",
+  "title": "Prawdziwy wnuk prosi o 200 zł na bilet",
+  "description": "Wnuk pożycza 200 zł na bilet na pociąg. Bez tajemnicy, bez autorytetu, bez presji. Nie powinno być alertu.",
+  "mode": "SCRIPTED",
+  "source": "Syntetyczne, napisane przez zespół z pomocą Claude podczas HackYeah 2026 na podstawie publicznych opisów oszustw",
+  "expected": {
+    "maxLevel": "low",
+    "mustHitStages": [],
+    "mustNotHitStages": [
+      "AUTHORITY_CLAIM",
+      "URGENT_THREAT",
+      "SECRECY_DEMAND",
+      "ISOLATION"
+    ]
+  },
+  "segments": [
+    {
+      "speaker": "B",
+      "text": "Cześć babciu, to ja, Kuba. Dobrze cię słychać?",
+      "delayMs": 1300
+    },
+    {
+      "speaker": "A",
+      "text": "Kubuś! A dobrze, dobrze, tylko trochę szumi. Co tam u ciebie?",
+      "delayMs": 1900
+    },
+    {
+      "speaker": "B",
+      "text": "Wszystko okej. Słuchaj, babciu, jadę w sobotę do ciebie, ale mam mały kłopot z biletem.",
+      "delayMs": 2400
+    },
+    {
+      "speaker": "A",
+      "text": "Jaki kłopot? Chorujesz?",
+      "delayMs": 1200
+    },
+    {
+      "speaker": "B",
+      "text": "Nie, nie, zdrowy jestem. Po prostu bilet na pociąg kosztuje dwieście złotych i mi trochę brakuje do wypłaty.",
+      "delayMs": 2800
+    },
+    {
+      "speaker": "A",
+      "text": "A, to ci pożyczę, nie ma sprawy. Tylko jak ci to dać?",
+      "delayMs": 2000
+    },
+    {
+      "speaker": "B",
+      "text": "W sobotę jak przyjadę, to mi dasz na miejscu, a w niedzielę oddam mamie, ona ci przekaże.",
+      "delayMs": 2600
+    },
+    {
+      "speaker": "A",
+      "text": "To najlepiej. Pamiętam, że ostatnio też zapomniałeś portfela, haha.",
+      "delayMs": 2100
+    },
+    {
+      "speaker": "B",
+      "text": "No było, było. Mama wie, że do ciebie jadę, możesz ją spytać.",
+      "delayMs": 2000
+    },
+    {
+      "speaker": "A",
+      "text": "Zadzwonię do niej wieczorem i się dogadamy. A będziesz na obiad?",
+      "delayMs": 2200
+    },
+    {
+      "speaker": "B",
+      "text": "Pewnie! Zrób ten rosół, co zawsze.",
+      "delayMs": 1400
+    },
+    {
+      "speaker": "A",
+      "text": "Zrobię, zrobię. To do soboty, kochanie.",
+      "delayMs": 1500
+    },
+    {
+      "speaker": "B",
+      "text": "Do soboty, babciu. Pa!",
+      "delayMs": 900
+    }
+  ]
+}

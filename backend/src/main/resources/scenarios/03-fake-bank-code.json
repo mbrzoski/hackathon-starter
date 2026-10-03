@@ -1,0 +1,88 @@
+{
+  "scenarioId": "03-fake-bank-code",
+  "title": "Fałszywy bank i kod autoryzacyjny",
+  "description": "Rozmówca podaje się za dział bezpieczeństwa banku i prosi o podanie kodu z aplikacji bankowej.",
+  "mode": "SCRIPTED",
+  "source": "Syntetyczne, napisane przez zespół z pomocą Claude podczas HackYeah 2026 na podstawie publicznych opisów oszustw",
+  "expected": {
+    "maxLevel": "high",
+    "mustHitStages": [
+      "AUTHORITY_CLAIM",
+      "URGENT_THREAT",
+      "PAYMENT_CHANNEL"
+    ],
+    "mustNotHitStages": []
+  },
+  "segments": [
+    {
+      "speaker": "A",
+      "text": "Dzień dobry, dział bezpieczeństwa Banku Przykładowego. Czy rozmawiam z panem Stanisławem Wzorcowym?",
+      "delayMs": 1600
+    },
+    {
+      "speaker": "B",
+      "text": "Tak, to ja. Z jakiego banku?",
+      "delayMs": 1500
+    },
+    {
+      "speaker": "A",
+      "text": "Bank Przykładowy, dział przeciwdziałania oszustwom. Na pana koncie zarejestrowaliśmy podejrzaną operację.",
+      "delayMs": 2600
+    },
+    {
+      "speaker": "B",
+      "text": "Jaką operację? Ja nic nie robiłem.",
+      "delayMs": 1700
+    },
+    {
+      "speaker": "A",
+      "text": "Ktoś zlecił płatność na kwotę dziewięć tysięcy złotych na obce konto. Widzi pan telefon przy sobie?",
+      "delayMs": 2800
+    },
+    {
+      "speaker": "B",
+      "text": "Mam, tu leży. Ale ja żadnej płatności nie zlecałem!",
+      "delayMs": 2000
+    },
+    {
+      "speaker": "A",
+      "text": "Dlatego dzwonię. Muszę ją zablokować w ciągu kilku minut, bo potem się nie cofnie.",
+      "delayMs": 2700
+    },
+    {
+      "speaker": "B",
+      "text": "To blokujcie, proszę. Co ja mam zrobić?",
+      "delayMs": 1600
+    },
+    {
+      "speaker": "A",
+      "text": "Proszę otworzyć aplikację bankową. Wygeneruje pan kod BLIK, sześć cyfr.",
+      "delayMs": 2500
+    },
+    {
+      "speaker": "B",
+      "text": "Zaraz... gdzie to... aaa, jest. Ale po co mi ten kod?",
+      "delayMs": 3200
+    },
+    {
+      "speaker": "A",
+      "text": "To kod anulujący. Proszę mi go podać, ja go wpiszę w systemie i operacja zostanie wycofana.",
+      "delayMs": 3000
+    },
+    {
+      "speaker": "B",
+      "text": "Podać wam kod? Mnie córka mówiła, żeby nikomu kodów nie podawać...",
+      "delayMs": 2800
+    },
+    {
+      "speaker": "A",
+      "text": "Rozumiem obawy, ale zostały dwie minuty. Proszę podać ten kod BLIK, inaczej pieniądze przepadną.",
+      "delayMs": 3000
+    },
+    {
+      "speaker": "B",
+      "text": "No nie wiem, jestem w kropce. Zaraz, zaraz, to ile tych cyfr?",
+      "delayMs": 2400
+    }
+  ]
+}

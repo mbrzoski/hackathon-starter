@@ -1,0 +1,98 @@
+{
+  "scenarioId": "09-heavy-stt-errors",
+  "title": "Silne błędy rozpoznawania mowy",
+  "description": "Transkrypcja z typowymi błędami STT: brak polskich znaków, zlepione słowa, pomylone wyrazy. Dla człowieka zrozumiała, system nadal ma wykryć oszustwo.",
+  "mode": "SCRIPTED",
+  "source": "Syntetyczne, napisane przez zespół z pomocą Claude podczas HackYeah 2026 na podstawie publicznych opisów oszustw",
+  "expected": {
+    "maxLevel": "high",
+    "mustHitStages": [
+      "AUTHORITY_CLAIM",
+      "MONEY_REQUEST",
+      "PAYMENT_CHANNEL"
+    ],
+    "mustNotHitStages": []
+  },
+  "segments": [
+    {
+      "speaker": "A",
+      "text": "dzien dobry mowi komendant polici z komisariatu zero zero zero czy to pani Barbara",
+      "delayMs": 2000
+    },
+    {
+      "speaker": "B",
+      "text": "tak to ja ale kto mowi bo slabo slysze",
+      "delayMs": 1800
+    },
+    {
+      "speaker": "A",
+      "text": "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto",
+      "delayMs": 2400
+    },
+    {
+      "speaker": "B",
+      "text": "na konto wlamal sie ojej a jak to mozliwe",
+      "delayMs": 1900
+    },
+    {
+      "speaker": "A",
+      "text": "to jest pilne musimy dzialac natychmiast prosze mnie dokladnie slochac",
+      "delayMs": 2800
+    },
+    {
+      "speaker": "B",
+      "text": "slucham slucham tylko mowcie wolniej",
+      "delayMs": 1700
+    },
+    {
+      "speaker": "A",
+      "text": "prosze nikomu o tym nie mowic to scisle tajmnica sluzbowa",
+      "delayMs": 3000
+    },
+    {
+      "speaker": "B",
+      "text": "dobrze nikomu nie powiem",
+      "delayMs": 1400
+    },
+    {
+      "speaker": "A",
+      "text": "prosze isc do banku i wyplacic wszystkie oszczednosci w gotowce",
+      "delayMs": 3100
+    },
+    {
+      "speaker": "B",
+      "text": "wszystkie a ile to bedzie moze trzydziesci tysiecy",
+      "delayMs": 2500
+    },
+    {
+      "speaker": "A",
+      "text": "tak a potem przyjedzie kurjer i odbierze koperte z pieniedzmi",
+      "delayMs": 2900
+    },
+    {
+      "speaker": "B",
+      "text": "jaki kurjer od kogo",
+      "delayMs": 1800
+    },
+    {
+      "speaker": "A",
+      "text": "od nas z polici prosze tez przygotowac kod blik na wszelki wypadek",
+      "delayMs": 3100
+    },
+    {
+      "speaker": "B",
+      "text": "kod blik nie rozumiem ale moze wnuczek mi pomoze",
+      "delayMs": 2600
+    },
+    {
+      "speaker": "A",
+      "text": "nie nie wnuczkowi prosze nic nie mowic tylko isc do banku",
+      "delayMs": 2700
+    },
+    {
+      "speaker": "B",
+      "text": "no dobrze juz ide ubieram sie",
+      "delayMs": 1800
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "scenarioId": "05-real-police-bike",
+  "title": "Prawdziwy funkcjonariusz w sprawie roweru",
+  "description": "Funkcjonariusz podaje się za policjanta w sprawie zgłoszonej kradzieży roweru. Autorytet bez presji i bez próśb o pieniądze.",
+  "mode": "SCRIPTED",
+  "source": "Syntetyczne, napisane przez zespół z pomocą Claude podczas HackYeah 2026 na podstawie publicznych opisów oszustw",
+  "expected": {
+    "maxLevel": "low",
+    "mustHitStages": [
+      "AUTHORITY_CLAIM"
+    ],
+    "mustNotHitStages": [
+      "URGENT_THREAT",
+      "SECRECY_DEMAND",
+      "MONEY_REQUEST",
+      "PAYMENT_CHANNEL",
+      "REMOTE_ACCESS"
+    ]
+  },
+  "segments": [
+    {
+      "speaker": "A",
+      "text": "Dzień dobry, mówi sierżant Marek Przykładowy z komisariatu numer zero zero zero. Czy to pan Józef Wzorcowy?",
+      "delayMs": 2000
+    },
+    {
+      "speaker": "B",
+      "text": "Tak, Józef. A co się stało?",
+      "delayMs": 1500
+    },
+    {
+      "speaker": "A",
+      "text": "Dzwonię w sprawie zgłoszenia kradzieży roweru z zeszłego tygodnia. Pan zgłaszał?",
+      "delayMs": 2300
+    },
+    {
+      "speaker": "B",
+      "text": "A tak, tak, zgłaszałem. Ktoś mi spod bloku zabrał, ten niebieski.",
+      "delayMs": 2200
+    },
+    {
+      "speaker": "A",
+      "text": "Odnaleźliśmy rower, stoi w naszym depozycie. Proszę przyjść z dowodem osobistym, kiedy będzie panu wygodnie.",
+      "delayMs": 2900
+    },
+    {
+      "speaker": "B",
+      "text": "Znaleźliście? No proszę! A gdzie to jest, ten komisariat?",
+      "delayMs": 1900
+    },
+    {
+      "speaker": "A",
+      "text": "Ulica Przykładowa dziesięć. Jesteśmy od ósmej do szesnastej, od poniedziałku do piątku.",
+      "delayMs": 2500
+    },
+    {
+      "speaker": "B",
+      "text": "To ja przyjdę w czwartek. Muszę coś zapłacić?",
+      "delayMs": 1800
+    },
+    {
+      "speaker": "A",
+      "text": "Nie, nie, odbiór jest bezpłatny. Tylko podpisze pan protokół.",
+      "delayMs": 2100
+    },
+    {
+      "speaker": "B",
+      "text": "To dobrze, bo ja emeryt jestem. A mogę przyjść z synem?",
+      "delayMs": 1900
+    },
+    {
+      "speaker": "A",
+      "text": "Oczywiście, jak pan woli. Mogę podać numer sprawy do notatki?",
+      "delayMs": 2000
+    },
+    {
+      "speaker": "B",
+      "text": "Poczekaj pan, wezmę długopis... no dobrze, mów pan.",
+      "delayMs": 2800
+    },
+    {
+      "speaker": "A",
+      "text": "Numer sprawy zero zero jeden, ukośnik dwa tysiące dwadzieścia sześć.",
+      "delayMs": 2200
+    },
+    {
+      "speaker": "B",
+      "text": "Zapisane. Dziękuję panu bardzo, do czwartku.",
+      "delayMs": 1500
+    }
+  ]
+}

@@ -308,6 +308,35 @@ components:
           type: string
           minLength: 1
           description: Team recording under recordings/, REPLAY only.
+        source:
+          type: string
+          minLength: 1
+          description: Provenance of the synthetic script.
+        sourceUrl:
+          type: string
+          minLength: 1
+          description: Public description of the scam the script is based on, if known.
+        expected:
+          type: object
+          description: Expected properties for the evaluation run, not scores.
+          additionalProperties: false
+          required:
+            - maxLevel
+            - mustHitStages
+            - mustNotHitStages
+          properties:
+            maxLevel:
+              $ref: "#/components/schemas/RiskLevel"
+            mustHitStages:
+              type: array
+              uniqueItems: true
+              items:
+                $ref: "#/components/schemas/StageId"
+            mustNotHitStages:
+              type: array
+              uniqueItems: true
+              items:
+                $ref: "#/components/schemas/StageId"
         segments:
           type: array
           minItems: 1
