@@ -41,6 +41,13 @@ class ArchitectureTest {
             .should().dependOnClassesThat().resideInAnyPackage("..call..", "..alerts..", "..demo..", "..events..")
             .allowEmptyShould(true);
 
+    /** The audit stores what it is given; it does not reach into calls, risk, alerts or the demo. */
+    @ArchTest
+    static final ArchRule auditDoesNotDependOnCallRiskAlertsOrDemo = noClasses()
+            .that().resideInAPackage("..audit..")
+            .should().dependOnClassesThat().resideInAnyPackage("..call..", "..risk..", "..alerts..", "..demo..")
+            .allowEmptyShould(true);
+
     @ArchTest
     static final ArchRule alertsDoNotDependOnCall = noClasses()
             .that().resideInAPackage("..alerts..")

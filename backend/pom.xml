@@ -133,6 +133,12 @@
                                 <importMapping>ProblemDetail=org.springframework.http.ProblemDetail</importMapping>
                                 <importMapping>StatusResponse=pl.aniolstroz.config.StatusResponse</importMapping>
                                 <importMapping>EventEnvelope=pl.aniolstroz.contracts.EventEnvelope</importMapping>
+                                <importMapping>AuditHit=pl.aniolstroz.audit.AuditHit</importMapping>
+                                <importMapping>AuditRecord=pl.aniolstroz.audit.AuditRecord</importMapping>
+                                <importMapping>AuditSummary=pl.aniolstroz.audit.AuditSummary</importMapping>
+                                <importMapping>CallSummary=pl.aniolstroz.audit.CallSummary</importMapping>
+                                <importMapping>ClassifierError=pl.aniolstroz.ai.ClassifierError</importMapping>
+                                <importMapping>RiskLevel=pl.aniolstroz.contracts.RiskLevel</importMapping>
                             </importMappings>
                             <configOptions>
                                 <interfaceOnly>true</interfaceOnly>

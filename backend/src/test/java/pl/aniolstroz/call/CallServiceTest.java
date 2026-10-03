@@ -223,7 +223,62 @@ class CallServiceTest {
         service.addSegment(segment(call.callId(), "w trakcie", false));
         service.addSegment(segment(call.callId(), "gotowe", true));
 
-        assertThat(announced).containsExactly(new FinalSegmentAdded(call.callId()));
+        assertThat(announced).filteredOn(FinalSegmentAdded.class::isInstance)
+                .containsExactly(new FinalSegmentAdded(call.callId()));
+    }
+
+    @Test
+    void startAnnouncesTheCallToTheAudit() {
+        List<Object> announced = new ArrayList<>();
+        service = CallServices.create(eventBus, clock, new DiscardTranscriptHook(),
+                () -> pl.aniolstroz.contracts.Sensitivity.STANDARD, announced::add);
+
+        CallState call = service.start(Mode.SCRIPTED, "01-fake-police-classic");
+
+        assertThat(announced).containsExactly(new CallOpened(call.callId(), Mode.SCRIPTED, "01-fake-police-classic", NOW));
+    }
+
+    @Test
+    void endAnnouncesTheClosedCallAfterTheHookWithItsHighestLevelAndWhetherItHadAnAlert() {
+        List<Object> announced = new ArrayList<>();
+        service = CallServices.create(eventBus, clock, state -> announced.add("hook"),
+                () -> pl.aniolstroz.contracts.Sensitivity.STANDARD, announced::add);
+        CallState call = service.start(Mode.SCRIPTED);
+        service.addSegment(segment(call.callId(), "Mówi policja. Nikomu nie mów.", true));
+        announced.clear();
+
+        service.end();
+
+        assertThat(announced).containsExactly("hook",
+                new CallClosed(call.callId(), Mode.SCRIPTED, NOW, pl.aniolstroz.contracts.RiskLevel.MEDIUM, true));
+    }
+
+    @Test
+    void aCallWithoutAnAlertIsAnnouncedAsClosedWithoutOne() {
+        List<Object> announced = new ArrayList<>();
+        service = CallServices.create(eventBus, clock, new DiscardTranscriptHook(),
+                () -> pl.aniolstroz.contracts.Sensitivity.STANDARD, announced::add);
+        CallState call = service.start(Mode.LIVE);
+        announced.clear();
+
+        service.end();
+
+        assertThat(announced).containsExactly(
+                new CallClosed(call.callId(), Mode.LIVE, NOW, pl.aniolstroz.contracts.RiskLevel.NONE, false));
+    }
+
+    @Test
+    void aFailingAuditListenerNeverKeepsACallOpenOrStopsItFromStarting() {
+        service = CallServices.create(eventBus, clock, new DiscardTranscriptHook(),
+                () -> pl.aniolstroz.contracts.Sensitivity.STANDARD, event -> {
+                    throw new IllegalStateException("audit down");
+                });
+
+        CallState call = service.start(Mode.SCRIPTED);
+
+        assertThat(service.active()).containsSame(call);
+        assertThat(service.end()).isTrue();
+        assertThat(service.active()).isEmpty();
     }
 
     @Test

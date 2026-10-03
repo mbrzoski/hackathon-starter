@@ -74,6 +74,77 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
+  /api/calls:
+    get:
+      operationId: listCalls
+      tags:
+        - calls
+      summary: Recent calls, newest first, with their start, end, highest risk level and number of AI calls.
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+      responses:
+        "200":
+          description: Calls known to the audit.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CallSummary"
+        "400":
+          description: Invalid limit.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+  /api/calls/{callId}/audit:
+    get:
+      operationId: getCallAudit
+      tags:
+        - calls
+      summary: One audit record per AI call of the call, oldest first. Text fields are gone for calls without an alert.
+      parameters:
+        - name: callId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        "200":
+          description: Audit records (empty if the call made no AI call).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditRecord"
+        "404":
+          description: Unknown callId.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+  /api/audit/summary:
+    get:
+      operationId: getAuditSummary
+      tags:
+        - audit
+      summary: Measured latency, cost, rejected quotes and errors over all real (non-mock) AI calls.
+      responses:
+        "200":
+          description: Summary. Percentiles and averages are absent while there is nothing to measure.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditSummary"
   /api/demo/scenarios:
     get:
       operationId: listScenarios
@@ -248,6 +319,213 @@ components:
         at:
           type: string
           format: date-time
+    AuditHit:
+      title: AuditHit
+      description: A stage hit in an audit record. quote is absent once the text was cleared (call without alert).
+      type: object
+      additionalProperties: false
+      required:
+        - stage
+        - segId
+        - speakerRole
+        - source
+        - validated
+      properties:
+        stage:
+          $ref: "#/components/schemas/StageId"
+        segId:
+          type: string
+        quote:
+          type: string
+        speakerRole:
+          type: string
+          enum:
+            - caller
+            - senior
+            - background
+            - unclear
+        source:
+          type: string
+          enum:
+            - llm
+            - keywords
+        validated:
+          type: boolean
+          description: Result of QuoteValidator. Always true for keyword hits.
+    AuditRecord:
+      title: AuditRecord
+      description: One AI call (OBS-03). rawOutput and quotes are removed after a call without an alert (DAT-03); numbers stay.
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - callId
+        - mode
+        - recordedAt
+        - segmentRange
+        - model
+        - effort
+        - usage
+        - latencyMs
+        - hits
+        - keywordHits
+        - levelBefore
+        - levelAfter
+        - textCleared
+      properties:
+        id:
+          type: integer
+        callId:
+          type: string
+        mode:
+          $ref: "#/components/schemas/Mode"
+        recordedAt:
+          type: string
+          format: date-time
+        segmentRange:
+          type: string
+          description: Segments sent to the model, for example s1-s12.
+        model:
+          type: string
+        effort:
+          type: string
+        usage:
+          type: object
+          additionalProperties: false
+          required:
+            - inputTokens
+            - cacheReadInputTokens
+            - outputTokens
+          properties:
+            inputTokens:
+              type: integer
+            cacheReadInputTokens:
+              type: integer
+            outputTokens:
+              type: integer
+        latencyMs:
+          type: integer
+        stopReason:
+          type: string
+        error:
+          $ref: "#/components/schemas/ClassifierError"
+        rawOutput:
+          type: string
+        hits:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditHit"
+          description: Hits of the model with the QuoteValidator result of each.
+        keywordHits:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditHit"
+          description: Hits of the keyword layer for the same segments.
+        levelBefore:
+          $ref: "#/components/schemas/RiskLevel"
+        levelAfter:
+          $ref: "#/components/schemas/RiskLevel"
+        textCleared:
+          type: boolean
+    AuditSummary:
+      title: AuditSummary
+      description: Numbers measured over real AI calls. Mock calls (model "mock") are not counted.
+      type: object
+      additionalProperties: false
+      required:
+        - aiCalls
+        - conversations
+        - mockCallsExcluded
+        - rejectedQuotes
+        - errorsByCause
+        - pricing
+        - costNote
+      properties:
+        aiCalls:
+          type: integer
+          description: Real AI calls counted.
+        conversations:
+          type: integer
+          description: Calls with at least one real AI call.
+        mockCallsExcluded:
+          type: integer
+        latencyP50Ms:
+          type: integer
+          description: Nearest-rank median over all counted AI calls, failures included.
+        latencyP95Ms:
+          type: integer
+          description: Nearest-rank 95th percentile over all counted AI calls, failures included.
+        avgCostPerCallUsd:
+          type: number
+          description: Average over AI calls that returned usage.
+        avgCostPerConversationUsd:
+          type: number
+          description: Average over calls that have at least one AI call with usage.
+        rejectedQuotes:
+          type: integer
+          description: Hits whose quote QuoteValidator rejected.
+        errorsByCause:
+          type: object
+          additionalProperties:
+            type: integer
+        pricing:
+          type: object
+          additionalProperties: false
+          required:
+            - inputPerMillionUsd
+            - cacheReadPerMillionUsd
+            - outputPerMillionUsd
+          properties:
+            inputPerMillionUsd:
+              type: number
+            cacheReadPerMillionUsd:
+              type: number
+            outputPerMillionUsd:
+              type: number
+        costNote:
+          type: string
+    CallSummary:
+      title: CallSummary
+      description: A call as the audit knows it.
+      type: object
+      additionalProperties: false
+      required:
+        - callId
+        - mode
+        - startedAt
+        - maxLevel
+        - aiCalls
+      properties:
+        callId:
+          type: string
+        mode:
+          $ref: "#/components/schemas/Mode"
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+          description: Absent while the call is active.
+        maxLevel:
+          $ref: "#/components/schemas/RiskLevel"
+        aiCalls:
+          type: integer
+    ClassifierError:
+      title: ClassifierError
+      description: Why an AI call produced no usable answer.
+      type: string
+      enum:
+        - REFUSAL
+        - MAX_TOKENS
+        - UNEXPECTED_STOP
+        - TIMEOUT
+        - RATE_LIMIT
+        - SERVER_ERROR
+        - API_ERROR
+        - NETWORK
+        - INVALID_OUTPUT
+        - INTERNAL
     AlertWithDecisions:
       title: AlertWithDecisions
       description: An alert with every decision made about it so far, oldest decision first.

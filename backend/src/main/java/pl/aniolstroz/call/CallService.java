@@ -87,6 +87,7 @@ public class CallService implements LiveCallAccess {
             CallState call = new CallState(UUID.randomUUID().toString(), mode, scenarioId, clock.instant());
             active = call;
             eventBus.publish(new CallStartedEvent(mode, clock.instant(), new CallStarted(call.callId())));
+            announce(new CallOpened(call.callId(), mode, scenarioId, call.startedAt()));
             return call;
         } finally {
             slotLock.unlock();
@@ -213,10 +214,15 @@ public class CallService implements LiveCallAccess {
 
     /** Tells the AI layer about a new final segment. A failing listener must not break the call. */
     private void announce(CallState call) {
+        announce(new FinalSegmentAdded(call.callId()));
+    }
+
+    /** Tells the listeners (AI layer, audit) about something that happened. A failing listener must not break a call. */
+    private void announce(Object event) {
         try {
-            publisher.publishEvent(new FinalSegmentAdded(call.callId()));
+            publisher.publishEvent(event);
         } catch (RuntimeException e) {
-            log.error("Listener of final segments failed: {}", e.getClass().getName());
+            log.error("Listener of {} failed: {}", event.getClass().getSimpleName(), e.getClass().getName());
         }
     }
 
@@ -290,6 +296,7 @@ public class CallService implements LiveCallAccess {
             }
             eventBus.publish(new CallEndedEvent(call.mode(), clock.instant(),
                     new CallEnded(call.callId(), call.hadAlert())));
+            announce(new CallClosed(call.callId(), call.mode(), clock.instant(), call.maxLevel(), call.hadAlert()));
         } finally {
             call.lock().unlock();
             active = null;

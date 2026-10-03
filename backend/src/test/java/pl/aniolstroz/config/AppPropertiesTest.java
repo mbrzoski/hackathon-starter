@@ -45,6 +45,29 @@ class AppPropertiesTest {
     }
 
     @Test
+    void auditPricingDefaultsToSonnet55PricesPerMillionTokens() {
+        runner.run(context -> {
+            AppProperties.Audit.Pricing pricing = context.getBean(AppProperties.class).audit().pricing();
+            assertThat(pricing.inputPerMillionUsd()).isEqualByComparingTo("2");
+            assertThat(pricing.cacheReadPerMillionUsd()).isEqualByComparingTo("0.20");
+            assertThat(pricing.outputPerMillionUsd()).isEqualByComparingTo("10");
+        });
+    }
+
+    @Test
+    void auditPricingCanBeChangedInConfiguration() {
+        runner.withPropertyValues("app.audit.pricing.input-per-million-usd=1.5")
+                .run(context -> assertThat(context.getBean(AppProperties.class).audit().pricing().inputPerMillionUsd())
+                        .isEqualByComparingTo("1.5"));
+    }
+
+    @Test
+    void negativePriceFailsStartup() {
+        runner.withPropertyValues("app.audit.pricing.output-per-million-usd=-1")
+                .run(context -> assertThat(context).hasFailed());
+    }
+
+    @Test
     void unknownModeFailsStartup() {
         runner.withPropertyValues("app.mode=PRODUCTION")
                 .run(context -> assertThat(context).hasFailed());

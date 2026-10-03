@@ -37,6 +37,7 @@ public final class CallState {
     private final Set<StageId> ignoredStages = EnumSet.noneOf(StageId.class);
     private int segmentCount;
     private RiskLevel level = RiskLevel.NONE;
+    private RiskLevel maxLevel = RiskLevel.NONE;
     private boolean ended;
 
     CallState(String callId, Mode mode, String scenarioId, Instant startedAt) {
@@ -75,6 +76,11 @@ public final class CallState {
 
     public RiskLevel level() {
         return locked(() -> level);
+    }
+
+    /** The highest level this call ever had. Unlike {@link #level()} it does not drop when stages are ignored. */
+    public RiskLevel maxLevel() {
+        return locked(() -> maxLevel);
     }
 
     /** Copy of the alerts raised so far, one per level. */
@@ -141,6 +147,9 @@ public final class CallState {
     /** Caller must hold the lock. */
     void setLevel(RiskLevel newLevel) {
         level = newLevel;
+        if (newLevel.compareTo(maxLevel) > 0) {
+            maxLevel = newLevel;
+        }
     }
 
     /** Caller must hold the lock. */
