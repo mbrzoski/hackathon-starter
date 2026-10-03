@@ -1,11 +1,13 @@
 package pl.aniolstroz.stt;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
 import jakarta.annotation.PreDestroy;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,6 +15,7 @@ import java.util.concurrent.Executor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
@@ -23,6 +26,8 @@ import pl.aniolstroz.call.CallAlreadyActiveException;
 import pl.aniolstroz.call.CallService;
 import pl.aniolstroz.call.CallState;
 import pl.aniolstroz.call.NoActiveCallException;
+import pl.aniolstroz.config.AppProperties;
+import pl.aniolstroz.contracts.AudioControl;
 import pl.aniolstroz.contracts.ComponentState;
 import pl.aniolstroz.contracts.Mode;
 import pl.aniolstroz.contracts.TranscriptSegment;
@@ -49,7 +54,8 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
     static final String RUNNING = "Rozpoznawanie mowy działa";
     static final String LISTENING = "Ochrona działa";
     static final String PAUSED = "Ochrona wstrzymana przez użytkownika";
-    private static final List<String> COMMANDS = List.of("start", "stop", "pause", "resume");
+    static final String NO_SOUND = "Brak dźwięku z mikrofonu. Ochrona nie działa";
+    static final String CONNECTION_LOST = "Połączenie z mikrofonem zostało przerwane. Ochrona nie działa";
 
     private final CallService calls;
     private final SttProviderFactory factory;
@@ -58,12 +64,13 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
     private final Clock clock;
     private final RetryScheduler retries;
     private final Executor executor;
-    private final ObjectMapper mapper;
+    private final ObjectReader controlReader;
+    private final Duration silenceTimeout;
     private final Map<String, LiveAudio> sessions = new ConcurrentHashMap<>();
 
     AudioWebSocketHandler(CallService calls, SttProviderFactory factory, StatusPublisher status,
             ConsentChecker consent, Clock clock, RetryScheduler retries,
-            @Qualifier("sttExecutor") Executor executor, ObjectMapper mapper) {
+            @Qualifier("sttExecutor") Executor executor, ObjectMapper mapper, AppProperties properties) {
         this.calls = calls;
         this.factory = factory;
         this.status = status;
@@ -71,18 +78,22 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
         this.clock = clock;
         this.retries = retries;
         this.executor = executor;
-        this.mapper = mapper;
+        // Strict, like the schema AudioControl (additionalProperties: false, CON-04).
+        this.controlReader = mapper.readerFor(AudioControl.class).with(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        this.silenceTimeout = Duration.ofMillis(properties.stt().silence().timeoutMs());
     }
 
     /** One connection with a running call. */
     private static final class LiveAudio {
         final String callId;
         final SttSupervisor supervisor;
+        final SilenceWatch silence;
         volatile boolean paused;
 
-        LiveAudio(String callId, SttSupervisor supervisor) {
+        LiveAudio(String callId, SttSupervisor supervisor, SilenceWatch silence) {
             this.callId = callId;
             this.supervisor = supervisor;
+            this.silence = silence;
         }
     }
 
@@ -96,35 +107,36 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
     }
 
     private void control(WebSocketSession session, String payload) throws IOException {
-        String type = commandOf(payload);
-        if (type == null) {
+        AudioControl.Command command = commandOf(payload);
+        if (command == null) {
             reject(session, CloseStatus.POLICY_VIOLATION, BAD_COMMAND);
             return;
         }
         LiveAudio live = sessions.get(session.getId());
-        switch (type) {
-            case "start" -> start(session, live);
-            case "stop" -> {
-                finish(session.getId());
+        switch (command) {
+            case START -> start(session, live);
+            case STOP -> {
+                finish(session.getId(), false);
                 session.close(CloseStatus.NORMAL);
             }
-            case "pause" -> {
+            case PAUSE -> {
                 if (live == null) {
                     reject(session, CloseStatus.POLICY_VIOLATION, NOT_STARTED);
                 } else if (!live.paused) {
                     live.paused = true;
+                    live.silence.pause();
                     status.publish(pl.aniolstroz.contracts.Component.AUDIO, ComponentState.DEGRADED, PAUSED);
                 }
             }
-            case "resume" -> {
+            case RESUME -> {
                 if (live == null) {
                     reject(session, CloseStatus.POLICY_VIOLATION, NOT_STARTED);
                 } else if (live.paused) {
                     live.paused = false;
+                    live.silence.resume();
                     status.publish(pl.aniolstroz.contracts.Component.AUDIO, ComponentState.OK, LISTENING);
                 }
             }
-            default -> reject(session, CloseStatus.POLICY_VIOLATION, BAD_COMMAND);
         }
     }
 
@@ -141,7 +153,23 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
         ByteBuffer payload = message.getPayload();
         byte[] pcm = new byte[payload.remaining()];
         payload.get(pcm);
+        if (live.silence.onFrame(pcm) == SilenceWatch.Change.RECOVERED) {
+            status.publish(pl.aniolstroz.contracts.Component.AUDIO, ComponentState.OK, LISTENING);
+        }
         live.supervisor.write(pcm);
+    }
+
+    /**
+     * OBS-02: every few seconds, checks that sound still arrives. A stream without frames, or with only flat ones,
+     * for the whole timeout makes {@code audio} down, so a muted microphone never shows "Ochrona działa".
+     */
+    @Scheduled(fixedDelayString = "${app.stt.silence.check-interval-ms:1000}")
+    void checkSilence() {
+        for (LiveAudio live : sessions.values()) {
+            if (live.silence.check() == SilenceWatch.Change.SILENT) {
+                status.publish(pl.aniolstroz.contracts.Component.AUDIO, ComponentState.DOWN, NO_SOUND);
+            }
+        }
     }
 
     private void start(WebSocketSession session, LiveAudio existing) throws IOException {
@@ -181,7 +209,7 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
             reject(session, CloseStatus.SERVER_ERROR, "Nie udało się uruchomić rozpoznawania mowy");
             return;
         }
-        sessions.put(session.getId(), new LiveAudio(callId, supervisor));
+        sessions.put(session.getId(), new LiveAudio(callId, supervisor, new SilenceWatch(clock, silenceTimeout)));
         status.publish(pl.aniolstroz.contracts.Component.STT, ComponentState.OK, RUNNING);
         status.publish(pl.aniolstroz.contracts.Component.AUDIO, ComponentState.OK, LISTENING);
     }
@@ -198,8 +226,13 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
         }
     }
 
-    /** Stops recognition, then ends the call, so the last segments still belong to it. */
-    private void finish(String sessionId) {
+    /**
+     * Stops recognition, then ends the call, so the last segments still belong to it.
+     *
+     * @param lost true when the connection ended without {@code stop} (the tablet lost the network, the page was
+     *        closed): the call ends, but nothing listens any more, so {@code audio} goes down (OBS-01)
+     */
+    private void finish(String sessionId, boolean lost) {
         LiveAudio live = sessions.remove(sessionId);
         if (live == null) {
             return;
@@ -208,7 +241,9 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
             live.supervisor.stop();
         } finally {
             calls.end(live.callId);
-            if (live.paused) {
+            if (lost) {
+                status.publish(pl.aniolstroz.contracts.Component.AUDIO, ComponentState.DOWN, CONNECTION_LOST);
+            } else if (live.paused) {
                 status.publish(pl.aniolstroz.contracts.Component.AUDIO, ComponentState.OK, LISTENING);
             }
         }
@@ -216,20 +251,20 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) {
-        finish(session.getId());
+        finish(session.getId(), true); // after a clean stop the session is already gone, so this does nothing
     }
 
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) throws IOException {
         log.debug("Transport error on /ws/audio: {}", exception.getClass().getSimpleName());
-        finish(session.getId());
+        finish(session.getId(), true);
         session.close(CloseStatus.SERVER_ERROR);
     }
 
     @PreDestroy
     void closeAll() {
         for (String id : List.copyOf(sessions.keySet())) {
-            finish(id);
+            finish(id, false); // the application is stopping: nobody is left to tell
         }
     }
 
@@ -237,11 +272,14 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
         session.close(code.withReason(reason));
     }
 
-    /** The command of a control message, or null if it is not one of start, stop, pause, resume. */
-    private String commandOf(String json) {
+    /**
+     * The command of a control message, or null if the message is not an {@code AudioControl} of the contract: an
+     * unknown command, a missing type or an unknown field is refused (CON-04, CON-06).
+     */
+    private AudioControl.Command commandOf(String json) {
         try {
-            JsonNode type = mapper.readTree(json).get("type");
-            return type != null && type.isTextual() && COMMANDS.contains(type.asText()) ? type.asText() : null;
+            AudioControl control = controlReader.readValue(json);
+            return control == null ? null : control.type();
         } catch (IOException e) {
             return null;
         }

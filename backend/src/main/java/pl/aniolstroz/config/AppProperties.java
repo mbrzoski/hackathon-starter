@@ -37,9 +37,19 @@ public record AppProperties(
      */
     public record Stt(
             @NotNull @DefaultValue("vosk") Provider provider,
-            @Valid @NotNull @DefaultValue Vosk vosk) {
+            @Valid @NotNull @DefaultValue Vosk vosk,
+            @Valid @NotNull @DefaultValue Silence silence) {
 
         public enum Provider { VOSK, FAKE }
+
+        /**
+         * OBS-02: no frames, or only flat ones, for {@code timeoutMs} (10 s) mean the audio is lost; the check runs
+         * every {@code checkIntervalMs} (CC-04).
+         */
+        public record Silence(
+                @Positive @DefaultValue("10000") long timeoutMs,
+                @Positive @DefaultValue("1000") long checkIntervalMs) {
+        }
 
         /** {@code modelPath}: directory of the unpacked model; env APP_STT_VOSK_MODEL_PATH. */
         public record Vosk(@NotBlank @DefaultValue("models/vosk-model-small-pl-0.22") String modelPath) {

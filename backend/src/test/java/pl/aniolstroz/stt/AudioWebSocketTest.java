@@ -261,6 +261,47 @@ class AudioWebSocketTest {
     }
 
     @Test
+    void aLostConnectionMakesAudioDownBecauseNothingListensAnyMore() throws Exception {
+        Client events = watchEvents();
+        Client audio = connect("/ws/audio");
+        audio.send("{\"type\":\"start\"}");
+        events.awaitEvent(e -> isStatus(e, "audio", "ok"));
+
+        audio.session.close(); // no stop: the tablet lost the network, the page was closed
+
+        events.awaitEvent(e -> isType(e, "call.ended")); // the call ends first, then the status is published
+        JsonNode down = events.awaitEvent(e -> isStatus(e, "audio", "down"));
+        assertThat(down.at("/payload/message").asText()).isEqualTo(AudioWebSocketHandler.CONNECTION_LOST);
+        assertThat(down.get("mode").asText()).isEqualTo("LIVE");
+    }
+
+    @Test
+    void aCleanStopLeavesNoAudioDownBehind() throws Exception {
+        Client events = watchEvents();
+        Client audio = connect("/ws/audio");
+        audio.send("{\"type\":\"start\"}");
+        events.awaitEvent(e -> isStatus(e, "audio", "ok"));
+
+        audio.send("{\"type\":\"stop\"}");
+
+        events.awaitEvent(e -> isType(e, "call.ended"));
+        assertThat(audio.awaitClose().getCode()).isEqualTo(1000);
+        awaitNoActiveCall();
+        assertThat(events.events).noneMatch(e -> isStatus(e, "audio", "down"));
+    }
+
+    @Test
+    void aControlMessageWithAFieldThatIsNotInTheContractIsRefused() throws Exception {
+        Client audio = connect("/ws/audio");
+
+        audio.send("{\"type\":\"start\",\"callId\":\"x\"}");
+
+        assertThat(audio.awaitClose().getCode()).isEqualTo(1008);
+        assertThat(calls.active()).isEmpty();
+        assertThat(FACTORY.created).isEmpty();
+    }
+
+    @Test
     void withoutConsentTheSessionIsClosedWith1008AndNoCallStarts() throws Exception {
         CONSENT.set(false);
         Client audio = connect("/ws/audio");

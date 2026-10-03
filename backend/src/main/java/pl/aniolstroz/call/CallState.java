@@ -10,6 +10,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import pl.aniolstroz.contracts.Alert;
 import pl.aniolstroz.contracts.HitSource;
 import pl.aniolstroz.contracts.Mode;
+import pl.aniolstroz.contracts.QuoteNormalizer;
 import pl.aniolstroz.contracts.RiskLevel;
 import pl.aniolstroz.contracts.StageHit;
 import pl.aniolstroz.contracts.StageId;
@@ -33,6 +34,7 @@ public final class CallState {
     private final List<TranscriptSegment> transcript = new ArrayList<>();
     private final List<StageHit> hits = new ArrayList<>();
     private final Set<HitKey> hitKeys = new HashSet<>();
+    private final Set<HitKey> provisionalKeys = new HashSet<>();
     private final List<Alert> alerts = new ArrayList<>();
     private final Set<StageId> ignoredStages = EnumSet.noneOf(StageId.class);
     private int segmentCount;
@@ -137,11 +139,53 @@ public final class CallState {
 
     /** Returns false if the hit was already known. Caller must hold the lock. */
     boolean addHit(StageHit hit) {
-        if (!hitKeys.add(new HitKey(hit.stage(), hit.segId(), hit.source()))) {
+        return addHit(hit, false);
+    }
+
+    /**
+     * Returns false if the hit was already known. A provisional hit comes from an interim segment: it quotes text the
+     * recognizer may still change, so {@link #settleProvisionalHits} checks it when the final segment arrives.
+     * Caller must hold the lock.
+     */
+    boolean addHit(StageHit hit, boolean provisional) {
+        HitKey key = new HitKey(hit.stage(), hit.segId(), hit.source());
+        if (!hitKeys.add(key)) {
             return false;
         }
         hits.add(hit);
+        if (provisional) {
+            provisionalKeys.add(key);
+        }
         return true;
+    }
+
+    /**
+     * Settles the provisional hits of the segment that has just become final. If the final text gives the very same
+     * hits ({@code finalHits}), they simply become permanent. Otherwise they are removed, so the hits of the final text
+     * can take their place (a stage the final text no longer has stays out). Returns true if hits were removed. The
+     * level never drops because of it (DET-05) and an alert already raised stays. Caller must hold the lock.
+     */
+    boolean settleProvisionalHits(String segId, List<StageHit> finalHits) {
+        List<HitKey> keys = provisionalKeys.stream().filter(k -> k.segId().equals(segId)).toList();
+        if (keys.isEmpty()) {
+            return false;
+        }
+        provisionalKeys.removeAll(keys);
+        List<StageHit> provisional = hits.stream()
+                .filter(h -> keys.contains(new HitKey(h.stage(), h.segId(), h.source()))).toList();
+        if (evidenceOf(provisional).equals(evidenceOf(finalHits))) {
+            return false;
+        }
+        hitKeys.removeAll(keys);
+        hits.removeAll(provisional);
+        return true;
+    }
+
+    /** What a hit says, compared the way quotes are validated: the stage and the normalized quote (CON-05). */
+    private static Set<List<Object>> evidenceOf(List<StageHit> stageHits) {
+        return stageHits.stream()
+                .map(h -> List.<Object>of(h.stage(), QuoteNormalizer.normalize(h.quote())))
+                .collect(java.util.stream.Collectors.toSet());
     }
 
     /** Caller must hold the lock. */
