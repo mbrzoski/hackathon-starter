@@ -53,7 +53,7 @@ class ScriptedPlayerTest {
             }
             return null;
         }).when(bus).publish(any());
-        calls = new CallService(bus, Clock.fixed(Instant.parse("2026-10-03T21:00:00Z"), ZoneOffset.UTC),
+        calls = pl.aniolstroz.call.CallServices.create(bus, Clock.fixed(Instant.parse("2026-10-03T21:00:00Z"), ZoneOffset.UTC),
                 new DiscardTranscriptHook());
     }
 

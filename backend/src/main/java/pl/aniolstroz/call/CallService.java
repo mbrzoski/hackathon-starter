@@ -1,29 +1,55 @@
 package pl.aniolstroz.call;
 
 import java.time.Clock;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import pl.aniolstroz.alerts.AlertFactory;
+import pl.aniolstroz.contracts.Alert;
 import pl.aniolstroz.contracts.CallEnded;
 import pl.aniolstroz.contracts.CallStarted;
+import pl.aniolstroz.contracts.Component;
+import pl.aniolstroz.contracts.ComponentState;
+import pl.aniolstroz.contracts.EventEnvelope.AlertCreatedEvent;
 import pl.aniolstroz.contracts.EventEnvelope.CallEndedEvent;
 import pl.aniolstroz.contracts.EventEnvelope.CallStartedEvent;
+import pl.aniolstroz.contracts.EventEnvelope.RiskUpdateEvent;
+import pl.aniolstroz.contracts.EventEnvelope.SystemStatusEvent;
 import pl.aniolstroz.contracts.EventEnvelope.TranscriptSegmentEvent;
 import pl.aniolstroz.contracts.Mode;
+import pl.aniolstroz.contracts.RiskLevel;
+import pl.aniolstroz.contracts.RiskUpdate;
+import pl.aniolstroz.contracts.StageHit;
+import pl.aniolstroz.contracts.StageId;
+import pl.aniolstroz.contracts.SystemStatus;
 import pl.aniolstroz.contracts.TranscriptSegment;
 import pl.aniolstroz.events.EventBus;
+import pl.aniolstroz.risk.KeywordDetector;
+import pl.aniolstroz.risk.RiskAssessment;
+import pl.aniolstroz.risk.RiskEngine;
+import pl.aniolstroz.risk.SensitivitySource;
 
 /**
- * Owns the single active call (BE-04). Events of one call are published under that call's lock, so subscribers
- * see segments in id order. Transcript text is never logged.
+ * Owns the single active call (BE-04) and ties together its segments, stage hits, deterministic risk and alerts.
+ * Events of one call are published under that call's lock, so subscribers see them in order. Transcript text is
+ * never logged.
  */
 @Service
 public class CallService {
 
+    private static final Logger log = LoggerFactory.getLogger(CallService.class);
+
     private final EventBus eventBus;
     private final Clock clock;
     private final CallEndedHook endedHook;
+    private final KeywordDetector keywordDetector;
+    private final SensitivitySource sensitivity;
+    private final AlertFactory alertFactory;
 
     /**
      * Guards {@link #active}. Lock order is always slot lock, then call lock; code holding a call lock never
@@ -32,10 +58,14 @@ public class CallService {
     private final ReentrantLock slotLock = new ReentrantLock();
     private CallState active;
 
-    public CallService(EventBus eventBus, Clock clock, CallEndedHook endedHook) {
+    public CallService(EventBus eventBus, Clock clock, CallEndedHook endedHook, KeywordDetector keywordDetector,
+            SensitivitySource sensitivity, AlertFactory alertFactory) {
         this.eventBus = eventBus;
         this.clock = clock;
         this.endedHook = endedHook;
+        this.keywordDetector = keywordDetector;
+        this.sensitivity = sensitivity;
+        this.alertFactory = alertFactory;
     }
 
     public CallState start(Mode mode) {
@@ -54,8 +84,9 @@ public class CallService {
     }
 
     /**
-     * Gives the segment the next id (s1, s2, ...) in the call named by {@code segment.callId()}, keeps it if it is
-     * final and publishes it. The incoming segId is ignored.
+     * Gives the segment its id in the call named by {@code segment.callId()} (s1, s2, ... for final segments; an
+     * interim segment gets the id of the final one that follows), keeps it if it is final, publishes it and runs the
+     * keyword detector on it (DET-03). The incoming segId is ignored.
      *
      * @throws NoActiveCallException if that call is not the active one
      */
@@ -63,17 +94,33 @@ public class CallService {
         CallState call = activeCall(segment.callId());
         call.lock().lock();
         try {
-            if (call.isEnded()) {
-                throw new NoActiveCallException();
-            }
-            TranscriptSegment numbered = new TranscriptSegment(call.callId(), call.nextSegmentId(),
+            ensureOpen(call);
+            TranscriptSegment numbered = new TranscriptSegment(call.callId(), call.segmentIdFor(segment.isFinal()),
                     segment.tStartMs(), segment.tEndMs(), segment.text(), segment.isFinal(),
                     segment.speaker(), segment.sttConfidence());
             if (numbered.isFinal()) {
                 call.keep(numbered);
             }
             eventBus.publish(new TranscriptSegmentEvent(call.mode(), clock.instant(), numbered));
+            applyHits(call, keywordDetector.detect(numbered));
             return numbered;
+        } finally {
+            call.lock().unlock();
+        }
+    }
+
+    /**
+     * Adds stage hits (for example from the AI layer) to the call. New hits publish risk.update and may raise
+     * the level and create an alert.
+     *
+     * @throws NoActiveCallException if that call is not the active one
+     */
+    public void addHits(String callId, List<StageHit> hits) {
+        CallState call = activeCall(callId);
+        call.lock().lock();
+        try {
+            ensureOpen(call);
+            applyHits(call, hits);
         } finally {
             call.lock().unlock();
         }
@@ -116,18 +163,64 @@ public class CallService {
         return call;
     }
 
-    /** Caller holds the slot lock. */
+    private static void ensureOpen(CallState call) {
+        if (call.isEnded()) {
+            throw new NoActiveCallException();
+        }
+    }
+
+    /**
+     * Stores the new hits, then publishes risk.update, then (when the level rose to MEDIUM or HIGH) the one alert for
+     * that level. The level never drops (DET-05). Caller holds the call lock.
+     */
+    private void applyHits(CallState call, List<StageHit> hits) {
+        boolean changed = false;
+        for (StageHit hit : hits) {
+            changed |= call.addHit(hit);
+        }
+        if (!changed) {
+            return;
+        }
+        List<StageHit> all = call.hits();
+        RiskAssessment assessment = RiskEngine.computeLevel(all, sensitivity.current());
+        RiskLevel previous = call.level();
+        RiskLevel level = assessment.level().compareTo(previous) > 0 ? assessment.level() : previous;
+        call.setLevel(level);
+
+        List<StageHit> counted = RiskEngine.countedHits(all);
+        Set<StageId> stages = RiskEngine.stagesOf(counted);
+        eventBus.publish(new RiskUpdateEvent(call.mode(), clock.instant(),
+                new RiskUpdate(call.callId(), level, previous, List.copyOf(stages), stages.size())));
+
+        if (level.compareTo(previous) > 0 && level.compareTo(RiskLevel.MEDIUM) >= 0) {
+            Alert alert = alertFactory.create(call.callId(), call.mode(), level, counted, assessment.triggeredBy());
+            call.recordAlert(alert);
+            eventBus.publish(new AlertCreatedEvent(call.mode(), clock.instant(), alert));
+        }
+    }
+
+    /** Caller holds the slot lock. A failing hook must not keep the call alive or hide that the call ended. */
     private boolean endLocked(CallState call) {
         call.lock().lock();
         try {
             call.markEnded();
-            endedHook.onCallEnded(call);
+            try {
+                endedHook.onCallEnded(call);
+            } catch (RuntimeException e) {
+                // Log the type only: messages may carry transcript text. Fail closed: drop the transcript.
+                log.error("Call-ended hook failed: {}", e.getClass().getName());
+                call.clearTranscript();
+                eventBus.publish(new SystemStatusEvent(call.mode(), clock.instant(), new SystemStatus(
+                        Component.BACKEND, ComponentState.DEGRADED,
+                        "Nie udało się zapisać alertu z rozmowy. Ostrzeżenie było widoczne, ale nie zostanie zachowane.",
+                        clock.instant())));
+            }
             eventBus.publish(new CallEndedEvent(call.mode(), clock.instant(),
                     new CallEnded(call.callId(), call.hadAlert())));
         } finally {
             call.lock().unlock();
+            active = null;
         }
-        active = null;
         return true;
     }
 }

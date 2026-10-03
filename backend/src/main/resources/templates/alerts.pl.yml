@@ -1,0 +1,19 @@
+# DET-04: the only texts shown and read aloud to the senior. Written and reviewed by the team, never generated live.
+# The template is chosen by TemplateSelector from the risk level and the set of stages.
+# shortText is one sentence; the voice reads shortText and then advice.
+templates:
+  high-secrecy-money:
+    shortText: Rozmówca prosi o tajemnicę i o pieniądze.
+    advice: Prawdziwa policja nigdy tego nie robi. Możesz się rozłączyć.
+  high-payment-channel:
+    shortText: Rozmówca prosi o kod, kuriera albo przelew na inne konto.
+    advice: Policja ani bank nigdy tego nie żądają. Możesz się rozłączyć i zadzwonić do kogoś bliskiego.
+  high-general:
+    shortText: Rozmówca prosi o pieniądze i wywiera presję.
+    advice: Nie przekazuj pieniędzy ani danych. Możesz się rozłączyć.
+  medium-isolation:
+    shortText: Rozmówca prosi, żeby nie kończyć rozmowy.
+    advice: Rozłącz się i odczekaj minutę, zanim zadzwonisz pod 112 albo do bliskich.
+  medium-general:
+    shortText: W tej rozmowie są znane oznaki oszustwa.
+    advice: Nie podawaj żadnych danych ani kodów. Jeśli masz wątpliwości, możesz się rozłączyć i zadzwonić do bliskich.

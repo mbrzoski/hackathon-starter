@@ -33,7 +33,7 @@ class CallServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new CallService(eventBus, clock, new DiscardTranscriptHook());
+        service = CallServices.create(eventBus, clock, new DiscardTranscriptHook());
     }
 
     private List<EventEnvelope> published(int times) {
@@ -150,7 +150,7 @@ class CallServiceTest {
     @Test
     void hookSeesTheTranscriptBeforeItIsDeletedAndCanKeepIt() {
         List<String> seen = new ArrayList<>();
-        service = new CallService(eventBus, clock, state -> state.transcript().forEach(s -> seen.add(s.text())));
+        service = CallServices.create(eventBus, clock, state -> state.transcript().forEach(s -> seen.add(s.text())));
         CallState call = service.start(Mode.SCRIPTED);
         service.addSegment(segment(call.callId(), "alert", true));
 
@@ -161,13 +161,48 @@ class CallServiceTest {
     }
 
     @Test
-    void endReportsHadAlertWhenCallWasMarkedAlerted() {
+    void endReportsHadAlertWhenTheCallRaisedAnAlert() {
         CallState call = service.start(Mode.SCRIPTED);
-        call.markAlerted();
+        service.addSegment(segment(call.callId(), "Mówi policja. Nikomu nie mów.", true));
 
         service.end();
 
-        assertThat(((CallEndedEvent) published(2).get(1)).payload().hadAlert()).isTrue();
+        var events = published(5);
+        assertThat(((CallEndedEvent) events.get(4)).payload().hadAlert()).isTrue();
+    }
+
+    @Test
+    void failingHookStillEndsTheCallFreesTheSlotAndDropsTheTranscript() {
+        service = CallServices.create(eventBus, clock, state -> {
+            throw new IllegalStateException("disk full");
+        });
+        CallState call = service.start(Mode.SCRIPTED);
+        service.addSegment(segment(call.callId(), "poufne", true));
+
+        assertThat(service.end()).isTrue();
+
+        assertThat(service.active()).isEmpty();
+        assertThat(call.transcript()).isEmpty();
+        var events = published(4);
+        assertThat(events.get(2)).isInstanceOf(EventEnvelope.SystemStatusEvent.class);
+        assertThat(((EventEnvelope.SystemStatusEvent) events.get(2)).payload().state())
+                .isEqualTo(pl.aniolstroz.contracts.ComponentState.DEGRADED);
+        assertThat(events.get(3)).isInstanceOf(CallEndedEvent.class);
+    }
+
+    @Test
+    void interimSegmentUsesTheIdOfTheFinalOneThatFollowsAndDoesNotConsumeIt() {
+        CallState call = service.start(Mode.SCRIPTED);
+
+        var interim = service.addSegment(segment(call.callId(), "w tra", false));
+        var interimAgain = service.addSegment(segment(call.callId(), "w trakcie", false));
+        var fin = service.addSegment(segment(call.callId(), "w trakcie rozmowy", true));
+        var next = service.addSegment(segment(call.callId(), "dalej", true));
+
+        assertThat(interim.segId()).isEqualTo("s1");
+        assertThat(interimAgain.segId()).isEqualTo("s1");
+        assertThat(fin.segId()).isEqualTo("s1");
+        assertThat(next.segId()).isEqualTo("s2");
     }
 
     @Test

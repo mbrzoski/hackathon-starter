@@ -1,0 +1,39 @@
+# DET-03: keyword baseline. StageId -> regex patterns, matched case-insensitively against the sentence after
+# QuoteNormalizer (lowercase, no Polish diacritics, single spaces), so write patterns without diacritics.
+# Short words use \b so that "pin" does not match "pinezka". URGENT_THREAT has no keywords on purpose: a threat
+# is too context-dependent for a word list and is left to the AI layer.
+AUTHORITY_CLAIM:
+  - policj
+  - komisarz
+  - prokurat
+  - \bcbs\b
+  - dzial\w* bezpieczenstwa
+URGENT_THREAT: []
+SECRECY_DEMAND:
+  - nikomu nie mow
+  - nie mow nikomu
+  - tajemnic
+  - dyskrecj
+  - nie informuj
+MONEY_REQUEST:
+  - wyplac
+  - przelew
+  - pieni[ae]dz
+  - gotowk
+PAYMENT_CHANNEL:
+  - \bblik
+  - kurier
+  - bezpieczn\w* kont
+  - bitcoin
+ISOLATION:
+  - nie rozlacza
+  - zostac na linii
+  - nie odklada\w* sluchawki
+REMOTE_ACCESS:
+  - anydesk
+  - teamviewer
+  - zainstaluj aplikacj
+PERSONAL_DATA_REQUEST:
+  - \bpesel\b
+  - numer karty
+  - \bpin\b

@@ -28,6 +28,17 @@ class ArchitectureTest {
             .should().dependOnClassesThat().resideInAPackage("..risk..")
             .allowEmptyShould(true);
 
+    /** The deterministic core stays free of orchestration: call depends on risk and alerts, never the reverse. */
+    @ArchTest
+    static final ArchRule riskDoesNotDependOnCallOrAlerts = noClasses()
+            .that().resideInAPackage("..risk..")
+            .should().dependOnClassesThat().resideInAnyPackage("..call..", "..alerts..");
+
+    @ArchTest
+    static final ArchRule alertsDoNotDependOnCall = noClasses()
+            .that().resideInAPackage("..alerts..")
+            .should().dependOnClassesThat().resideInAPackage("..call..");
+
     @ArchTest
     static final ArchRule noSynchronizedMethodsInAiAndStt = methods()
             .that().areDeclaredInClassesThat().resideInAnyPackage("..ai..", "..stt..")
