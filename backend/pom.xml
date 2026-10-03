@@ -19,7 +19,7 @@
         <archunit.version>1.4.1</archunit.version>
         <networknt.version>2.0.1</networknt.version>
         <sqlite-jdbc.version>3.53.4.0</sqlite-jdbc.version>
-        <vosk.version>0.3.45</vosk.version>
+        <vosk.version>0.3.38</vosk.version>
         <jna.version>5.17.0</jna.version>
         <anthropic-java.version>2.68.0</anthropic-java.version>
         <wiremock.version>3.13.2</wiremock.version>

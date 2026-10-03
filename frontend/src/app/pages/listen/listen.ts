@@ -1,6 +1,6 @@
-import { Component, computed, effect, inject, untracked } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { AudioService } from '../../core/audio.service';
-import { DecisionActorEnum, SystemStatusStateEnum } from '../../api/model/models';
+import { DecisionActorEnum, DecisionDecisionEnum, SystemStatusStateEnum } from '../../api/model/models';
 import { openAlert } from '../../core/call-view';
 import { EventsService } from '../../core/events.service';
 import { Icon } from '../../shared/icon';
@@ -8,10 +8,13 @@ import { ModeBadge } from '../../shared/mode-badge';
 import { RISK_LEVEL_WORDS } from '../../shared/risk-level-chip';
 import { formatDuration, injectNow } from '../../shared/time';
 
-type ListenView = 'offline' | 'starting' | 'blocked' | 'audio_lost' | 'alarm' | 'listening' | 'waiting';
+type ListenView = 'offline' | 'ended' | 'starting' | 'blocked' | 'audio_lost' | 'alarm' | 'listening' | 'waiting';
 
 /** How often a microphone that is not running is tried again. */
 const RETRY_MS = 5000;
+
+/** After the senior hung up, how long the screen says so before it listens for the next call. */
+const NEXT_CALL_MS = 3000;
 
 /**
  * "Nasłuch": navy full-screen front for the tablet next to the landline. Connects to /ws/events as the senior.
@@ -28,6 +31,10 @@ export class Listen {
   protected readonly events = inject(EventsService);
   protected readonly audio = inject(AudioService);
   private readonly now = injectNow();
+  /** The senior chose "Rozłączam się": this call is over, the microphone starts again for the next one. */
+  protected readonly hungUp = signal(false);
+  /** The call already ended because of a hang-up, so a late event cannot end the next call. */
+  private endedCallId: string | null = null;
   protected readonly bars = [14, 26, 40, 22, 52, 64, 34, 18, 30, 56, 64, 38, 20, 14, 30, 48, 60, 36, 20, 28];
 
   protected readonly alert = computed(() =>
@@ -38,6 +45,7 @@ export class Listen {
     const audio = this.events.systemStatus().audio;
     const call = this.events.activeCall();
     if (!this.events.online()) return 'offline';
+    if (this.hungUp()) return 'ended';
     const microphone = this.audio.state();
     if (microphone === 'idle' || microphone === 'requesting') return 'starting';
     if (microphone !== 'listening') return 'blocked';
@@ -65,12 +73,36 @@ export class Listen {
   }
 
   constructor() {
+    // The senior hung up: the call is over, so stop sending its audio. The backend ends the call (call.ended for
+    // everyone); the screen never touches the phone line itself (FE-09).
+    effect(() => {
+      const call = this.events.activeCall();
+      if (!call || call.endedAt || call.callId === this.endedCallId) {
+        return;
+      }
+      const alertIds = new Set(this.events.alerts().map((alert) => alert.alertId));
+      const hungUp = this.events
+        .decisions()
+        .some((d) => d.actor === DecisionActorEnum.senior && d.decision === DecisionDecisionEnum.hung_up && alertIds.has(d.alertId));
+      if (hungUp) {
+        this.endedCallId = call.callId;
+        untracked(() => {
+          this.hungUp.set(true);
+          this.audio.stop();
+        });
+      }
+    });
+
     effect((onCleanup) => {
       if (!this.events.online()) {
         return;
       }
       const state = this.audio.state();
-      if (state === 'idle') {
+      if (this.hungUp()) {
+        // Protection stays on: after a short "Rozmowa zakończona" the microphone starts again for the next call.
+        const timer = setTimeout(() => this.hungUp.set(false), NEXT_CALL_MS);
+        onCleanup(() => clearTimeout(timer));
+      } else if (state === 'idle') {
         untracked(() => void this.audio.start());
       } else if (state === 'error') {
         // Never silent (the screen says why), never given up: a cable, a cut connection or a late consent heals itself.

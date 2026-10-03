@@ -28,6 +28,7 @@ describe('Listen', () => {
   };
   const audio = {
     start: vi.fn(async () => undefined as void),
+    stop: vi.fn(() => audio.state.set('idle')),
     state: signal<string>('idle'),
     error: signal<AudioError | null>(null),
   };
@@ -61,12 +62,14 @@ describe('Listen', () => {
 
   beforeEach(() => {
     audio.start.mockReset();
+    audio.stop.mockClear();
     microphoneWorks();
     audio.state.set('idle');
     audio.error.set(null);
     events.connection.set('open');
     events.activeCall.set(null);
     events.alerts.set([]);
+    events.decisions.set([]);
     events.systemStatus.set({});
   });
 
@@ -151,5 +154,42 @@ describe('Listen', () => {
     events.activeCall.set({ ...CALL, endedAt: AT, interrupted: true });
     await fixture.whenStable();
     expect(heading(fixture)).toBe('Czekam na rozmowę');
+  });
+
+  it('ends the call when the senior hung up, then listens for the next one', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const fixture = await open();
+    events.activeCall.set(CALL);
+    events.alerts.set([ALERT]);
+    await fixture.whenStable();
+    expect(audio.start).toHaveBeenCalledTimes(1);
+
+    events.decisions.set([{ alertId: 'a1', actor: 'senior', decision: 'hung_up', at: AT } as Decision]);
+    await fixture.whenStable();
+    expect(audio.stop).toHaveBeenCalledTimes(1);
+    expect(heading(fixture)).toBe('Rozmowa zakończona');
+    expect(audio.start).toHaveBeenCalledTimes(1);
+
+    // The backend answers the stop with call.ended; a repeated event must not stop anything again.
+    events.activeCall.set({ ...CALL, endedAt: AT, hadAlert: true });
+    events.decisions.update((list) => [...list]);
+    await vi.advanceTimersByTimeAsync(3000);
+    await fixture.whenStable();
+    expect(audio.start).toHaveBeenCalledTimes(2);
+    expect(audio.stop).toHaveBeenCalledTimes(1);
+    expect(heading(fixture)).toBe('Czekam na rozmowę');
+  });
+
+  it('keeps listening after other decisions (family, false alarm)', async () => {
+    const fixture = await open();
+    events.activeCall.set(CALL);
+    events.alerts.set([ALERT]);
+    events.decisions.set([
+      { alertId: 'a1', actor: 'family', decision: 'confirmed_scam', at: AT } as Decision,
+      { alertId: 'a1', actor: 'senior', decision: 'false_alarm', at: AT } as Decision,
+    ]);
+    await fixture.whenStable();
+    expect(audio.stop).not.toHaveBeenCalled();
+    expect(heading(fixture)).toBe('Słucham rozmowy');
   });
 });
