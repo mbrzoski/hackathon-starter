@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Positive;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.validation.annotation.Validated;
+import pl.aniolstroz.contracts.Mode;
 
 /**
  * Typed application configuration (prefix {@code app}). Secrets (ANTHROPIC_API_KEY, AZURE_SPEECH_KEY,

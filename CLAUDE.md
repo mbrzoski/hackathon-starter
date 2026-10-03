@@ -12,7 +12,7 @@ Projekt na HackYeah 2026. Urządzenie przy telefonie stacjonarnym seniora słuch
 
 - `backend/`: Java 21, Spring Boot 3, Maven (`mvnw`), wątki wirtualne, pakiety według funkcji: `events`, `call`, `stt`, `risk`, `ai`, `audit`, `alerts`, `settings`, `demo`, `config`
 - `frontend/`: Angular (standalone, signals, Material), statyczne SPA; Android przez Capacitor z tej samej bazy kodu
-- `contracts/schemas/`: JSON Schema, jedyne źródło prawdy o kontrakcie. Zmiana kontraktu: schemat → `npm run generate` w `contracts/` → rekord Javy → testy kontraktowe.
+- `contracts/openapi.yaml`: OpenAPI 3.1 (`components.schemas`, bez `paths`), jedyne źródło prawdy o kontrakcie. Zmiana kontraktu: schemat → rekord Javy (`backend/.../contracts/`) → typy w frontendzie.
 - `deploy/`: Caddy lub nginx (HTTPS, reverse proxy `/api` i `/ws`)
 
 ## Komendy
@@ -20,12 +20,17 @@ Projekt na HackYeah 2026. Urządzenie przy telefonie stacjonarnym seniora słuch
 Skróty w `Makefile`: `make build`, `make test`, `make run-backend`. Wymagane JDK 21.
 
 ```bash
-cd backend && ./mvnw verify          # testy backendu (w tym kontraktowe i ArchUnit)
+cd backend && ./mvnw verify          # testy backendu (w tym ArchUnit)
 cd backend && ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
-cd contracts && npm run generate     # typy TS i zod ze schematów
 cd frontend && npm test && npm start # testy i serwer deweloperski z proxy
 deploy/run-demo.sh                   # całość za HTTPS
 ```
+
+## Jak zmienić kontrakt
+
+1. Edytuj `contracts/openapi.yaml` (`additionalProperties: false`, wymagane pola jawnie).
+2. W tym samym commicie zaktualizuj ręcznie rekord Javy w `backend/.../contracts/` (enumy o małych literach na wire mają `@JsonValue`) oraz typy we frontendzie.
+3. `cd backend && ./mvnw verify` musi być zielone.
 
 ## Zasady, których nie wolno łamać
 
@@ -49,7 +54,7 @@ deploy/run-demo.sh                   # całość za HTTPS
 
 - Kod, identyfikatory i komentarze po angielsku. Teksty dla użytkownika po polsku.
 - Java: rekordy, `sealed interface`, `enum`. `ReentrantLock` zamiast `synchronized`. `Clock` wstrzykiwany. Błędy HTTP jako `ProblemDetail`.
-- Angular: typy tylko z `@aniol/contracts`. Poziom ryzyka zawsze słowami, nigdy w procentach. Stan zawsze ikoną i tekstem.
+- Angular: typy zgodne z `contracts/openapi.yaml`. Poziom ryzyka zawsze słowami, nigdy w procentach. Stan zawsze ikoną i tekstem.
 - Każda nowa logika deterministyczna ma test. Testy nie wołają prawdziwego Claude ani STT (WireMock, `FakeSttProvider`, tryb MOCK).
 - Nowa biblioteka, model albo API trafia do listy ujawnień w `README.md` (nazwa, licencja, cel).
 

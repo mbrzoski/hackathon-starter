@@ -16,8 +16,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <archunit.version>1.4.1</archunit.version>
-    </properties>
+        <archunit.version>1.4.1</archunit.version>    </properties>
 
     <dependencies>
         <dependency>

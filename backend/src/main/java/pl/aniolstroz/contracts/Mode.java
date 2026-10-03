@@ -1,4 +1,4 @@
-package pl.aniolstroz.config;
+package pl.aniolstroz.contracts;
 
 /** Honest operating mode; every event, audit record and screen carries one. */
 public enum Mode {

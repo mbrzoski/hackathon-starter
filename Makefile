@@ -4,7 +4,7 @@
 build:
 	cd backend && ./mvnw -DskipTests package
 
-# Run all backend tests (unit, contract, ArchUnit) via verify.
+# Run all backend tests (unit, ArchUnit) via verify.
 test:
 	cd backend && ./mvnw verify
 
