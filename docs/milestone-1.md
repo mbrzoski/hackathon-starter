@@ -48,7 +48,7 @@ Przykładowy przebieg do ręcznego sprawdzenia: `make run-backend`, połączyć 
 
 SQLite, plik `aniol.db` w katalogu roboczym (zmienna `APP_DB_FILE`), jedno połączenie (`hikari.maximum-pool-size: 1`). Schemat z `backend/src/main/resources/schema.sql` tworzy się przy każdym starcie (`CREATE TABLE IF NOT EXISTS`). Testy używają bazy w pamięci. Plik `*.db` jest w `.gitignore`.
 
-Zasada nadrzędna (DAT-01): do bazy trafiają tylko rozmowy, które wywołały alert. Rozmowa bez alertu nie zostawia żadnego śladu. Transkrypcja i trafienia trzymane są tylko w pamięci (`CallState`), dopóki rozmowa trwa.
+Zasada nadrzędna (DAT-01, DAT-03, zasada 4): tekst rozmowy trafia do bazy tylko po rozmowie, która wywołała alert (tabele `alerts` i `alert_segments`, oraz tekst w rekordach audytu). Rozmowa bez alertu zostawia w bazie wyłącznie liczby audytu (tabele `audit_calls` i `audit_records`: czasy, tokeny, opóźnienia, poziomy, bez cytatów). Transkrypcja i trafienia są w pamięci (`CallState`), a tekst audytu AI czeka w pamięci do końca rozmowy (od BE-07).
 
 ### Tabele
 
@@ -70,14 +70,15 @@ Zależności i ograniczenia, o których warto wiedzieć:
 - `ON DELETE CASCADE` w `alert_segments` zadziała tylko, jeśli w SQLite włączono `PRAGMA foreign_keys=ON`. W kodzie nie znalazłem takiego ustawienia, więc kaskada prawdopodobnie jest nieaktywna. Przy implementacji `DELETE /api/data` trzeba usuwać tabele jawnie.
 - Ten sam segment może wystąpić w kilku alertach jednej rozmowy: każdy alert ma własną kopię swoich segmentów (klucz złożony na to pozwala).
 - Poza bazą jest jeszcze `backend/data/labels.jsonl`. Zawiera `alertId`, `callId`, `mode`, listę etapów, decyzję, aktora i czas. Nie ma w nim cytatów ani tekstu rozmowy.
-- Nie ma jeszcze retencji ani czyszczenia (zadanie BE-09). Wszystko, co zapisane, zostaje.
+- Nie ma jeszcze retencji ani czyszczenia (zadanie BE-09). Wszystko, co zapisane, zostaje, także wiersze audytu.
+- Audyt (BE-07): `audit_calls` (wiersz na rozmowę, tryb, czasy, najwyższy poziom, czy był alert) i `audit_records` (wiersz na wywołanie AI: model, effort, tokeny wejścia, odczytu i zapisu cache, wyjścia, opóźnienie, `stopReason`, błąd, zakres segmentów, poziomy przed i po, liczba trafień i odrzuconych). Pola tekstowe (`raw_output`, cytaty w `hits_json` i `keyword_hits_json`) są wypełniane dopiero po rozmowie z alertem; w trakcie rozmowy `GET /api/calls/{id}/audit` pokazuje je z pamięci.
 
 ### Mini scenariusze
 
 **S1. Rozmowa bez alertu** (np. scenariusz 04 „prawdziwy wnuk”).
 1. `call.started`, segmenty trafiają do pamięci, najwyżej poziom LOW (jedna lub zero oznak).
 2. Koniec rozmowy: `DiscardTranscriptHook` czyści transkrypcję.
-3. Baza: bez zmian. `call.ended` ma `hadAlert: false`.
+3. Baza: tylko liczby audytu (`audit_calls`, `audit_records`: tokeny, opóźnienia, poziomy, zakresy segmentów), bez cytatów i bez surowych odpowiedzi AI. Tabele `alerts`, `alert_segments` bez zmian. `call.ended` ma `hadAlert: false`.
 
 **S2. Klasyczny fałszywy policjant** (scenariusz 01, same słowa kluczowe).
 1. Po segmencie z „policja” i „nikomu nie mów” poziom rośnie do MEDIUM → jeden alert `medium-general`.

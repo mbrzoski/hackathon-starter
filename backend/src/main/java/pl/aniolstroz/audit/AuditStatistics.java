@@ -25,7 +25,8 @@ final class AuditStatistics {
     /** One real AI call. */
     record Sample(String callId, long latencyMs, Usage usage, ClassifierError error, int rejectedHits) {
         boolean hasUsage() {
-            return usage.inputTokens() + usage.cacheReadInputTokens() + usage.outputTokens() > 0;
+            return usage.inputTokens() + usage.cacheReadInputTokens() + usage.outputTokens()
+                    + usage.cacheCreationInputTokens() > 0;
         }
     }
 
@@ -61,7 +62,7 @@ final class AuditStatistics {
                 samples.stream().mapToInt(Sample::rejectedHits).sum(),
                 Collections.unmodifiableMap(errors),
                 new AuditSummary.Pricing(pricing.inputPerMillionUsd(), pricing.cacheReadPerMillionUsd(),
-                        pricing.outputPerMillionUsd()),
+                        pricing.outputPerMillionUsd(), pricing.cacheCreationPerMillionUsd()),
                 AuditSummary.COST_NOTE);
     }
 
@@ -69,7 +70,8 @@ final class AuditStatistics {
     static BigDecimal cost(Usage usage, Pricing pricing) {
         BigDecimal perMillion = pricing.inputPerMillionUsd().multiply(BigDecimal.valueOf(usage.inputTokens()))
                 .add(pricing.cacheReadPerMillionUsd().multiply(BigDecimal.valueOf(usage.cacheReadInputTokens())))
-                .add(pricing.outputPerMillionUsd().multiply(BigDecimal.valueOf(usage.outputTokens())));
+                .add(pricing.outputPerMillionUsd().multiply(BigDecimal.valueOf(usage.outputTokens())))
+                .add(pricing.cacheCreationPerMillionUsd().multiply(BigDecimal.valueOf(usage.cacheCreationInputTokens())));
         return perMillion.divide(MILLION, SCALE, RoundingMode.HALF_UP).stripTrailingZeros();
     }
 

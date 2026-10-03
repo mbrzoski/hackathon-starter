@@ -13,6 +13,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -66,6 +67,8 @@ class AiAnalyzerTest {
     private final List<CallSnapshot> snapshots = new CopyOnWriteArrayList<>();
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
     private Function<CallSnapshot, ClassifierResult> script = s -> ok(s, List.of());
+    /** Runs inside the call lock, just before the analyzer hears of a final segment; null for no pause. */
+    private volatile Runnable beforeAnalyzer;
     private CallService calls;
     private CallState call;
 
@@ -77,6 +80,10 @@ class AiAnalyzerTest {
         calls = CallServices.create(bus, CLOCK, new DiscardTranscriptHook(), () -> pl.aniolstroz.contracts.Sensitivity.STANDARD,
                 event -> {
                     if (event instanceof FinalSegmentAdded added) {
+                        Runnable pause = beforeAnalyzer;
+                        if (pause != null) {
+                            pause.run();
+                        }
                         analyzer.get().onFinalSegment(added);
                     }
                 });
@@ -286,6 +293,36 @@ class AiAnalyzerTest {
 
         assertThat(snapshots).hasSize(2);
         assertThat(snapshots.get(1).segments()).hasSize(3);
+    }
+
+    /**
+     * CC-01: the slot lock is taken before a call lock, never after. The listener runs under the call lock, so if it
+     * looked the call up through CallService.active() it would wait for the slot lock that end() holds while it waits
+     * for the call lock: a deadlock. Here end() is made to hold the slot lock while the listener runs.
+     */
+    @Test
+    void theFirstFinalSegmentDoesNotWaitForTheSlotLockWhileTheCallIsLocked() throws Exception {
+        CountDownLatch inListener = new CountDownLatch(1);
+        AtomicReference<Thread> ender = new AtomicReference<>();
+        beforeAnalyzer = () -> {
+            inListener.countDown();
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(WAIT_SECONDS);
+            Thread t;
+            // Wait until end() holds the slot lock and waits for the call lock that this thread holds.
+            while (((t = ender.get()) == null || t.getState() != Thread.State.WAITING) && System.nanoTime() < deadline) {
+                Thread.onSpinWait();
+            }
+        };
+
+        Future<?> adding = executor.submit(() -> calls.addSegment(
+                new TranscriptSegment(call.callId(), "x", 0, 0, HARMLESS_TEXT, true, SpeakerLabel.B, null)));
+        assertThat(inListener.await(WAIT_SECONDS, TimeUnit.SECONDS)).isTrue();
+        Thread endThread = Thread.ofPlatform().name("ender").start(() -> calls.end());
+        ender.set(endThread);
+
+        adding.get(WAIT_SECONDS, TimeUnit.SECONDS);
+        endThread.join(TimeUnit.SECONDS.toMillis(WAIT_SECONDS));
+        assertThat(endThread.isAlive()).as("end() finished, no deadlock").isFalse();
     }
 
     @Test

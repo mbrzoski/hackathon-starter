@@ -396,6 +396,7 @@ components:
             - inputTokens
             - cacheReadInputTokens
             - outputTokens
+            - cacheCreationInputTokens
           properties:
             inputTokens:
               type: integer
@@ -403,6 +404,9 @@ components:
               type: integer
             outputTokens:
               type: integer
+            cacheCreationInputTokens:
+              type: integer
+              description: Tokens written to the prompt cache, billed above the input price.
         latencyMs:
           type: integer
         stopReason:
@@ -475,12 +479,15 @@ components:
             - inputPerMillionUsd
             - cacheReadPerMillionUsd
             - outputPerMillionUsd
+            - cacheCreationPerMillionUsd
           properties:
             inputPerMillionUsd:
               type: number
             cacheReadPerMillionUsd:
               type: number
             outputPerMillionUsd:
+              type: number
+            cacheCreationPerMillionUsd:
               type: number
         costNote:
           type: string

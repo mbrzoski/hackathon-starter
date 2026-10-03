@@ -28,6 +28,17 @@ public record AuditRecord(
         RiskLevel levelAfter,
         boolean textCleared) {
 
-    public record Usage(long inputTokens, long cacheReadInputTokens, long outputTokens) {
+    /** The same record with its text filled in: used for a running call, whose text is only in memory. */
+    AuditRecord withText(String newRawOutput, List<AuditHit> newHits, List<AuditHit> newKeywordHits) {
+        return new AuditRecord(id, callId, mode, recordedAt, segmentRange, model, effort, usage, latencyMs, stopReason,
+                error, newRawOutput, newHits, newKeywordHits, levelBefore, levelAfter, false);
+    }
+
+    /** {@code cacheCreationInputTokens} are the tokens written to the prompt cache (billed above the input price). */
+    public record Usage(long inputTokens, long cacheReadInputTokens, long outputTokens, long cacheCreationInputTokens) {
+
+        public Usage(long inputTokens, long cacheReadInputTokens, long outputTokens) {
+            this(inputTokens, cacheReadInputTokens, outputTokens, 0);
+        }
     }
 }

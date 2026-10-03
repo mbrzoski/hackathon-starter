@@ -70,24 +70,23 @@ public class AiAnalyzer {
 
     @EventListener
     public void onFinalSegment(FinalSegmentAdded event) {
-        queueFor(event.callId()).ifPresent(CallClassificationQueue::segmentAdded);
+        queueFor(event.call()).segmentAdded();
     }
 
-    /** One queue per call; a new call gets a fresh one, the old one finishes by itself. */
-    private Optional<CallClassificationQueue> queueFor(String callId) {
+    /**
+     * One queue per call; a new call gets a fresh one, the old one finishes by itself. Runs while the call lock is held
+     * (the event is published under it), so it must not look the call up through {@link CallService#active()}: that
+     * takes the slot lock, and the slot lock is always taken before a call lock, never after (CC-01).
+     */
+    private CallClassificationQueue queueFor(CallState call) {
         lock.lock();
         try {
-            if (queue == null || queueCall == null || !callId.equals(queueCall.callId())) {
-                Optional<CallState> call = activeCall(callId);
-                if (call.isEmpty()) {
-                    return Optional.empty();
-                }
-                CallState state = call.get();
-                queueCall = state;
-                queue = new CallClassificationQueue(classifier, () -> snapshot(state),
-                        result -> handle(state, result), executor);
+            if (queue == null || queueCall == null || !call.callId().equals(queueCall.callId())) {
+                queueCall = call;
+                queue = new CallClassificationQueue(classifier, () -> snapshot(call),
+                        result -> handle(call, result), executor);
             }
-            return Optional.of(queue);
+            return queue;
         } finally {
             lock.unlock();
         }

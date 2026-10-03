@@ -45,7 +45,7 @@ deploy/run-demo.sh                   # całość za HTTPS
 
 ## Claude API
 
-- SDK `com.anthropic:anthropic-java`, model `claude-sonnet-5-5`, effort `LOW`, `thinking: between_tools` (tylko na tym modelu), structured output, `maxTokens 512`, timeout 2500 ms, `maxRetries 0`.
+- SDK `com.anthropic:anthropic-java`, model `claude-sonnet-5-5`, effort `LOW`, `thinking: between_tools` (tylko na tym modelu), structured output, `maxTokens` 1024 i timeout 8000 ms (domyślne, zmienne: `APP_CLAUDE_MAX_TOKENS`, `APP_CLAUDE_TIMEOUT_MS`), `maxRetries 0`.
 - Rubryka w `backend/src/main/resources/prompts/stage-rubric.pl.md` z cache. Transkrypcja tylko przyrasta. Bez znaczników czasu w prompcie.
 - Zawsze sprawdzaj `stopReason()` przed odczytem treści. Kształtu API nie zgaduj, sprawdź go w dokumentacji SDK.
 - Nie używamy narzędzi (function calling), agentów, RAG, MCP, Spring AI ani LangChain4j.

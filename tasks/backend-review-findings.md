@@ -21,7 +21,7 @@ Uwagi:
 | F-03 | Średnia | BE-10 (Odporność i uczciwe statusy błędów) | OBS-01, zasada 7 | `HeartbeatService` | Heartbeat co 10 s publikuje `BACKEND = OK` bezwarunkowo i nadpisuje `DEGRADED` z `CallService`, `RetainAlertedCallHook`, `DecisionService`. Statusy awarii już istnieją (BE-04, BE-05), więc luka jest realna. | Rozwiązać w BE-10: jawny model stanu komponentu, `OK` tylko po zdjęciu awarii. |
 | F-06 | Niska | WEB-01 (serwer WWW, HTTPS), deploy | API-05, OBS-05 | `application.yml` | `spring.profiles.default: dev`: start bez profilu włącza `/api/dev/emit`, DEBUG, szczegóły `health`, originy `localhost`. `deploy/` jeszcze nie istnieje. | Przy WEB-01 ustawić bezpieczny domyślny profil, `dev` jawnie w `Makefile` i `.env.example`. |
 
-## 2a. Findingi zamknięte (naprawione, `./mvnw verify` zielone: 281 testów)
+## 2a. Findingi zamknięte (naprawione, `./mvnw verify` zielone: 440 testów)
 
 | ID | Co zrobiono |
 |---|---|
@@ -29,6 +29,14 @@ Uwagi:
 | F-02 | `QuoteNormalizerTest` czyta wspólne wektory `contracts/test-vectors/normalize.json` (14 przypadków), tak jak wersja TS. Poprawiono ścieżkę w Javadocu `QuoteNormalizer`. |
 | F-04 | `EventBus` trzyma teraz alerty aktywnej rozmowy, ostatni `risk.update` i decyzje, a snapshot wysyła je po `call.started`. Po `call.ended` dane tej rozmowy znikają ze snapshotu, nowa rozmowa zaczyna z pustym stanem, a decyzja o alercie spoza bieżącej rozmowy nie jest zapamiętywana. 5 nowych testów w `EventsWebSocketTest`. |
 | F-09 | `DecisionService.record` odrzuca (400) decyzję z `ignoredStages` dla zakończonej rozmowy, zanim cokolwiek zapisze i opublikuje. Decyzja bez `ignoredStages` działa jak wcześniej. Zmiana kolejności zdarzeń: `risk.update` z ignorowania etapów jest teraz przed `alert.decision`. 2 nowe testy, zaktualizowany opis 400 w kontrakcie. |
+| F-15 | Domyślny timeout Claude to teraz 8000 ms, a `maxTokens` 1024. Oba są w konfiguracji (`app.claude.timeout-ms`, `app.claude.max-tokens`, zmienne `APP_CLAUDE_TIMEOUT_MS`, `APP_CLAUDE_MAX_TOKENS`, walidowane `@Positive`, w `.env.example`). Zaktualizowane AI-03, AI-05, `CLAUDE.md`, `architecture.md` i wpis w „Odstępstwach”. Testy: konfiguracja, żądanie z `max_tokens` z konfiguracji. Wariant „tylko nowe trafienia” (delta) nie został zrobiony (decyzja: wariant szybki). |
+| F-16 | `FinalSegmentAdded` niesie `CallState`, a `AiAnalyzer` nie woła już `CallService.active()` spod blokady rozmowy, więc blokada slotu nie jest brana po blokadzie rozmowy. Test regresji w `AiAnalyzerTest`: `end()` trzyma blokadę slotu, gdy listener działa pod blokadą rozmowy. Test wykrywa błąd: po przywróceniu starego zachowania kończy się `TimeoutException`. |
+| F-17 | `AuditService` trzyma tekst rekordów (surowy wynik i cytaty) w pamięci do końca rozmowy. Do bazy idzie od razu tylko część liczbowa, a tekst po rozmowie z alertem; po rozmowie bez alertu nie trafia na dysk w ogóle. W trakcie rozmowy `GET /api/calls/{id}/audit` pokazuje tekst z pamięci. DAT-03 i `schema.sql` zaktualizowane. |
+| F-18 | Sprawdzenie „rozmowa skończona” i zapis rekordu oraz `callEnded` odbywają się pod jedną blokadą (`ReentrantLock`). Test wyścigu (100 rund) i testy tekstu w bazie. |
+| F-19 | `usage` ma `cacheCreationInputTokens` (z odpowiedzi API), zapisywane w audycie (kolumna z automatyczną migracją istniejącej bazy), w kontrakcie, w cenniku (`cacheCreationPerMillionUsd`, domyślnie 2,50 USD, do sprawdzenia w cenniku) i w kosztach. `costNote` mówi, że wywołania bez usage (np. timeout) nie są wliczone. |
+| F-20 | Wpis o `GET /api/calls` w „Odstępstwach”. |
+| F-21 | `milestone-1.md`: opis zasady DAT-01, tabel audytu i scenariusza S1 zaktualizowany. |
+| F-22 | `QuoteValidator` odrzuca cytat krótszy niż 3 znaki po normalizacji (AI-08 zaktualizowane, testy). |
 
 ## 3. Findingi usunięte jako nadmiarowe (funkcja jeszcze nie jest zadaniem)
 
@@ -50,5 +58,6 @@ Uwagi:
 
 ## 5. Kolejność dalszych poprawek (propozycja)
 
-1. Wpisy do „Odstępstw” (część F-01), potem F-10, F-11, F-13 przy okazji.
+1. Wpisy do „Odstępstw” dla pozostałych dodatkowych endpointów i zdarzeń (reszta F-01), potem F-10, F-11, F-13 przy okazji.
 2. W swoich zadaniach: F-03 (BE-10), F-06 (WEB-01).
+3. Do pomiaru po poprawkach: realne czasy odpowiedzi Claude (limit 8 s), `MAX_TOKENS` przy dłuższych rozmowach i koszt z zapisem cache (DC-02, DC-04 w `tasks/decyzje_do_podjecia_claude.md`).

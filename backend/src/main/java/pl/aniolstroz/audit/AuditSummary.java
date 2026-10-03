@@ -23,10 +23,11 @@ public record AuditSummary(
         Pricing pricing,
         String costNote) {
 
-    public static final String COST_NOTE = "Koszt wyliczony z usage i cennika z konfiguracji.";
+    public static final String COST_NOTE = "Koszt wyliczony z usage (wejście, odczyt i zapis cache, wyjście) i cennika z konfiguracji. "
+            + "Wywołania bez usage, na przykład po przekroczeniu czasu, nie są wliczone, więc rzeczywisty koszt może być wyższy.";
 
     /** The prices the cost was computed with, USD per 1M tokens. */
     public record Pricing(BigDecimal inputPerMillionUsd, BigDecimal cacheReadPerMillionUsd,
-            BigDecimal outputPerMillionUsd) {
+            BigDecimal outputPerMillionUsd, BigDecimal cacheCreationPerMillionUsd) {
     }
 }

@@ -49,7 +49,8 @@ public final class ClaudeStageClassifier implements StageClassifier {
 
     /** Thinking is switched off up front with {@code between_tools}, which only this model accepts (AI-03). */
     static final String THINKING_MODEL = "claude-sonnet-5-5";
-    static final long MAX_TOKENS = 512;
+    /** Default for {@code app.claude.max-tokens}; the real value comes from the configuration. */
+    static final long DEFAULT_MAX_TOKENS = 1024;
     static final OutputConfig.Effort EFFORT = OutputConfig.Effort.LOW;
 
     private static final String RUBRIC_RESOURCE = "prompts/stage-rubric.pl.md";
@@ -60,10 +61,16 @@ public final class ClaudeStageClassifier implements StageClassifier {
     private final String model;
     private final Clock clock;
     private final ObjectMapper mapper;
+    private final long maxTokens;
 
     public ClaudeStageClassifier(AnthropicClient client, String model, Clock clock, ObjectMapper mapper) {
+        this(client, model, DEFAULT_MAX_TOKENS, clock, mapper);
+    }
+
+    public ClaudeStageClassifier(AnthropicClient client, String model, long maxTokens, Clock clock, ObjectMapper mapper) {
         this.client = client;
         this.model = model;
+        this.maxTokens = maxTokens;
         this.clock = clock;
         this.mapper = mapper;
     }
@@ -74,6 +81,11 @@ public final class ClaudeStageClassifier implements StageClassifier {
      */
     public static ClaudeStageClassifier create(
             String apiKey, String baseUrl, String model, Duration timeout, Clock clock, ObjectMapper mapper) {
+        return create(apiKey, baseUrl, model, DEFAULT_MAX_TOKENS, timeout, clock, mapper);
+    }
+
+    public static ClaudeStageClassifier create(String apiKey, String baseUrl, String model, long maxTokens,
+            Duration timeout, Clock clock, ObjectMapper mapper) {
         AnthropicOkHttpClient.Builder builder = AnthropicOkHttpClient.builder()
                 .apiKey(apiKey)
                 .timeout(timeout)
@@ -81,7 +93,7 @@ public final class ClaudeStageClassifier implements StageClassifier {
         if (baseUrl != null) {
             builder.baseUrl(baseUrl);
         }
-        return new ClaudeStageClassifier(builder.build(), model, clock, mapper);
+        return new ClaudeStageClassifier(builder.build(), model, maxTokens, clock, mapper);
     }
 
     @Override
@@ -110,7 +122,7 @@ public final class ClaudeStageClassifier implements StageClassifier {
         CacheControlEphemeral cache = CacheControlEphemeral.builder().build();
         MessageCreateParams.Builder builder = MessageCreateParams.builder()
                 .model(model)
-                .maxTokens(MAX_TOKENS)
+                .maxTokens(maxTokens)
                 .outputConfig(OutputConfig.builder()
                         .effort(EFFORT)
                         .format(JsonOutputFormat.builder().schema(schema()).build())
@@ -173,7 +185,8 @@ public final class ClaudeStageClassifier implements StageClassifier {
         ClassifierResult.Usage usage = new ClassifierResult.Usage(
                 message.usage().inputTokens(),
                 message.usage().cacheReadInputTokens().orElse(0L),
-                message.usage().outputTokens());
+                message.usage().outputTokens(),
+                message.usage().cacheCreationInputTokens().orElse(0L));
         Optional<StopReason> stopReason = message.stopReason();
         String stop = stopReason.map(StopReason::asString).orElse(null);
 

@@ -100,7 +100,7 @@ Verified against the official Anthropic models overview (platform.claude.com/doc
 
 | Option | WHY | VALUE | SIMPLEST IMPLEMENTATION | FALLBACK | CAN THE TEAM EXPLAIN IT | DECISION |
 |---|---|---|---|---|---|---|
-| **Claude** | Stage recognition from paraphrased, noisy Polish speech | Catches what keywords miss; returns quotes | One Messages API call per finalised STT segment: `claude-sonnet-5-5`, `output_config.effort: "low"`, `thinking: {type: "between_tools"}` (no thinking, lowest latency), `max_tokens: 512`. Measure Haiku 4.5 on the eval set as a speed comparison only. | Keyword layer keeps working; UI shows "AI unavailable, basic protection only" | Yes | **USE** |
+| **Claude** | Stage recognition from paraphrased, noisy Polish speech | Catches what keywords miss; returns quotes | One Messages API call per finalised STT segment: `claude-sonnet-5-5`, `output_config.effort: "low"`, `thinking: {type: "between_tools"}` (no thinking, lowest latency), `max_tokens: 1024` (configurable). Measure Haiku 4.5 on the eval set as a speed comparison only. | Keyword layer keeps working; UI shows "AI unavailable, basic protection only" | Yes | **USE** |
 | **Structured output** | We need machine-checkable stage hits, not prose | Deterministic code can validate every field | `output_config.format` with the JSON schema in "Integration contracts" | Invalid or refused output: drop it, log it, keyword layer continues | Yes | **USE** |
 | **Tools (function calling)** | Would let the model take actions | None: actions belong to people and deterministic code | — | — | Yes | **REJECT.** The model never acts. |
 | **RAG** | Retrieve scam patterns | The rubric (8 stages, about 2k tokens with examples) fits in the system prompt | — | — | Yes | **REJECT.** Nothing to retrieve. |
@@ -178,7 +178,7 @@ Angular apps: one Angular workspace with three routes (senior, family, audit) is
 - **User message:** `<transcript>` with numbered segments `[s12 caller?] text`, then "Return stage hits for segments up to s{N}."
 - **Output:** structured JSON (schema in contracts). No free text reaches the senior.
 - **Prompt caching:** the system prompt plus the transcript are append-only, so a cache breakpoint at the end of the transcript makes each subsequent call pay only for the new segments.
-- **Refusal or error:** check `stop_reason` before reading the content. On `refusal`, `max_tokens`, timeout (2.5 s) or 429/5xx: log it, skip this cycle, keep the keyword layer; after 3 consecutive failures, show "AI check unavailable, basic protection only" on both screens.
+- **Refusal or error:** check `stop_reason` before reading the content. On `refusal`, `max_tokens`, timeout (8 s by default, configurable; measured calls took 2.5 to 3.9 s) or 429/5xx: log it, skip this cycle, keep the keyword layer; after 3 consecutive failures, show "AI check unavailable, basic protection only" on both screens.
 
 ### 6.4 User flow
 
@@ -293,7 +293,7 @@ Shared: `RiskLevelChip` (words, not percentages), `ModeBadge` (always visible), 
 
 - Validate every WebSocket message and API body against the shared types (Zod or class-validator).
 - Validate Claude output: schema (structured outputs guarantee the shape), stage enum, segment ID exists, quote is in the segment.
-- Timeouts: Claude 2.5 s, alert delivery retry. The STT recognizer is restarted with backoff.
+- Timeouts: Claude 8 s by default (configurable), alert delivery retry. The STT recognizer is restarted with backoff.
 
 | Mode | Audio | STT | Claude | Badge text |
 |---|---|---|---|---|
@@ -379,7 +379,7 @@ export interface Decision {
 ```
 
 **Claude request (backend, `@anthropic-ai/sdk`):**
-- `model: "claude-sonnet-5-5"`, `max_tokens: 512`, `thinking: { type: "between_tools" }`, `output_config: { effort: "low", format: { type: "json_schema", schema: StageHitsSchema } }`.
+- `model: "claude-sonnet-5-5"`, `max_tokens: 1024` (default, `app.claude.max-tokens`), `thinking: { type: "between_tools" }`, `output_config: { effort: "low", format: { type: "json_schema", schema: StageHitsSchema } }`.
 - System prompt with `cache_control`; user message with the numbered transcript.
 - Check `stop_reason` (`end_turn` expected; handle `refusal`, `max_tokens`).
 - Verify the exact request shape against the Structured Outputs docs on the day (platform.claude.com/docs/en/build-with-claude/structured-outputs).

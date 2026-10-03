@@ -28,13 +28,28 @@ class AppPropertiesTest {
             AppProperties props = context.getBean(AppProperties.class);
             assertThat(props.mode()).isEqualTo(Mode.SCRIPTED);
             assertThat(props.claude().model()).isEqualTo("claude-sonnet-5-5");
-            assertThat(props.claude().timeoutMs()).isEqualTo(2500);
+            assertThat(props.claude().timeoutMs()).isEqualTo(8000);
+            assertThat(props.claude().maxTokens()).isEqualTo(1024);
         });
     }
 
     @Test
     void nonPositiveTimeoutFailsStartup() {
         runner.withPropertyValues("app.claude.timeout-ms=0")
+                .run(context -> assertThat(context).hasFailed());
+    }
+
+    @Test
+    void timeoutAndMaxTokensCanBeChangedInConfiguration() {
+        runner.withPropertyValues("app.claude.timeout-ms=3000", "app.claude.max-tokens=256").run(context -> {
+            assertThat(context.getBean(AppProperties.class).claude().timeoutMs()).isEqualTo(3000);
+            assertThat(context.getBean(AppProperties.class).claude().maxTokens()).isEqualTo(256);
+        });
+    }
+
+    @Test
+    void nonPositiveMaxTokensFailsStartup() {
+        runner.withPropertyValues("app.claude.max-tokens=0")
                 .run(context -> assertThat(context).hasFailed());
     }
 
@@ -51,6 +66,7 @@ class AppPropertiesTest {
             assertThat(pricing.inputPerMillionUsd()).isEqualByComparingTo("2");
             assertThat(pricing.cacheReadPerMillionUsd()).isEqualByComparingTo("0.20");
             assertThat(pricing.outputPerMillionUsd()).isEqualByComparingTo("10");
+            assertThat(pricing.cacheCreationPerMillionUsd()).isEqualByComparingTo("2.50");
         });
     }
 
