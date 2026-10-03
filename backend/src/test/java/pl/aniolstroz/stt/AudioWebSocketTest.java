@@ -94,6 +94,8 @@ class AudioWebSocketTest {
     /** Collects text frames (events) or only the close status (audio). */
     static final class Client extends AbstractWebSocketHandler {
         final BlockingQueue<JsonNode> events = new LinkedBlockingQueue<>();
+        /** Every event that awaitEvent took from the queue, whether or not it matched. */
+        final List<JsonNode> seen = new CopyOnWriteArrayList<>();
         final CompletableFuture<CloseStatus> closed = new CompletableFuture<>();
         private final ObjectMapper mapper;
         WebSocketSession session;
@@ -131,6 +133,9 @@ class AudioWebSocketTest {
             long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
             while (System.nanoTime() < deadline) {
                 JsonNode event = events.poll(100, TimeUnit.MILLISECONDS);
+                if (event != null) {
+                    seen.add(event);
+                }
                 if (event != null && predicate.test(event)) {
                     return event;
                 }
@@ -337,6 +342,8 @@ class AudioWebSocketTest {
         JsonNode degraded = events.awaitEvent(e -> isStatus(e, "audio", "degraded"));
         assertThat(degraded.at("/payload/message").asText()).isEqualTo(AudioWebSocketHandler.PROTECTION_OFF);
         awaitNoActiveCall();
+        // A deliberate switch-off is not a lost connection.
+        assertThat(events.seen).noneMatch(e -> isStatus(e, "audio", "down"));
     }
 
     @Test
