@@ -12,6 +12,14 @@ spring:
     deserialization:
       fail-on-unknown-properties: true
 
+  datasource: # BE-07: SQLite file in the working directory, one connection (single writer)
+    url: jdbc:sqlite:${APP_DB_FILE:aniol.db}
+    hikari:
+      maximum-pool-size: 1
+  sql:
+    init:
+      mode: always # schema.sql uses CREATE TABLE IF NOT EXISTS
+
 server:
   forward-headers-strategy: framework # API-04: behind a reverse proxy with HTTPS
 

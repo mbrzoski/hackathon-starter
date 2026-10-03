@@ -2,16 +2,26 @@ package pl.aniolstroz.call;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
+import pl.aniolstroz.contracts.Alert;
+import pl.aniolstroz.contracts.HitSource;
 import pl.aniolstroz.contracts.Mode;
+import pl.aniolstroz.contracts.RiskLevel;
+import pl.aniolstroz.contracts.StageHit;
+import pl.aniolstroz.contracts.StageId;
 import pl.aniolstroz.contracts.TranscriptSegment;
 
 /**
  * State of one call. Every read and write of the mutable fields happens under the call's own lock (CC-01, CC-03).
- * The transcript lives only in memory (DAT-01).
+ * The transcript lives only in memory (DAT-01). The risk level only grows (DET-05).
  */
 public final class CallState {
+
+    private record HitKey(StageId stage, String segId, HitSource source) {
+    }
 
     private final String callId;
     private final Mode mode;
@@ -19,9 +29,12 @@ public final class CallState {
 
     private final ReentrantLock lock = new ReentrantLock();
     private final List<TranscriptSegment> transcript = new ArrayList<>();
+    private final List<StageHit> hits = new ArrayList<>();
+    private final Set<HitKey> hitKeys = new HashSet<>();
+    private final List<Alert> alerts = new ArrayList<>();
     private int segmentCount;
+    private RiskLevel level = RiskLevel.NONE;
     private boolean ended;
-    private boolean alerted;
 
     CallState(String callId, Mode mode, Instant startedAt) {
         this.callId = callId;
@@ -43,31 +56,25 @@ public final class CallState {
 
     /** Copy of the final segments kept so far. */
     public List<TranscriptSegment> transcript() {
-        lock.lock();
-        try {
-            return List.copyOf(transcript);
-        } finally {
-            lock.unlock();
-        }
+        return locked(() -> List.copyOf(transcript));
+    }
+
+    /** Copy of the stage hits, without duplicates (key: stage, segment and source). */
+    public List<StageHit> hits() {
+        return locked(() -> List.copyOf(hits));
+    }
+
+    public RiskLevel level() {
+        return locked(() -> level);
+    }
+
+    /** Copy of the alerts raised so far, one per level. */
+    public List<Alert> alerts() {
+        return locked(() -> List.copyOf(alerts));
     }
 
     public boolean hadAlert() {
-        lock.lock();
-        try {
-            return alerted;
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    /** Called by the alert pipeline when an alert was raised, so the transcript is kept (BE-04 follow-up). */
-    public void markAlerted() {
-        lock.lock();
-        try {
-            alerted = true;
-        } finally {
-            lock.unlock();
-        }
+        return locked(() -> !alerts.isEmpty());
     }
 
     /** Removes the whole transcript from memory (DAT-01). */
@@ -80,18 +87,51 @@ public final class CallState {
         }
     }
 
+    /** Keeps only the given segments (the excerpt of an alerted call). */
+    void retainTranscript(List<TranscriptSegment> excerpt) {
+        lock.lock();
+        try {
+            transcript.clear();
+            transcript.addAll(excerpt);
+        } finally {
+            lock.unlock();
+        }
+    }
+
     ReentrantLock lock() {
         return lock;
     }
 
-    /** Assigns the next segment id. Caller must hold the lock. */
-    String nextSegmentId() {
-        return "s" + (++segmentCount);
+    /**
+     * Id for a segment about to be added. A final segment takes the next number; an interim one gets the number
+     * the next final segment will take, so interim and final of one utterance share an id. Caller holds the lock.
+     */
+    String segmentIdFor(boolean isFinal) {
+        return "s" + (isFinal ? ++segmentCount : segmentCount + 1);
     }
 
     /** Caller must hold the lock. */
     void keep(TranscriptSegment segment) {
         transcript.add(segment);
+    }
+
+    /** Returns false if the hit was already known. Caller must hold the lock. */
+    boolean addHit(StageHit hit) {
+        if (!hitKeys.add(new HitKey(hit.stage(), hit.segId(), hit.source()))) {
+            return false;
+        }
+        hits.add(hit);
+        return true;
+    }
+
+    /** Caller must hold the lock. */
+    void setLevel(RiskLevel newLevel) {
+        level = newLevel;
+    }
+
+    /** Caller must hold the lock. */
+    void recordAlert(Alert alert) {
+        alerts.add(alert);
     }
 
     /** Caller must hold the lock. */
@@ -102,5 +142,14 @@ public final class CallState {
     /** Caller must hold the lock. */
     void markEnded() {
         ended = true;
+    }
+
+    private <T> T locked(java.util.function.Supplier<T> read) {
+        lock.lock();
+        try {
+            return read.get();
+        } finally {
+            lock.unlock();
+        }
     }
 }

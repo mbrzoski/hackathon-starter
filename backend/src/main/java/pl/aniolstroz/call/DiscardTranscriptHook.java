@@ -1,9 +1,6 @@
 package pl.aniolstroz.call;
 
-import org.springframework.stereotype.Component;
-
-/** Default hook (DAT-01): the whole transcript is deleted when the call ends. Alerted calls will keep excerpts (BE-04). */
-@Component
+/** The no-alert rule of DAT-01: the whole transcript is deleted when the call ends. */
 public class DiscardTranscriptHook implements CallEndedHook {
 
     @Override

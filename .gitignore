@@ -19,3 +19,6 @@ frontend/.angular/
 .vscode/
 .DS_Store
 Thumbs.db
+
+### Local SQLite database (alert excerpts) ###
+*.db
