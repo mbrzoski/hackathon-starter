@@ -22,7 +22,7 @@
         [alert]="alert()"
         [segments]="segments()"
         [ignored]="ignored()"
-        [canIgnore]="!familyDecision()"
+        [canIgnore]="canIgnore()"
         (toggle)="toggle($event)" />
     </section>
     @if (segments().length) {
@@ -36,5 +36,8 @@
   <app-decision-bar [senior]="settings.senior()" [disabled]="!!familyDecision() || pending()" (decide)="decide($event)" />
   @if (pending()) {
     <p class="note" role="status">Zapisuję decyzję…</p>
+  }
+  @if (failure(); as reason) {
+    <p class="note failure" role="alert">Nie udało się zapisać decyzji: {{ reason }} Spróbuj ponownie.</p>
   }
 </article>

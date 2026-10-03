@@ -32,6 +32,8 @@ export class FamilyFeed {
   /** Live high alerts the family has not decided on yet: they keep "⚠ Alert" in the tab title. */
   private readonly attention = signal<ReadonlySet<string>>(new Set());
   private loaded = false;
+  private wasOpen = false;
+  private reconnecting = false;
 
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
@@ -62,6 +64,18 @@ export class FamilyFeed {
     effect(() => {
       const list = this.events.decisions();
       untracked(() => this.addDecisions(list));
+    });
+    effect(() => {
+      // Calls that ended while the socket was down are only in history (FF-16).
+      const open = this.events.connection() === 'open';
+      untracked(() => {
+        if (!open && this.wasOpen) this.reconnecting = true;
+        if (open && this.reconnecting) {
+          this.reconnecting = false;
+          this.load();
+        }
+        this.wasOpen = this.wasOpen || open;
+      });
     });
     effect(() => this.title.setTitle(this.needsAttention() ? ALERT_TITLE : FAMILY_TITLE));
   }

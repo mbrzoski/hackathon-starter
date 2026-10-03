@@ -17,7 +17,7 @@
   }
 
   @for (item of feed.items(); track item.alert.alertId) {
-    <app-alert-card [item]="item" [segments]="segmentsFor(item.alert.callId)" />
+    <app-alert-card [item]="item" [segments]="segmentsFor(item.alert.callId)" [live]="isLive(item.alert.callId)" />
   } @empty {
     @if (feed.loading()) {
       <p class="note">Wczytuję alerty…</p>
@@ -30,6 +30,6 @@
   }
 
   <p class="privacy">
-    <app-icon name="lock" [size]="18" /> Nagrania audio nie są przechowywane. Transkrypcja służy wyłącznie do oceny ryzyka.
+    <app-icon name="lock" [size]="18" /> Nagrania audio nie są przechowywane. Tekst rozmowy jest wysyłany do dostawcy AI (Anthropic), żeby ocenić ryzyko. Fragmenty rozmów, które wywołały alert, są zapisywane na czas retencji.
   </p>
 </main>

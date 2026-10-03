@@ -90,6 +90,21 @@ describe('DecisionOutbox', () => {
     expect(outbox.unsaved()).toBe(true);
   });
 
+  it('tells the caller why a decision was not saved (FF-14)', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const failed = vi.fn();
+    responses = [throwError(() => new HttpErrorResponse({ status: 400, error: { detail: 'Rozmowa już się zakończyła.' } }))];
+    outbox.send('a1', DecisionRequestDecisionEnum.hung_up, undefined, [], failed);
+    expect(failed).toHaveBeenCalledWith('Rozmowa już się zakończyła.');
+
+    const gaveUp = vi.fn();
+    responses = Array.from({ length: 20 }, () => throwError(() => new HttpErrorResponse({ status: 503 })));
+    outbox.send('a2', DecisionRequestDecisionEnum.hung_up, undefined, [], gaveUp);
+    expect(gaveUp).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(30 * 60_000);
+    expect(gaveUp).toHaveBeenCalledTimes(1);
+  });
+
   it('stays quiet while a retry is still pending', () => {
     responses = [throwError(() => new HttpErrorResponse({ status: 0 }))];
     outbox.send('a1', DecisionRequestDecisionEnum.hung_up);

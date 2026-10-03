@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
-import { Observable, of, throwError } from 'rxjs';
+import { Observable, defer, of, throwError } from 'rxjs';
 import { AlertsService } from '../../api/api/alerts.service';
 import {
   Alert,
@@ -73,6 +73,7 @@ describe('Family', () => {
   let history: Observable<AlertWithDecisions[]>;
   let posted: { alertId: string; body: DecisionRequest }[];
   let notifier: { beep: ReturnType<typeof vi.fn> };
+  let submit: () => Observable<unknown>;
 
   const el = (f: ComponentFixture<Family>) => f.nativeElement as HTMLElement;
   const text = (e: Element | null) => e?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
@@ -90,6 +91,7 @@ describe('Family', () => {
     events = fakeEvents();
     history = of([]);
     posted = [];
+    submit = () => of({});
     notifier = { beep: vi.fn() };
     TestBed.configureTestingModule({
       imports: [Family],
@@ -102,7 +104,7 @@ describe('Family', () => {
             listAlerts: () => history,
             submitDecision: (alertId: string, body: DecisionRequest) => {
               posted.push({ alertId, body: JSON.parse(JSON.stringify(body)) });
-              return of({});
+              return submit();
             },
           },
         },
@@ -176,6 +178,7 @@ describe('Family', () => {
   });
 
   it('sends the family decision with actor family and the ignored stages', async () => {
+    events.activeCall.set({ callId: 'c1', startedAt: T0, endedAt: null, hadAlert: null });
     events.alerts.set([alert('a1', T0)]);
     const fixture = await render();
     const card = cards(fixture)[0];
@@ -207,7 +210,7 @@ describe('Family', () => {
 
     events.decisions.set([{ alertId: 'a1', actor: 'senior', decision: 'hung_up', at: '2026-10-04T10:02:00Z' } as unknown as Decision]);
     await fixture.whenStable();
-    expect(text(cards(fixture)[0])).toMatch(/Mama wybrała: rozłączam się · \d\d:\d\d/);
+    expect(text(cards(fixture)[0])).toMatch(/Senior wybrał\(a\): rozłączam się · \d\d:\d\d/);
 
     events.decisions.update((list) => [
       ...list,
@@ -218,6 +221,59 @@ describe('Family', () => {
     expect(text(card)).toContain('Rodzina: potwierdzone oszustwo');
     expect(button(card, 'Potwierdzam oszustwo').disabled).toBe(true);
     expect(card.querySelector('app-stage-timeline input')).toBeNull();
+  });
+
+  it('uses the name from settings in the senior choice and a neutral text without it (FF-17)', async () => {
+    events.alerts.set([alert('a1', T0)]);
+    events.decisions.set([{ alertId: 'a1', actor: 'senior', decision: 'hung_up', at: T0 } as unknown as Decision]);
+    TestBed.inject(SettingsStore).senior.set({ name: 'Mama', phone: '' });
+    const fixture = await render();
+    expect(text(cards(fixture)[0])).toContain('Mama wybrał(a): rozłączam się');
+  });
+
+  it('offers "nie licz tego etapu" only for alerts of the ongoing call (FF-14)', async () => {
+    history = of([{ alert: alert('old', '2026-10-01T10:00:00Z', 'high', 'c0'), decisions: [] }] as AlertWithDecisions[]);
+    events.activeCall.set({ callId: 'c1', startedAt: T0, endedAt: null, hadAlert: null });
+    events.alerts.set([alert('live', T0)]);
+    const fixture = await render();
+    const [live, old] = cards(fixture);
+    expect(live.querySelector('app-stage-timeline input')).toBeTruthy();
+    expect(old.querySelector('app-stage-timeline input')).toBeNull();
+
+    events.activeCall.set({ callId: 'c1', startedAt: T0, endedAt: '2026-10-04T10:05:00Z', hadAlert: true });
+    await fixture.whenStable();
+    expect(cards(fixture)[0].querySelector('app-stage-timeline input')).toBeNull();
+  });
+
+  it('shows the reason and enables the buttons again when the decision is rejected (FF-14)', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    submit = () => throwError(() => new HttpErrorResponse({ status: 400, error: { detail: 'Rozmowa już się zakończyła.' } }));
+    events.alerts.set([alert('a1', T0)]);
+    const fixture = await render();
+    const card = cards(fixture)[0];
+    button(card, 'Potwierdzam oszustwo').click();
+    await fixture.whenStable();
+
+    expect(text(card.querySelector('[role=alert]'))).toContain('Rozmowa już się zakończyła.');
+    expect(text(card)).not.toContain('Zapisuję decyzję…');
+    expect(button(card, 'Potwierdzam oszustwo').disabled).toBe(false);
+  });
+
+  it('reloads history when the connection comes back (FF-16)', async () => {
+    let loads = 0;
+    history = defer(() => {
+      loads++;
+      return of([]);
+    });
+    const fixture = await render();
+    expect(loads).toBe(1);
+
+    events.connection.set('closed');
+    await fixture.whenStable();
+    expect(loads).toBe(1);
+    events.connection.set('open');
+    await fixture.whenStable();
+    expect(loads).toBe(2);
   });
 
   it('offers the call link only with a number from settings (FE-10)', async () => {
