@@ -62,13 +62,13 @@ Metoda: czytanie kodu. Nie uruchamiałem `./mvnw verify` (w tym środowisku nie 
 | BE-02, BE-03, BE-04 | ✅ | Wątki wirtualne w executorze, własny `BinaryWebSocketHandler`, jedna rozmowa (test: drugi `start` odrzucony). |
 | BE-05, TST-04 | ✅ | ArchUnit: `stt` nie zależy od `ai`/`risk`/`alerts`/`audit`/`demo`, `call` nie zależy od `stt`, brak `synchronized`. |
 | CC-01, CC-03 | ⚠️ | `ReentrantLock` wszędzie. Luka: pole `provider` w `SttSupervisor` nie jest `volatile` (F-29). |
-| CC-04 zadania okresowe | ❌ | Nie ma żadnego zadania pilnującego ciszy (F-25). |
-| OBS-01 awaria zawsze w `system.status` | ⚠️ | Brak modelu, błąd Vosk, przepełnienie i pauza publikują status. Zerwane połączenie i brak ramek nie (F-31, F-25). |
-| OBS-02 progi | ⚠️ | STT: 3 próby po 1, 2 i 4 s, potem `down`, powrót do `ok` po udanym restarcie ✅. Brak progu „10 s ciszy lub brak ramek → audio `down`” (F-25). |
+| CC-04 zadania okresowe | ✅ | `AudioWebSocketHandler.checkSilence` (`@Scheduled`, `app.stt.silence.check-interval-ms`), zegar `Clock` wstrzykiwany (naprawione: F-25). |
+| OBS-01 awaria zawsze w `system.status` | ✅ | Brak modelu, błąd Vosk, przepełnienie, pauza, cisza (`NO_SOUND`) i zerwane połączenie (`CONNECTION_LOST`) publikują status (naprawione: F-25, F-31). |
+| OBS-02 progi | ✅ | STT: 3 próby po 1, 2 i 4 s, potem `down`, powrót do `ok` po udanym restarcie. Audio: 10 s bez ramek lub z samymi płaskimi ramkami → `down`, dźwięk przywraca `ok` (naprawione: F-25). |
 | OBS-05 logi bez treści | ✅ | W pakiecie `stt` logowane są tylko typy wyjątków. |
 | API-02, zasada 6: tryb na zdarzeniu | ✅ | `LiveStatusPublisher` i `calls.start(Mode.LIVE)`. |
-| CON-01, CON-02 kontrakt najpierw | ❌ | `/ws/audio` i `AudioControl` nie ma w `contracts/openapi.yaml` (F-24). |
-| CON-06 walidacja wejścia WebSocket | ⚠️ | Polecenia sprawdza ręcznie `commandOf` (lista czterech słów), bez walidatora schematu (F-24). |
+| CON-01, CON-02 kontrakt najpierw | ✅ | `AudioControl` i `x-websockets` (`/ws/audio`, `/ws/events`, kody zamknięcia) są w `contracts/openapi.yaml`, rekord `contracts/AudioControl` (naprawione: F-24). |
+| CON-06 walidacja wejścia WebSocket | ✅ | Polecenia czyta ścisły `ObjectReader` (`FAIL_ON_UNKNOWN_PROPERTIES`) do rekordu `AudioControl`, test `AudioControlTest` sprawdza zgodność ze schematem (naprawione: F-24). |
 | TST-02 testy bez prawdziwego STT | ⚠️ | `VoskSttProviderSmokeTest` uruchamia prawdziwy Vosk, gdy jest model (F-34). |
 | Zasady 3, 4, 5, 8 z `CLAUDE.md` | ✅ | Brak rozłączania i dzwonienia, audio tylko w pamięci, do STT nie idą dane z ustawień, brak kluczy (Vosk ich nie potrzebuje). |
 
@@ -87,6 +87,19 @@ Metoda: czytanie kodu. Nie uruchamiałem `./mvnw verify` (w tym środowisku nie 
 | F-32 | Średnia | BE-09 (odroczone) | AUD-07 | `settings/PermissiveConsentChecker` | Produkcyjny `ConsentChecker` zawsze zwraca `true`, więc każdy klient na tym originie może włączyć nasłuch LIVE bez zgody. Kod jest świadomym zaślepieniem („Replace it, do not extend it”), a test używa własnego stubu. | Zastąpić przy BE-09 (zgody z ustawień). Do tego czasu dopisać do README/„Odstępstw”, że LIVE nie wymaga zgody. |
 | F-33 | Niska | BE-08 | TST-01 | `VoskSttProvider` | Logika dostawcy (łączenie interim i final, czasy, średnia pewność, dławienie kolejki, `getFinalResult` przy `stop`) jest testowana tylko ciszą z prawdziwym modelem, więc bez modelu nie jest testowana wcale. | Wydzielić rozpoznawacz za małym interfejsem i przetestować logikę na atrapie (bez Vosk i bez modelu). |
 | F-34 | Niska | BE-08 | TST-02, `CLAUDE.md` („testy nie wołają prawdziwego STT”) | `VoskSttProviderSmokeTest` | Test wywołuje prawdziwy Vosk, gdy model leży na dysku (`@EnabledIf`), więc na maszynie z modelem `./mvnw verify` uruchamia natywne STT. | Oznaczyć jako test ręczny/integracyjny (`@Tag`, osobny profil) albo dopisać wyjątek do „Odstępstw”. |
+
+### Stan poprawek średnich findingów (branch `fix/be-08-medium-findings`)
+
+`./mvnw verify` zielone: 507 testów, 1 pominięty (test z prawdziwym Vosk, bez modelu). Wcześniej `master` nie kompilował testów (`RetentionServiceTest` nie znał parametru `Stt` w `AppProperties`), co też naprawiono.
+
+| ID | Status | Co zrobiono |
+|---|---|---|
+| F-24 | ZAMKNIĘTY | `AudioControl` i `x-websockets` w `contracts/openapi.yaml`, rekord `contracts/AudioControl`, ścisły odczyt poleceń (nieznane pole lub polecenie zamyka sesję kodem 1008). Testy: `AudioControlTest`, `AudioWebSocketTest`. Typy we frontendzie powstają z generatora (`audio-control.ts`). |
+| F-25 | ZAMKNIĘTY | `SilenceWatch` i `@Scheduled` `checkSilence`: 10 s bez ramek lub z samymi płaskimi ramkami (najgłośniejsza próbka poniżej 8 z 32768) daje `audio = down`, dźwięk przywraca `ok`, pauza nie jest ciszą. Konfiguracja `app.stt.silence.timeout-ms` i `check-interval-ms`. Testy: `SilenceWatchTest`, `AudioSilenceTest`. |
+| F-26 | UDOKUMENTOWANY | Bez diaryzacji nie da się tego naprawić w kodzie bez decyzji zespołu. Wpis w „Odstępstwach” (`docs/ograniczenia-backend-java.md`) do potwierdzenia. Otwarta decyzja: potwierdzenie przez AI dla `MONEY_REQUEST` i `PAYMENT_CHANNEL` z rolą `UNCLEAR`. |
+| F-27 | ZAMKNIĘTY | Trafienie z interim jest tymczasowe. Gdy przychodzi final tego samego `segId`, trafienia powstają od nowa z tekstu finala, a niepotwierdzone są wycofywane (`risk.update` z mniejszą liczbą etapów). Poziom nie spada (DET-05), a alert już pokazany zostaje. Testy w `CallServiceRiskTest`. Zostaje: alert pokazany z tekstu interim, którego final nie potwierdził, ma w sobie ten cytat. |
+| F-31 | ZAMKNIĘTY | Zamknięcie gniazda bez `stop` i błąd transportu publikują `audio = down` („Połączenie z mikrofonem zostało przerwane”). Czyste `stop` niczego nie zmienia. Testy w `AudioWebSocketTest`. Status `stt` po końcu rozmowy zostaje taki, jaki był, do następnego startu. |
+| F-32 | ODROCZONY | Zadanie BE-09 (zgody), poza zakresem tej poprawki. |
 
 ### Uwagi poza findingami
 

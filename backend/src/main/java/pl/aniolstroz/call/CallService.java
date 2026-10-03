@@ -115,7 +115,12 @@ public class CallService implements LiveCallAccess {
                 call.keep(numbered);
             }
             eventBus.publish(new TranscriptSegmentEvent(call.mode(), clock.instant(), numbered));
-            applyHits(call, keywordDetector.detect(numbered));
+            // Keywords act on interim text too (DET-03), but that text may still change. Such a hit is provisional;
+            // when the final segment comes, the hits are made again from the final text, which is what the transcript
+            // keeps, so the evidence of a call never cites words that the transcript does not have.
+            List<StageHit> found = keywordDetector.detect(numbered);
+            boolean replaced = numbered.isFinal() && call.settleProvisionalHits(numbered.segId(), found);
+            applyHits(call, found, !numbered.isFinal(), replaced);
             if (numbered.isFinal()) {
                 announce(call);
             }
@@ -187,9 +192,17 @@ public class CallService implements LiveCallAccess {
      * (DET-05). Caller holds the call lock.
      */
     private void applyHits(CallState call, List<StageHit> hits) {
-        boolean changed = false;
+        applyHits(call, hits, false, false);
+    }
+
+    /**
+     * @param provisional the hits come from an interim segment and are replaced when it becomes final
+     * @param recompute provisional hits were just removed, so the risk is computed again even if no hit is new
+     */
+    private void applyHits(CallState call, List<StageHit> hits, boolean provisional, boolean recompute) {
+        boolean changed = recompute;
         for (StageHit hit : hits) {
-            changed |= call.addHit(hit);
+            changed |= call.addHit(hit, provisional);
         }
         if (!changed) {
             return;

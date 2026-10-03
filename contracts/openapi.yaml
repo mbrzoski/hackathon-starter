@@ -245,8 +245,40 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
+x-websockets:
+  /ws/events:
+    description: Server to client. Every message is a text frame with one EventEnvelope. A new client first gets the current state (API-03).
+    server-to-client:
+      text:
+        $ref: "#/components/schemas/EventEnvelope"
+  /ws/audio:
+    description: Senior device to backend. Opens a LIVE call and carries the microphone audio to the local speech recognition (AUD-01).
+    client-to-server:
+      text:
+        $ref: "#/components/schemas/AudioControl"
+      binary: "PCM 16 kHz, mono, 16-bit little endian, frames of 100 ms (3200 bytes). Messages over 64 KB are refused by the container (close code 1009)."
+    close-codes:
+      "1000": Normal end after stop.
+      "1008": Refused, with a Polish reason. No consent, a call is already active, audio before start or a malformed or unknown control message.
+      "1009": Message over 64 KB.
+      "1011": Speech recognition cannot start (for example the model is missing).
 components:
   schemas:
+    AudioControl:
+      title: AudioControl
+      description: "Control message on /ws/audio (text frame). start opens a LIVE call, stop ends it, pause drops the audio until resume."
+      type: object
+      additionalProperties: false
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum:
+            - start
+            - stop
+            - pause
+            - resume
     Alert:
       title: Alert
       description: Alert created by deterministic code. Texts come from a pre-written template, never from the model.

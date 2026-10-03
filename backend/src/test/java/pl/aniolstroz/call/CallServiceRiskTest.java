@@ -114,6 +114,39 @@ class CallServiceRiskTest {
     }
 
     @Test
+    void anInterimHitIsReplacedByTheHitOfTheFinalTextWhenTheRecognizerChangesItsMind() {
+        sayInterim("Dzwonię z policji");
+        say("Dzwonię z policji w sprawie konta.");
+
+        assertThat(call.hits()).hasSize(1);
+        assertThat(call.hits().get(0).quote()).isEqualTo("Dzwonię z policji w sprawie konta.");
+        assertThat(call.hits().get(0).segId()).isEqualTo("s1");
+        assertThat(call.transcript().get(0).text()).contains(call.hits().get(0).quote());
+    }
+
+    @Test
+    void anInterimHitThatTheFinalTextDoesNotConfirmIsWithdrawnButTheLevelDoesNotDrop() {
+        sayInterim("Mówi policja");
+        say("Mów im pilnie.");
+
+        assertThat(call.hits()).isEmpty();
+        assertThat(riskUpdates()).hasSize(2);
+        RiskUpdate withdrawn = riskUpdates().get(1);
+        assertThat(withdrawn.stages()).isEmpty();
+        assertThat(withdrawn.level()).isEqualTo(RiskLevel.LOW); // DET-05: the level only grows
+        assertThat(call.level()).isEqualTo(RiskLevel.LOW);
+    }
+
+    @Test
+    void anInterimHitThatNoFinalConfirmedIsReplacedByTheNextFinalOfTheSameId() {
+        sayInterim("Mówi policja"); // the recognizer dropped this utterance: no final for s1 ever came
+        say("Dzień dobry babciu."); // so the next final takes the id s1
+
+        assertThat(call.hits()).isEmpty();
+        assertThat(call.transcript()).extracting(TranscriptSegment::segId).containsExactly("s1");
+    }
+
+    @Test
     void sameStageInAnotherSegmentIsAnotherHitButTheStageIsCountedOnce() {
         say("Mówi policja.");
         say("Tu policja, proszę słuchać.");
