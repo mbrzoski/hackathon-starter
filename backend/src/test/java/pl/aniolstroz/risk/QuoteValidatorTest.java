@@ -53,6 +53,21 @@ class QuoteValidatorTest {
     }
 
     @Test
+    void aQuoteShorterThanThreeCharactersAfterNormalizationIsNotValid() {
+        // "a" and "z" are in the segment, but one letter proves nothing
+        assertThat(validated("s1", "a")).isFalse();
+        assertThat(validated("s2", "z")).isFalse();
+        assertThat(validated("s2", "ż")).isFalse();
+        assertThat(validated("s2", " , ")).isFalse();
+    }
+
+    @Test
+    void aQuoteOfExactlyThreeCharactersIsStillValid() {
+        assertThat(validated("s2", "nie")).isTrue();
+        assertThat(validated("s2", "ni e")).isFalse();
+    }
+
+    @Test
     void quoteMatchesTheErroneousTranscriptTextNotTheCorrectedOne() {
         assertThat(validated("s3", "wyplac pieniondze do kopeCie")).isTrue();
         assertThat(validated("s3", "wypłać pieniądze do kopercie")).isFalse();

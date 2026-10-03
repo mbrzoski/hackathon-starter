@@ -224,7 +224,7 @@ class CallServiceTest {
         service.addSegment(segment(call.callId(), "gotowe", true));
 
         assertThat(announced).filteredOn(FinalSegmentAdded.class::isInstance)
-                .containsExactly(new FinalSegmentAdded(call.callId()));
+                .containsExactly(new FinalSegmentAdded(call));
     }
 
     @Test

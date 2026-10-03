@@ -51,7 +51,7 @@ class AiConfig {
             }
             return new MockStageClassifier(mapper);
         }
-        return ClaudeStageClassifier.create(apiKey, null, properties.claude().model(),
+        return ClaudeStageClassifier.create(apiKey, null, properties.claude().model(), properties.claude().maxTokens(),
                 Duration.ofMillis(properties.claude().timeoutMs()), clock, mapper);
     }
 

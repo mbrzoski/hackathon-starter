@@ -54,7 +54,7 @@ class AuditRecorderTest {
         dataSource = new SingleConnectionDataSource("jdbc:sqlite::memory:", true);
         new ResourceDatabasePopulator(new ClassPathResource("schema.sql")).execute(dataSource);
         audit = new AuditService(JdbcClient.create(dataSource), new ObjectMapper().findAndRegisterModules(), CLOCK,
-                new Pricing(new BigDecimal("2"), new BigDecimal("0.20"), new BigDecimal("10")));
+                new Pricing(new BigDecimal("2"), new BigDecimal("0.20"), new BigDecimal("10"), new BigDecimal("2.50")));
         bus = mock(EventBus.class);
         doAnswer(invocation -> events.add(invocation.getArgument(0))).when(bus).publish(any());
     }

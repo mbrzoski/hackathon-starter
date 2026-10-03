@@ -18,7 +18,16 @@ public record ClassifierResult(
         String stopReason,
         ClassifierError error) {
 
-    public record Usage(long inputTokens, long cacheReadInputTokens, long outputTokens) {
+    /**
+     * Tokens as the API reports them. {@code inputTokens} are the new tokens only, {@code cacheReadInputTokens} come
+     * from the cache and {@code cacheCreationInputTokens} were written to it (billed above the input price, and the
+     * transcript block is written every call because it grows).
+     */
+    public record Usage(long inputTokens, long cacheReadInputTokens, long outputTokens, long cacheCreationInputTokens) {
+
+        public Usage(long inputTokens, long cacheReadInputTokens, long outputTokens) {
+            this(inputTokens, cacheReadInputTokens, outputTokens, 0);
+        }
     }
 
     public ClassifierResult {
