@@ -32,7 +32,7 @@ make demo           # LAN: builds everything, starts backend + Caddy in Docker, 
 make e2e-demo       # UC-01 end to end against the running demo
 ```
 
-`make demo` prints one address, e.g. `http://192.168.1.50`. Open it on each phone or tablet in the same Wi-Fi: the start page downloads the certificate (once per device) and links to the senior, listen and family apps. On this laptop run `deploy/trust-ca.sh` once. Ctrl+C stops the demo.
+`make demo` prints one address, e.g. `http://192.168.1.50`. Open it on each phone or tablet in the same Wi-Fi: the start page downloads the certificate (once per device) and links to the senior, listen and family apps. On this laptop run `deploy/trust-ca.sh` once (while the demo runs). Ctrl+C stops the demo and deletes its generated files (`deploy/site/`, `deploy/ca.crt`).
 
 ### All commands
 
@@ -46,6 +46,7 @@ make e2e-demo       # UC-01 end to end against the running demo
 | `make demo` | Demo in the LAN over HTTPS: builds frontend and backend, starts backend and Caddy in Docker, saves Caddy's CA to `deploy/ca.crt`, runs the smoke test, prints the start page address. |
 | `make demo-tunnel` | Same through a public Cloudflare quick tunnel (`https://….trycloudflare.com`): no certificates on the devices, but the address is public and changes on every start. |
 | `make smoke` | Smoke test of the running demo: routes of the three apps, security headers, cache, TLS checked with the downloaded CA, API, WebSocket, start page. |
+| `make clean-demo` | Stops the demo containers and deletes the generated `deploy/site/` and `deploy/ca.crt`. `make demo` does this itself on exit (Ctrl+C); use it after a hard kill. Volumes stay, so device certificates keep working. |
 | `make e2e-demo` | Use case UC-01 in Chrome against the running demo at `https://localhost` (failure states are skipped: no `/api/dev/emit` in prod). |
 | `deploy/trust-ca.sh` | Trusts the demo CA on this laptop (macOS asks for your password once). |
 

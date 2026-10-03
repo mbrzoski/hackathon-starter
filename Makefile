@@ -1,4 +1,4 @@
-.PHONY: build test run-backend run-frontend demo demo-tunnel smoke e2e e2e-demo
+.PHONY: build test run-backend run-frontend demo demo-tunnel smoke e2e e2e-demo clean-demo
 
 # Build the backend without running tests.
 build:
@@ -35,3 +35,9 @@ e2e:
 # UC-01 end to end against the running demo (make demo).
 e2e-demo:
 	cd frontend && npm run e2e:demo
+
+# Stops the demo containers and deletes the generated deploy/site and deploy/ca.crt (make demo does it on exit).
+# Keeps the volumes: the database and Caddy's CA (the certificate installed on the devices stays valid).
+clean-demo:
+	PATH="$$PATH:/Applications/Docker.app/Contents/Resources/bin" docker compose -f deploy/docker-compose.yml --profile tunnel down
+	rm -rf deploy/site deploy/ca.crt

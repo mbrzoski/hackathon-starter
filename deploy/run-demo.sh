@@ -63,8 +63,30 @@ echo "== Building the frontend (senior, listen, family)"
 echo "== Building the backend"
 (cd "$ROOT/backend" && ./mvnw -q -DskipTests package)
 
-echo "== Assembling deploy/site"
 SITE="$ROOT/deploy/site"
+CA_COPY="$ROOT/deploy/ca.crt"
+
+# On any exit (Ctrl+C, closed terminal, error, normal end): stop the containers and delete what this script
+# generated (deploy/site, deploy/ca.crt). The CA itself stays in the caddy-data volume, so the certificate
+# installed on the devices keeps working next time. `make clean-demo` does the same by hand.
+STARTED=0
+CLEANED=0
+cleanup() {
+  [[ "$CLEANED" == 1 ]] && return
+  CLEANED=1
+  echo
+  if [[ "$STARTED" == 1 ]]; then
+    echo "== Stopping the demo"
+    "${COMPOSE[@]}" ${PROFILE[@]+"${PROFILE[@]}"} down || true
+  fi
+  rm -rf "$SITE" "$CA_COPY"
+  echo "== Removed deploy/site and deploy/ca.crt"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM HUP
+
+echo "== Assembling deploy/site"
 rm -rf "$SITE"
 mkdir -p "$SITE"
 for app in senior listen family; do
@@ -74,8 +96,8 @@ for app in senior listen family; do
 done
 
 echo "== Starting backend and Caddy"
+STARTED=1
 "${COMPOSE[@]}" ${PROFILE[@]+"${PROFILE[@]}"} up -d --build
-trap '"${COMPOSE[@]}" ${PROFILE[@]+"${PROFILE[@]}"} down' EXIT
 
 echo "== Waiting for Caddy and the backend"
 WAIT_URL="https://localhost/api/status"
@@ -87,7 +109,7 @@ done
 
 if [[ "$VARIANT" == "lan" ]]; then
   # Caddy's CA for this laptop (deploy/trust-ca.sh) and for the smoke test; the devices download it from the start page.
-  "${COMPOSE[@]}" cp caddy:/data/caddy/pki/authorities/local/root.crt "$ROOT/deploy/ca.crt" >/dev/null
+  "${COMPOSE[@]}" cp caddy:/data/caddy/pki/authorities/local/root.crt "$CA_COPY" >/dev/null
   echo "== Smoke test"
   node "$ROOT/deploy/smoke-test.mjs" --host "$LAN_IP" || echo "Smoke test failed: see above."
   echo
@@ -120,5 +142,5 @@ else
   fi
 fi
 echo
-echo "Logs follow. Ctrl+C stops the demo."
+echo "Logs follow. Ctrl+C stops the demo and removes deploy/site and deploy/ca.crt."
 "${COMPOSE[@]}" ${PROFILE[@]+"${PROFILE[@]}"} logs -f backend caddy
