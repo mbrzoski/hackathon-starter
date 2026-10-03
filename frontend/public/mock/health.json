@@ -1,8 +1,0 @@
-{
-  "status": "UP",
-  "app": "hackathon-starter",
-  "profiles": ["mock"],
-  "time": "2026-10-03T12:00:00Z",
-  "database": "UP",
-  "llm": { "provider": "mock", "model": "claude-sonnet-5-5", "apiKeyConfigured": true }
-}

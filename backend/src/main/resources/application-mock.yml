@@ -1,4 +1,0 @@
-# Activate with SPRING_PROFILES_ACTIVE=mock : no API key needed, the LLM is a deterministic stub.
-app:
-  llm:
-    provider: mock

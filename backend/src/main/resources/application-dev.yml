@@ -1,0 +1,8 @@
+logging:
+  level:
+    pl.aniolstroz: DEBUG
+
+management:
+  endpoint:
+    health:
+      show-details: always

@@ -4,6 +4,7 @@ Projekt na HackYeah 2026. Urządzenie przy telefonie stacjonarnym seniora słuch
 
 ## Przeczytaj przed pracą
 
+- `docs/architecture.md`: architektura, przepływy i kontrakty.
 - `docs/ograniczenia-backend-java.md` i `docs/ograniczenia-frontend.md`: zasady „MUSI” / „NIE WOLNO” z identyfikatorami (np. AI-03, WEB-03). Odstępstwo zgłoś człowiekowi, nie wprowadzaj go sam.
 - `docs/plan/`: lista zadań w kolejności. Rób tylko zadanie, które dostałeś, i nie zaczynaj następnego.
 
@@ -15,6 +16,8 @@ Projekt na HackYeah 2026. Urządzenie przy telefonie stacjonarnym seniora słuch
 - `deploy/`: Caddy lub nginx (HTTPS, reverse proxy `/api` i `/ws`)
 
 ## Komendy
+
+Skróty w `Makefile`: `make build`, `make test`, `make run-backend`. Wymagane JDK 21.
 
 ```bash
 cd backend && ./mvnw verify          # testy backendu (w tym kontraktowe i ArchUnit)

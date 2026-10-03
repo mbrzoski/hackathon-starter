@@ -1,0 +1,14 @@
+logging:
+  level:
+    root: INFO
+    pl.aniolstroz: INFO
+
+management:
+  endpoint:
+    health:
+      show-details: never
+
+server:
+  error:
+    include-message: never
+    include-stacktrace: never
