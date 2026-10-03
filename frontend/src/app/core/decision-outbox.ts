@@ -12,7 +12,8 @@ const MAX_ATTEMPTS = 12;
 /**
  * Sends decisions (POST /api/alerts/{id}/decision), by default as the senior. The screen never waits for it:
  * network and server errors are retried in the background up to MAX_ATTEMPTS. A 4xx is final.
- * A decision that is not saved in the end is never silent: `unsaved` turns on until acknowledged (FF-11).
+ * A decision that is not saved in the end is never silent: `unsaved` turns on until acknowledged (FF-11),
+ * and the optional `onFailed` callback gets the reason so a screen can show it next to the decision (FF-14).
  */
 @Injectable({ providedIn: 'root' })
 export class DecisionOutbox {
@@ -27,35 +28,38 @@ export class DecisionOutbox {
     decision: DecisionRequestDecisionEnum,
     actor: DecisionRequestActorEnum = DecisionRequestActorEnum.senior,
     ignoredStages: readonly StageId[] = [],
+    onFailed?: (reason: string) => void,
   ): void {
     const body: DecisionRequest = { actor, decision };
     if (ignoredStages.length) {
       // The generator types uniqueItems as Set, which JSON.stringify turns into {}: send a plain array.
       body.ignoredStages = [...new Set(ignoredStages)] as unknown as Set<StageId>;
     }
-    this.attempt(alertId, body, 1);
+    this.attempt(alertId, body, 1, onFailed);
   }
 
   acknowledge(): void {
     this._unsaved.set(false);
   }
 
-  private attempt(alertId: string, body: DecisionRequest, attempt: number): void {
+  private attempt(alertId: string, body: DecisionRequest, attempt: number, onFailed?: (reason: string) => void): void {
     const decision = body.decision;
     this.alerts.submitDecision(alertId, body).subscribe({
       error: (err: unknown) => {
         if (err instanceof HttpErrorResponse && err.status >= 400 && err.status < 500) {
           console.warn(`Decision ${decision} for ${alertId} rejected: ${problemDetailText(err)}`);
           this._unsaved.set(true);
+          onFailed?.(problemDetailText(err));
           return;
         }
         if (attempt >= MAX_ATTEMPTS) {
           console.warn(`Decision ${decision} for ${alertId} not saved after ${attempt} attempts`);
           this._unsaved.set(true);
+          onFailed?.('Brak połączenia z serwerem.');
           return;
         }
         const delay = Math.min(FIRST_RETRY_MS * 2 ** (attempt - 1), MAX_RETRY_MS);
-        setTimeout(() => this.attempt(alertId, body, attempt + 1), delay);
+        setTimeout(() => this.attempt(alertId, body, attempt + 1, onFailed), delay);
       },
     });
   }

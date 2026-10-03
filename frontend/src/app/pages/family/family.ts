@@ -17,6 +17,11 @@ export class Family {
   protected readonly feed = inject(FamilyFeed);
   private readonly events = inject(EventsService);
 
+  protected isLive(callId: string): boolean {
+    const call = this.events.activeCall();
+    return call?.callId === callId && call.endedAt === null;
+  }
+
   /** The live transcript belongs only to the ongoing call's alerts. */
   protected segmentsFor(callId: string) {
     return this.events.activeCall()?.callId === callId ? this.events.segments() : [];

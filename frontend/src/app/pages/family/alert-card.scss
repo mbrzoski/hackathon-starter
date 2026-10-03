@@ -9,4 +9,5 @@ h3 { margin: 0 0 8px; font-size: 13px; letter-spacing: 0.06em; text-transform: u
 .choice.family { font-weight: 600; }
 .cols { display: grid; gap: 16px; }
 .note { margin: 0; color: var(--muted); font-size: 14px; }
+.failure { color: var(--warn-deep); background: var(--warn-bg); padding: 10px 12px; border-radius: 8px; font-size: 15px; }
 @media (min-width: 900px) { .cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }

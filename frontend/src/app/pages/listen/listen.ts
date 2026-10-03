@@ -32,8 +32,8 @@ export class Listen {
     if (!this.events.online()) return 'offline';
     if (!this.armed()) return 'idle';
     if (audio && audio.state !== SystemStatusStateEnum.ok) return 'audio_lost';
-    if (this.alert()) return 'alarm';
-    if (call && !call.endedAt) return 'listening';
+    // Only an ongoing call can be alarming: after call.ended (or a backend restart) the tablet waits again.
+    if (call && !call.endedAt) return this.alert() ? 'alarm' : 'listening';
     return 'waiting';
   });
 
