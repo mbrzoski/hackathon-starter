@@ -45,27 +45,33 @@ export class AlertCard {
   readonly item = input.required<FamilyAlert>();
   /** Transcript of this alert's call when it is the ongoing call; empty for history. */
   readonly segments = input<TranscriptSegment[]>([]);
+  /** True while the alert's call is still ongoing: only then the backend accepts ignored stages (FF-14). */
+  readonly live = input(false);
 
   protected readonly ignored = signal<ReadonlySet<StageId>>(new Set());
   /** Sent from this card, waiting for alert.decision from the backend. */
   protected readonly sent = signal<DecisionRequestDecisionEnum | null>(null);
+  /** Why the last decision from this card was not saved; the buttons are enabled again (FF-14). */
+  protected readonly failure = signal<string | null>(null);
 
   protected readonly alert = computed(() => this.item().alert);
   protected readonly time = computed(() => formatClock(this.alert().createdAt));
   protected readonly source = computed(() => TRIGGERED_BY_LABEL[this.alert().triggeredBy]);
-  protected readonly seniorName = computed(() => this.settings.senior()?.name ?? 'Mama');
 
   protected readonly seniorDecision = computed(() => this.latest(DecisionActorEnum.senior));
   protected readonly familyDecision = computed(() => this.latest(DecisionActorEnum.family));
   protected readonly seniorText = computed(() => {
     const d = this.seniorDecision();
-    return d ? `${this.seniorName()} wybrała: ${SENIOR_CHOICE[d.decision]}` : null;
+    if (!d) return null;
+    const name = this.settings.senior()?.name;
+    return `${name ? `${name} wybrał(a)` : 'Senior wybrał(a)'}: ${SENIOR_CHOICE[d.decision]}`;
   });
   protected readonly familyText = computed(() => {
     const d = this.familyDecision();
     return d ? `Rodzina: ${FAMILY_CHOICE[d.decision]}` : null;
   });
   protected readonly pending = computed(() => !!this.sent() && !this.familyDecision());
+  protected readonly canIgnore = computed(() => this.live() && !this.familyDecision());
 
   protected readonly clock = formatClock;
 
@@ -79,7 +85,12 @@ export class AlertCard {
 
   protected decide(decision: DecisionRequestDecisionEnum): void {
     this.sent.set(decision);
-    this.outbox.send(this.alert().alertId, decision, DecisionRequestActorEnum.family, [...this.ignored()]);
+    this.failure.set(null);
+    const ignored = this.canIgnore() ? [...this.ignored()] : [];
+    this.outbox.send(this.alert().alertId, decision, DecisionRequestActorEnum.family, ignored, (reason) => {
+      this.sent.set(null);
+      this.failure.set(reason);
+    });
   }
 
   private latest(actor: DecisionActorEnum): Decision | null {
