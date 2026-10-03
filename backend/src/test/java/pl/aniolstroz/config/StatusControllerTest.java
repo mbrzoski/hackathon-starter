@@ -1,5 +1,6 @@
 package pl.aniolstroz.config;
 
+import static com.atlassian.oai.validator.mockmvc.OpenApiValidationMatchers.openApi;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -25,6 +26,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @Import(StatusControllerTest.FixedClockConfig.class)
 class StatusControllerTest {
 
+    private static final String SPEC = "contract/openapi.yaml";
+
     static final Instant NOW = Instant.parse("2026-10-03T21:00:00Z");
 
     @TestConfiguration(proxyBeanMethods = false)
@@ -45,7 +48,8 @@ class StatusControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.mode").value("SCRIPTED"))
                 .andExpect(jsonPath("$.version").isNotEmpty())
-                .andExpect(jsonPath("$.startedAt").value("2026-10-03T21:00:00Z"));
+                .andExpect(jsonPath("$.startedAt").value("2026-10-03T21:00:00Z"))
+                .andExpect(openApi().isValid(SPEC));
     }
 
     @Test
