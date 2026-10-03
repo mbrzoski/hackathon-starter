@@ -6,44 +6,46 @@ Każde zadanie kończy się działającą funkcjonalnością, którą da się zo
 
 ## Kolejność implementacji
 
+Status: ✅ zrobione = zmergowane do `master` (wg historii git), ⏳ = brak w repozytorium. Stan na commit ce7d241. Hotfix ce7d241 dodał brakujące pliki ekranu seniora (FE-02/FE-03). Build i testy nie były uruchamiane (przegląd z kodu). Uwagi do zadań są w `tasks/backend-review-findings.md` i `tasks/frontend-review-findings.md`.
+
 Numer to kolejność, w jakiej warto zaczynać zadania. W kolumnie „Ścieżka” jest osoba, która zwykle je robi, więc zadania z różnych ścieżek mogą iść równolegle. Zadanie zaczynamy dopiero wtedy, gdy wszystko z kolumny „Wymaga” jest już zmergowane.
 
-| # | ID | Zadanie | Ścieżka | Wymaga |
-|---|---|---|---|---|
-| 1 | BE-01 | Fundament repozytorium, `CLAUDE.md`, `/api/status` | A | — |
-| 2 | CT-01 | Kontrakty JSON Schema, rekordy Javy, typy TS i zod, wektory normalizacji | A | 1 |
-| 3 | EV-01 | Rubryka etapów oszustwa (prompt systemowy) | D | — |
-| 4 | EV-02 | 12 syntetycznych scenariuszy | D | 2 |
-| 5 | BE-02 | Kanał zdarzeń `/ws/events` | B | 2 |
-| 6 | FE-01 | Szkielet Angulara, kanał zdarzeń w UI, znaczek trybu | C | 2, 5 |
-| 7 | BE-03 | Tryb SCRIPTED: rozmowa odtwarzana z pliku | B | 5, 4 (wystarczy 1 scenariusz) |
-| 8 | BE-04 | Słowa kluczowe, silnik ryzyka, szablony, alert | A | 7 |
-| 9 | BE-05 | Decyzje seniora i rodziny | B | 8 |
-| 10 | FE-02 | Ekran seniora: stan ochrony | C | 6 |
-| 11 | FE-03 | Ekran seniora: alert, głos, trzy przyciski | C | 10, 8, 9 |
-| | | **Kamień milowy M1: scenariusz SCRIPTED kończy się alertem na ekranie seniora (bez AI)** | | |
-| 12 | BE-06 | Claude: etapy oszustwa, walidacja cytatów, tryb MOCK | A | 8, 3 |
-| 13 | BE-07 | Log audytu AI | A | 12 |
-| 14 | FE-04 | Panel rodziny | D | 6, 8, 9 |
-| | | **M2: alert z dowodami od AI widoczny u seniora i rodziny** | | |
-| 15 | BE-08 | Tryb LIVE: odbiór audio i streaming STT | B | 7 |
-| 16 | WEB-01 | Serwer WWW: HTTPS, reverse proxy, nagłówki bezpieczeństwa | C | 6, 5 |
-| 17 | FE-05 | Mikrofon i transkrypcja na żywo | C | 15, 16 |
-| | | **M3: mówienie do tabletu daje alert na żywo** | | |
-| 18 | BE-09 | Ustawienia, zgody, czułość, retencja | B | 8 |
-| 19 | FE-06 | Kreator konfiguracji i zgód | D | 18 |
-| 20 | BE-10 | Odporność i uczciwe statusy błędów | B | 12, 15 |
-| 21 | FE-07 | Ekran audytu i wybór scenariusza demo | D | 13 |
-| 22 | EV-04 | Nagrania demo zespołu | D | 7 |
-| 23 | BE-11 | Tryb REPLAY: nagranie przez prawdziwe STT i AI | B | 15, 22 |
-| 24 | BE-12 | Runner ewaluacji: słowa kluczowe vs AI | A | 12, 4 |
-| 25 | EV-03 | Ewaluacja, mocki, tabela do PDF | A | 24 |
-| | | **M4: demo gotowe (LIVE, REPLAY, audyt, liczby do PDF)** | | |
-| 26 | FE-08 | Dostępność, wygląd i zrzuty ekranów | C | 11, 14 |
-| 27 | AND-01 | Android: aplikacja seniora w trybie kiosku (Capacitor) | C | 17, 26 |
-| 28 | AND-02 | (opcjonalnie) Android: powiadomienia push dla rodziny | D + B | 27, 9 |
-| 29 | BE-13 | (opcjonalnie) SMS do rodziny | B | 9, 18 |
-| 30 | FE-09 | (opcjonalnie) Wersja angielska UI dla jury | D | 26 |
+| # | ID | Zadanie | Ścieżka | Wymaga | Status |
+|---|---|---|---|---|---|
+| 1 | BE-01 | Fundament repozytorium, `CLAUDE.md`, `/api/status` | A | — | ✅ zrobione |
+| 2 | CT-01 | Kontrakty JSON Schema, rekordy Javy, typy TS i zod, wektory normalizacji | A | 1 | ✅ zrobione |
+| 3 | EV-01 | Rubryka etapów oszustwa (prompt systemowy) | D | — | ✅ zrobione |
+| 4 | EV-02 | 12 syntetycznych scenariuszy | D | 2 | ✅ zrobione |
+| 5 | BE-02 | Kanał zdarzeń `/ws/events` | B | 2 | ✅ zrobione |
+| 6 | FE-01 | Szkielet Angulara, kanał zdarzeń w UI, znaczek trybu | C | 2, 5 | ✅ zrobione |
+| 7 | BE-03 | Tryb SCRIPTED: rozmowa odtwarzana z pliku | B | 5, 4 (wystarczy 1 scenariusz) | ✅ zrobione |
+| 8 | BE-04 | Słowa kluczowe, silnik ryzyka, szablony, alert | A | 7 | ✅ zrobione |
+| 9 | BE-05 | Decyzje seniora i rodziny | B | 8 | ✅ zrobione |
+| 10 | FE-02 | Ekran seniora: stan ochrony | C | 6 | ✅ zrobione (uwaga: FF-13) |
+| 11 | FE-03 | Ekran seniora: alert, głos, trzy przyciski | C | 10, 8, 9 | ✅ zrobione (uwaga: FF-12) |
+| | | **Kamień milowy M1: scenariusz SCRIPTED kończy się alertem na ekranie seniora (bez AI)** | | | ✅ osiągnięty wg kodu (ce7d241), nie zweryfikowany uruchomieniem; uwagi FF-02, FF-12, FF-13 w `tasks/frontend-review-findings.md` |
+| 12 | BE-06 | Claude: etapy oszustwa, walidacja cytatów, tryb MOCK | A | 8, 3 | ⏳ do zrobienia |
+| 13 | BE-07 | Log audytu AI | A | 12 | ⏳ do zrobienia |
+| 14 | FE-04 | Panel rodziny | D | 6, 8, 9 | ⏳ do zrobienia |
+| | | **M2: alert z dowodami od AI widoczny u seniora i rodziny** | | | |
+| 15 | BE-08 | Tryb LIVE: odbiór audio i streaming STT | B | 7 | ⏳ do zrobienia |
+| 16 | WEB-01 | Serwer WWW: HTTPS, reverse proxy, nagłówki bezpieczeństwa | C | 6, 5 | ⏳ do zrobienia |
+| 17 | FE-05 | Mikrofon i transkrypcja na żywo | C | 15, 16 | ⏳ do zrobienia |
+| | | **M3: mówienie do tabletu daje alert na żywo** | | | |
+| 18 | BE-09 | Ustawienia, zgody, czułość, retencja | B | 8 | ⏳ do zrobienia |
+| 19 | FE-06 | Kreator konfiguracji i zgód | D | 18 | ⏳ do zrobienia |
+| 20 | BE-10 | Odporność i uczciwe statusy błędów | B | 12, 15 | ⏳ do zrobienia |
+| 21 | FE-07 | Ekran audytu i wybór scenariusza demo | D | 13 | ⏳ do zrobienia |
+| 22 | EV-04 | Nagrania demo zespołu | D | 7 | ⏳ do zrobienia |
+| 23 | BE-11 | Tryb REPLAY: nagranie przez prawdziwe STT i AI | B | 15, 22 | ⏳ do zrobienia |
+| 24 | BE-12 | Runner ewaluacji: słowa kluczowe vs AI | A | 12, 4 | ⏳ do zrobienia |
+| 25 | EV-03 | Ewaluacja, mocki, tabela do PDF | A | 24 | ⏳ do zrobienia |
+| | | **M4: demo gotowe (LIVE, REPLAY, audyt, liczby do PDF)** | | | |
+| 26 | FE-08 | Dostępność, wygląd i zrzuty ekranów | C | 11, 14 | ⏳ do zrobienia |
+| 27 | AND-01 | Android: aplikacja seniora w trybie kiosku (Capacitor) | C | 17, 26 | ⏳ do zrobienia |
+| 28 | AND-02 | (opcjonalnie) Android: powiadomienia push dla rodziny | D + B | 27, 9 | ⏳ do zrobienia |
+| 29 | BE-13 | (opcjonalnie) SMS do rodziny | B | 9, 18 | ⏳ do zrobienia |
+| 30 | FE-09 | (opcjonalnie) Wersja angielska UI dla jury | D | 26 | ⏳ do zrobienia |
 
 ## Ścieżki dla 4 osób
 
