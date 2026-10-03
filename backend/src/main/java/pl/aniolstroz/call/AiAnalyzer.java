@@ -70,24 +70,23 @@ public class AiAnalyzer {
 
     @EventListener
     public void onFinalSegment(FinalSegmentAdded event) {
-        queueFor(event.callId()).ifPresent(CallClassificationQueue::segmentAdded);
+        queueFor(event.call()).segmentAdded();
     }
 
-    /** One queue per call; a new call gets a fresh one, the old one finishes by itself. */
-    private Optional<CallClassificationQueue> queueFor(String callId) {
+    /**
+     * One queue per call; a new call gets a fresh one, the old one finishes by itself. Runs while the call lock is held
+     * (the event is published under it), so it must not look the call up through {@link CallService#active()}: that
+     * takes the slot lock, and the slot lock is always taken before a call lock, never after (CC-01).
+     */
+    private CallClassificationQueue queueFor(CallState call) {
         lock.lock();
         try {
-            if (queue == null || queueCall == null || !callId.equals(queueCall.callId())) {
-                Optional<CallState> call = activeCall(callId);
-                if (call.isEmpty()) {
-                    return Optional.empty();
-                }
-                CallState state = call.get();
-                queueCall = state;
-                queue = new CallClassificationQueue(classifier, () -> snapshot(state),
-                        result -> handle(state, result), executor);
+            if (queue == null || queueCall == null || !call.callId().equals(queueCall.callId())) {
+                queueCall = call;
+                queue = new CallClassificationQueue(classifier, () -> snapshot(call),
+                        result -> handle(call, result), executor);
             }
-            return Optional.of(queue);
+            return queue;
         } finally {
             lock.unlock();
         }
@@ -105,8 +104,9 @@ public class AiAnalyzer {
         ClassifierResult finished = result;
         int valid = 0;
         RiskLevel before = call.level();
+        boolean late = activeCall(call.callId()).isEmpty();
         try {
-            if (activeCall(call.callId()).isPresent()) {
+            if (!late) {
                 if (result.failed()) {
                     recordFailure(call);
                 } else {
@@ -118,10 +118,10 @@ public class AiAnalyzer {
                     addHits(call.callId(), accepted);
                 }
             }
-            logResult(call.callId(), finished, valid);
+            logResult(call.callId(), finished, valid, late);
         } finally {
             report(new AiCallReport(call.callId(), call.mode(), finished, before, call.level(),
-                    keywordHitsIn(call, finished.segmentRange())));
+                    keywordHitsIn(call, finished.segmentRange()), late));
         }
     }
 
@@ -210,11 +210,11 @@ public class AiAnalyzer {
                 pl.aniolstroz.contracts.Component.AI, state, message, clock.instant())));
     }
 
-    private static void logResult(String callId, ClassifierResult r, int valid) {
+    private static void logResult(String callId, ClassifierResult r, int valid, boolean late) {
         ClassifierResult.Usage usage = r.usage();
         log.info("AI call finished: callId={} range={} model={} effort={} stopReason={} inputTokens={} "
-                        + "cacheReadInputTokens={} outputTokens={} latencyMs={} hits={} valid={} error={}",
+                        + "cacheReadInputTokens={} outputTokens={} latencyMs={} hits={} valid={} late={} error={}",
                 callId, r.segmentRange(), r.model(), r.effort(), r.stopReason(), usage.inputTokens(),
-                usage.cacheReadInputTokens(), usage.outputTokens(), r.latencyMs(), r.hits().size(), valid, r.error());
+                usage.cacheReadInputTokens(), usage.outputTokens(), r.latencyMs(), r.hits().size(), valid, late, r.error());
     }
 }

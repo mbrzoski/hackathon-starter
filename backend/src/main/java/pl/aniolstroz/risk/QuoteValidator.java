@@ -10,10 +10,14 @@ import pl.aniolstroz.contracts.TranscriptSegment;
 /**
  * AI-08: the AI may only quote, never invent. A hit is valid when the segment it cites exists and the normalized
  * quote (CON-05) is contained in the normalized text of that segment. Whatever the incoming {@code validated} flag
- * says is ignored; the result is the only truth. Invalid hits stay in the list with {@code validated = false}, so the
+ * says is ignored; the result is the only truth. A quote of fewer than {@value #MIN_QUOTE_LENGTH} characters after
+ * normalization is rejected, too. Invalid hits stay in the list with {@code validated = false}, so the
  * audit can show them, and they never influence the risk.
  */
 public final class QuoteValidator {
+
+    /** A shorter quote (after normalization) is too weak as evidence: one common word fits almost any segment. */
+    static final int MIN_QUOTE_LENGTH = 3;
 
     private QuoteValidator() {
     }
@@ -33,7 +37,7 @@ public final class QuoteValidator {
             return false;
         }
         String quote = QuoteNormalizer.normalize(hit.quote());
-        return !quote.isEmpty() && segmentText.contains(quote);
+        return quote.length() >= MIN_QUOTE_LENGTH && segmentText.contains(quote);
     }
 
     private static StageHit withFlag(StageHit hit, boolean validated) {

@@ -7,6 +7,13 @@ Co zostało sprawdzone, a czego nie:
 - Nie sprawdzone: wygląd ekranu seniora i panelu rodziny (cytaty, znaczek AI, status AI). Nie widziałem przeglądarki.
 - Test jednorazowy, jedna rozmowa, jedno połączenie sieciowe. Liczby czasu to pomiar z jednego przebiegu, nie statystyka.
 
+## Status po poprawkach (findingi F-15 i F-19)
+
+- **DC-01 (limit czasu):** zdecydowane. Domyślnie 8000 ms, konfigurowalne (`APP_CLAUDE_TIMEOUT_MS`), wpis w „Odstępstwach” (AI-05). Do zmierzenia na więcej rozmowach, czy wystarcza.
+- **DC-02 (`maxTokens`):** zdecydowane wariantem szybkim. Domyślnie 1024, konfigurowalne (`APP_CLAUDE_MAX_TOKENS`), wpis w „Odstępstwach” (AI-03). Wariant „tylko nowe trafienia” nie został zrobiony, więc przy bardzo długich rozmowach `MAX_TOKENS` jest nadal możliwe.
+- **DC-04 (cache transkrypcji):** nadal do pomiaru. Audyt zapisuje już tokeny zapisu do cache (F-19), więc koszt transkrypcji w cache da się teraz zmierzyć.
+- Pozostałe punkty bez zmian.
+
 ## 1. Wyniki
 
 ### 1.1 Limit 2500 ms (domyślny, AI-05): wszystko kończy się `TIMEOUT`

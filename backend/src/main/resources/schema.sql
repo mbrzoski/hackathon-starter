@@ -38,8 +38,9 @@ CREATE TABLE IF NOT EXISTS decisions (
 
 CREATE INDEX IF NOT EXISTS idx_decisions_alert ON decisions (alert_id);
 
--- AI audit (OBS-03). One row per classifier call. After a call without an alert the text columns are emptied and the
--- numbers stay (DAT-03): raw_output is NULL, the quotes are removed from the hit lists, text_cleared is 1.
+-- AI audit (OBS-03). One row per classifier call. Call text lives in memory until the call ends (rule 4, DAT-03):
+-- raw_output is NULL and the quotes are removed from the hit lists (text_cleared = 1) while a call runs and after a
+-- call without an alert. After a call with an alert the text is written and text_cleared is 0. The numbers stay.
 CREATE TABLE IF NOT EXISTS audit_calls (
     call_id    TEXT PRIMARY KEY,
     mode       TEXT NOT NULL,
@@ -60,6 +61,7 @@ CREATE TABLE IF NOT EXISTS audit_records (
     input_tokens           INTEGER NOT NULL,
     cache_read_input_tokens INTEGER NOT NULL,
     output_tokens          INTEGER NOT NULL,
+    cache_creation_input_tokens INTEGER NOT NULL DEFAULT 0,
     latency_ms             INTEGER NOT NULL,
     stop_reason            TEXT,
     error                  TEXT,
@@ -70,7 +72,8 @@ CREATE TABLE IF NOT EXISTS audit_records (
     level_after            TEXT NOT NULL,
     hit_count              INTEGER NOT NULL,
     rejected_hits          INTEGER NOT NULL,
-    text_cleared           INTEGER NOT NULL DEFAULT 0
+    text_cleared           INTEGER NOT NULL DEFAULT 0,
+    late                   INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_audit_records_call ON audit_records (call_id);

@@ -62,7 +62,7 @@ public class AuditRecorder implements AiCallObserver {
     @Override
     public void onAiCall(AiCallReport report) {
         guarded(report.mode(), () -> audit.record(new AuditEntry(report.callId(), report.mode(), report.result(),
-                report.levelBefore(), report.levelAfter(), report.keywordHits())));
+                report.levelBefore(), report.levelAfter(), report.keywordHits(), report.late())));
     }
 
     private void guarded(Mode mode, Runnable write) {

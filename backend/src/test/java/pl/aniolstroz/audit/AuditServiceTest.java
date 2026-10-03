@@ -30,7 +30,7 @@ import pl.aniolstroz.contracts.StageId;
 class AuditServiceTest {
 
     private static final Instant T0 = Instant.parse("2026-10-03T21:00:00Z");
-    private static final Pricing PRICING = new Pricing(new BigDecimal("2"), new BigDecimal("0.20"), new BigDecimal("10"));
+    private static final Pricing PRICING = new Pricing(new BigDecimal("2"), new BigDecimal("0.20"), new BigDecimal("10"), new BigDecimal("2.50"));
 
     private SingleConnectionDataSource dataSource;
     private JdbcClient jdbc;
@@ -353,6 +353,132 @@ class AuditServiceTest {
                 .singleElement().satisfies(c -> assertThat(c.endedAt()).isNotNull());
         assertThat(records("done").get(0).textCleared()).isFalse();
         assertThat(audit.closeOrphanedCalls()).isZero();
+    }
+
+    private String storedText() {
+        return jdbc.sql("SELECT coalesce(group_concat(coalesce(raw_output, '') || hits_json || keyword_hits_json), '')"
+                + " FROM audit_records").query(String.class).single();
+    }
+
+    @Test
+    void textOfARunningCallIsNotInTheDatabaseButStillVisibleInItsAudit() {
+        audit.callStarted("c1", Mode.SCRIPTED, T0);
+        audit.record(entry("c1", result("s1-s3", List.of(llmHit(StageId.SECRECY_DEMAND, "s2", "nikomu nie mów", true))),
+                RiskLevel.LOW, RiskLevel.MEDIUM, List.of(keywordHit(StageId.SECRECY_DEMAND, "s2", "Nikomu nie mów."))));
+
+        assertThat(storedText()).doesNotContain("nikomu nie mów").doesNotContain("Nikomu nie mów")
+                .doesNotContain("cytat z rozmowy");
+        AuditRecord live = records("c1").get(0);
+        assertThat(live.rawOutput()).isEqualTo("{\"stage_hits\":[\"cytat z rozmowy\"]}");
+        assertThat(live.hits().get(0).quote()).isEqualTo("nikomu nie mów");
+        assertThat(live.keywordHits().get(0).quote()).isEqualTo("Nikomu nie mów.");
+        assertThat(live.textCleared()).isFalse();
+    }
+
+    @Test
+    void textOfAnAlertedCallIsWrittenToTheDatabaseOnlyWhenTheCallEnds() {
+        audit.callStarted("c1", Mode.SCRIPTED, T0);
+        audit.record(simpleEntry("c1"));
+        assertThat(storedText()).doesNotContain("nikomu nie mów");
+
+        audit.callEnded("c1", T0.plusSeconds(60), RiskLevel.HIGH, true);
+
+        assertThat(storedText()).contains("nikomu nie mów").contains("cytat z rozmowy");
+    }
+
+    @Test
+    void textOfACallWithoutAnAlertNeverReachesTheDatabase() {
+        audit.callStarted("c1", Mode.SCRIPTED, T0);
+        audit.record(simpleEntry("c1"));
+        audit.record(simpleEntry("c1"));
+
+        audit.callEnded("c1", T0.plusSeconds(60), RiskLevel.MEDIUM, false);
+
+        assertThat(storedText()).doesNotContain("nikomu nie mów").doesNotContain("cytat z rozmowy");
+        assertThat(records("c1")).allSatisfy(r -> assertThat(r.textCleared()).isTrue());
+    }
+
+    @Test
+    void aRecordThatRacesWithTheEndOfTheCallNeverBringsTextBack() throws Exception {
+        for (int i = 0; i < 100; i++) {
+            String id = "race" + i;
+            audit.callStarted(id, Mode.SCRIPTED, T0);
+            Thread recording = Thread.ofPlatform().start(() -> audit.record(simpleEntry(id)));
+            Thread ending = Thread.ofPlatform().start(() -> audit.callEnded(id, T0.plusSeconds(1), RiskLevel.NONE, false));
+            recording.join();
+            ending.join();
+        }
+
+        assertThat(storedText()).doesNotContain("nikomu nie mów").doesNotContain("cytat z rozmowy");
+    }
+
+    @Test
+    void cacheWritesAreStoredReadBackAndPaidFor() {
+        audit.record(realEntry("c1", 100, new ClassifierResult.Usage(1000, 0, 100, 2000), null, List.of()));
+
+        assertThat(records("c1").get(0).usage()).isEqualTo(new AuditRecord.Usage(1000, 0, 100, 2000));
+        // 1000 * 2 + 100 * 10 + 2000 * 2.50 = 8000 per million
+        assertThat(audit.summary().avgCostPerCallUsd()).isEqualByComparingTo("0.008");
+        assertThat(audit.summary().pricing().cacheCreationPerMillionUsd()).isEqualByComparingTo("2.50");
+    }
+
+    @Test
+    void aDatabaseFromBeforeCacheWritesWereRecordedGetsTheColumn() {
+        SingleConnectionDataSource old = new SingleConnectionDataSource("jdbc:sqlite::memory:", true);
+        try {
+            JdbcClient oldJdbc = JdbcClient.create(old);
+            oldJdbc.sql("CREATE TABLE audit_calls (call_id TEXT PRIMARY KEY, mode TEXT NOT NULL, started_at TEXT NOT NULL,"
+                    + " ended_at TEXT, max_level TEXT NOT NULL DEFAULT 'NONE', had_alert INTEGER NOT NULL DEFAULT 0)")
+                    .update();
+            oldJdbc.sql("CREATE TABLE audit_records (id INTEGER PRIMARY KEY AUTOINCREMENT, call_id TEXT NOT NULL,"
+                    + " mode TEXT NOT NULL, recorded_at TEXT NOT NULL, segment_range TEXT NOT NULL, model TEXT NOT NULL,"
+                    + " effort TEXT NOT NULL, input_tokens INTEGER NOT NULL, cache_read_input_tokens INTEGER NOT NULL,"
+                    + " output_tokens INTEGER NOT NULL, latency_ms INTEGER NOT NULL, stop_reason TEXT, error TEXT,"
+                    + " raw_output TEXT, hits_json TEXT NOT NULL, keyword_hits_json TEXT NOT NULL,"
+                    + " level_before TEXT NOT NULL, level_after TEXT NOT NULL, hit_count INTEGER NOT NULL,"
+                    + " rejected_hits INTEGER NOT NULL, text_cleared INTEGER NOT NULL DEFAULT 0)").update();
+            ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
+            AuditService migrated = new AuditService(oldJdbc, mapper, Clock.fixed(T0, ZoneOffset.UTC), PRICING);
+
+            migrated.record(realEntry("c1", 100, new ClassifierResult.Usage(10, 0, 10, 5), null, List.of()));
+            // a second start finds the column and leaves the table alone
+            new AuditService(oldJdbc, mapper, Clock.fixed(T0, ZoneOffset.UTC), PRICING);
+
+            assertThat(migrated.callAudit("c1").orElseThrow().get(0).usage())
+                    .isEqualTo(new AuditRecord.Usage(10, 0, 10, 5));
+        } finally {
+            old.destroy();
+        }
+    }
+
+    @Test
+    void aLateAnswerIsStoredAsLateAndItsHitsAreNotCountedAsRejected() {
+        audit.callStarted("c1", Mode.SCRIPTED, T0);
+        audit.callEnded("c1", T0.plusSeconds(10), RiskLevel.NONE, false);
+        // an answer that came after the call ended: its hits were never validated (validated = false)
+        ClassifierResult unvalidated = result("s1-s3", List.of(
+                llmHit(StageId.SECRECY_DEMAND, "s2", "nikomu nie mów", false),
+                llmHit(StageId.MONEY_REQUEST, "s3", "wypłać pieniądze", false)));
+
+        audit.record(new AuditEntry("c1", Mode.SCRIPTED, unvalidated, RiskLevel.LOW, RiskLevel.LOW, List.of(), true));
+
+        AuditRecord record = records("c1").get(0);
+        assertThat(record.late()).isTrue();
+        assertThat(record.hits()).extracting(AuditHit::validated).containsOnly(false);
+        assertThat(audit.summary().rejectedQuotes()).isZero();
+        assertThat(audit.summary().lateResults()).isEqualTo(1);
+    }
+
+    @Test
+    void anAnswerInTimeIsNotLateAndItsRejectedQuotesAreCounted() {
+        audit.callStarted("c1", Mode.SCRIPTED, T0);
+
+        audit.record(realEntry("c1", 100, new ClassifierResult.Usage(10, 0, 10), null,
+                List.of(llmHit(StageId.MONEY_REQUEST, "s1", "zmyślony", false))));
+
+        assertThat(records("c1").get(0).late()).isFalse();
+        assertThat(audit.summary().rejectedQuotes()).isEqualTo(1);
+        assertThat(audit.summary().lateResults()).isZero();
     }
 
     private AuditEntry realEntry(String callId, long latencyMs, ClassifierResult.Usage usage, ClassifierError error,

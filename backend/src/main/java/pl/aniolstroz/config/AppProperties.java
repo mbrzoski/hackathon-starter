@@ -37,12 +37,14 @@ public record AppProperties(
 
         /**
          * Claude prices in USD per 1M tokens, used to compute cost from usage. Defaults are the Sonnet 5.5 prices
-         * (input 2, cache read 0.20, output 10). Change them here, never in code, when the price list changes.
+         * (input 2, cache read 0.20, output 10) and the 5-minute cache write price of 1.25 times the input price (2.50);
+         * check the last one against the price list. Change them here, never in code, when the price list changes.
          */
         public record Pricing(
                 @NotNull @PositiveOrZero @DefaultValue("2") BigDecimal inputPerMillionUsd,
                 @NotNull @PositiveOrZero @DefaultValue("0.20") BigDecimal cacheReadPerMillionUsd,
-                @NotNull @PositiveOrZero @DefaultValue("10") BigDecimal outputPerMillionUsd) {
+                @NotNull @PositiveOrZero @DefaultValue("10") BigDecimal outputPerMillionUsd,
+                @NotNull @PositiveOrZero @DefaultValue("2.50") BigDecimal cacheCreationPerMillionUsd) {
         }
     }
 
@@ -52,7 +54,8 @@ public record AppProperties(
 
     public record Claude(
             @NotBlank @DefaultValue("claude-sonnet-5-5") String model,
-            @Positive @DefaultValue("2500") long timeoutMs) {
+            @Positive @DefaultValue("8000") long timeoutMs,
+            @Positive @DefaultValue("1024") long maxTokens) {
     }
 
     /** /ws/events settings. Empty {@code allowedOrigins} means same origin only (API-04). */

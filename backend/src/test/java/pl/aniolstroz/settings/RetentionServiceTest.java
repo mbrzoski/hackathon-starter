@@ -44,10 +44,10 @@ class RetentionServiceTest {
     }
 
     private RetentionService service(EventBus bus, TransactionTemplate tx) {
-        var props = new AppProperties(Mode.SCRIPTED, new AppProperties.Claude("m", 1000),
+        var props = new AppProperties(Mode.SCRIPTED, new AppProperties.Claude("m", 1000, 1024),
                 new AppProperties.Events(List.of(), 1000, 1000, 1000), new AppProperties.Labels("x"),
                 new AppProperties.Audit(new AppProperties.Audit.Pricing(
-                        java.math.BigDecimal.ONE, java.math.BigDecimal.ONE, java.math.BigDecimal.ONE)),
+                        java.math.BigDecimal.ONE, java.math.BigDecimal.ONE, java.math.BigDecimal.ONE, java.math.BigDecimal.ONE)),
                 new AppProperties.Retention(30));
         return new RetentionService(jdbc, tx, props, bus, Clock.fixed(NOW, ZoneOffset.UTC));
     }

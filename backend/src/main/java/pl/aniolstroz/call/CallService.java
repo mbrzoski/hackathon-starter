@@ -220,7 +220,7 @@ public class CallService implements LiveCallAccess {
 
     /** Tells the AI layer about a new final segment. A failing listener must not break the call. */
     private void announce(CallState call) {
-        announce(new FinalSegmentAdded(call.callId()));
+        announce(new FinalSegmentAdded(call));
     }
 
     /** Tells the listeners (AI layer, audit) about something that happened. A failing listener must not break a call. */

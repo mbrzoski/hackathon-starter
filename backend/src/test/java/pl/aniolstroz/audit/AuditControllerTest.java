@@ -202,7 +202,7 @@ class AuditControllerTest {
                 .andExpect(jsonPath("$.pricing.inputPerMillionUsd").value(2))
                 .andExpect(jsonPath("$.pricing.cacheReadPerMillionUsd").value(0.2))
                 .andExpect(jsonPath("$.pricing.outputPerMillionUsd").value(10))
-                .andExpect(jsonPath("$.costNote").value("Koszt wyliczony z usage i cennika z konfiguracji."));
+                .andExpect(jsonPath("$.costNote").value(AuditSummary.COST_NOTE));
     }
 
     @Test
