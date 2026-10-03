@@ -52,6 +52,11 @@ class KeywordDetectorTest {
             Podaj mi numer PESEL.                            | PERSONAL_DATA_REQUEST
             Jaki jest numer karty?                           | PERSONAL_DATA_REQUEST
             Proszę podać PIN.                                | PERSONAL_DATA_REQUEST
+            Wyślij mi akt własności nieruchomości.           | PERSONAL_DATA_REQUEST
+            Potrzebuję skanu aktu notarialnego.              | PERSONAL_DATA_REQUEST
+            Proszę o numer księgi wieczystej.                | PERSONAL_DATA_REQUEST
+            Prześlij skan dowodu osobistego.                 | PERSONAL_DATA_REQUEST
+            Przelej mi pieniądze na Blika.                   | MONEY_REQUEST
             """)
     void detectsStagesWithPolishDiacritics(String text, StageId expected) {
         assertThat(detect(text.strip())).extracting(StageHit::stage).contains(expected);

@@ -18,6 +18,8 @@ SECRECY_DEMAND:
 MONEY_REQUEST:
   - wyplac
   - przelew
+  - przelej
+  - przelac
   - pieni[ae]dz
   - gotowk
 PAYMENT_CHANNEL:
@@ -37,3 +39,9 @@ PERSONAL_DATA_REQUEST:
   - \bpesel\b
   - numer karty
   - \bpin\b
+  - akt\w* wlasnosci
+  - akt\w* notarialn
+  - ksieg\w* wieczyst
+  - dowod\w* osobist
+  - skan\w* dowod
+  - pelnomocnictw
