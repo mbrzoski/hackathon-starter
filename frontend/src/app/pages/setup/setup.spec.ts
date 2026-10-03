@@ -2,6 +2,9 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Observable, of, throwError } from 'rxjs';
 import { ProtectionService } from '../../api/api/protection.service';
+import { SeniorConfigService } from '../../api/api/senior-config.service';
+import { SettingsService } from '../../api/api/settings.service';
+import { provideRouter } from '@angular/router';
 import { Alert, Decision, Mode, Protection, SystemStatus, TranscriptSegment } from '../../api/model/models';
 import { ActiveCall, ConnectionState, EventsService } from '../../core/events.service';
 import { Setup } from './setup';
@@ -26,6 +29,19 @@ describe('Setup: protection switch', () => {
   const button = (f: ComponentFixture<Setup>, label: string) =>
     [...(f.nativeElement as HTMLElement).querySelectorAll('button')].find((b) => b.textContent?.trim() === label);
 
+  const extraProviders = () => [
+    {
+      provide: SettingsService,
+      useValue: {
+        getSettings: () =>
+          of({ seniorConsent: false, familyConsent: false, contacts: [], sensitivity: 'standard', retentionDays: 30, seniorName: '' }),
+        setSettings: vi.fn(),
+      },
+    },
+    { provide: SeniorConfigService, useValue: { getSeniorConfig: () => of({ familyPhone: '', keywords: [] }) } },
+    provideRouter([]),
+  ];
+
   async function open(enabled = true) {
     api.getProtection.mockReturnValue(of({ enabled }));
     TestBed.configureTestingModule({
@@ -33,6 +49,16 @@ describe('Setup: protection switch', () => {
       providers: [
         { provide: ProtectionService, useValue: api },
         { provide: EventsService, useValue: events },
+        {
+          provide: SettingsService,
+          useValue: {
+            getSettings: () =>
+              of({ seniorConsent: false, familyConsent: false, contacts: [], sensitivity: 'standard', retentionDays: 30, seniorName: '' }),
+            setSettings: vi.fn(),
+          },
+        },
+        { provide: SeniorConfigService, useValue: { getSeniorConfig: () => of({ familyPhone: '', keywords: [] }) } },
+        provideRouter([]),
       ],
     });
     const fixture = TestBed.createComponent(Setup);
@@ -100,6 +126,7 @@ describe('Setup: protection switch', () => {
       providers: [
         { provide: ProtectionService, useValue: api },
         { provide: EventsService, useValue: events },
+        ...extraProviders(),
       ],
     });
     const fixture = TestBed.createComponent(Setup);

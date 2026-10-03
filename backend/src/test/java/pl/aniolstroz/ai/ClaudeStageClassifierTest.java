@@ -305,7 +305,7 @@ class ClaudeStageClassifierTest {
         Settings settings = new Settings(true, true,
                 List.of(new Settings.Contact("Marek Kowalski", "+48 601 234 567"),
                         new Settings.Contact("Ela Nowak", "500 600 700")),
-                Sensitivity.SENSITIVE, 30);
+                Sensitivity.SENSITIVE, 30, "Babcia Halina");
         String seniorName = "Halina Wzorcowa";
 
         classifier().classify(snapshot());

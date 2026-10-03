@@ -31,6 +31,8 @@ class RetentionServiceTest {
     private SingleConnectionDataSource dataSource;
     private JdbcClient jdbc;
     private RetentionService service;
+    private SettingsService settings;
+    private java.nio.file.Path labelsFile;
     private final List<EventEnvelope> published = new java.util.ArrayList<>();
 
     @BeforeEach
@@ -52,7 +54,15 @@ class RetentionServiceTest {
                         new AppProperties.Stt.Silence(10_000, 1_000),
                         new AppProperties.Stt.Call(10_000, 300, 3)),
                 new AppProperties.Retention(30));
-        return new RetentionService(jdbc, tx, props, bus, Clock.fixed(NOW, ZoneOffset.UTC));
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules();
+        settings = new SettingsService(jdbc, mapper, props, event -> { });
+        try {
+            labelsFile = java.nio.file.Files.createTempDirectory("labels").resolve("labels.jsonl");
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException(e);
+        }
+        return new RetentionService(jdbc, tx, props, bus, Clock.fixed(NOW, ZoneOffset.UTC), settings,
+                new pl.aniolstroz.alerts.LabelWriter(labelsFile, mapper));
     }
 
     @AfterEach
@@ -125,5 +135,24 @@ class RetentionServiceTest {
         assertThat(published).hasSize(1);
         var status = ((EventEnvelope.SystemStatusEvent) published.get(0)).payload();
         assertThat(status.state()).isEqualTo(ComponentState.DEGRADED);
+    }
+
+    @Test
+    void theRetentionOfTheSavedSettingsDecidesWhatIsOld() {
+        insertAlert("ten-days-old", NOW.minus(java.time.Duration.ofDays(10)).toString());
+        service.scheduledCleanup(); // default 30 days: kept
+        assertThat(jdbc.sql("SELECT COUNT(*) FROM alerts").query(Integer.class).single()).isEqualTo(1);
+
+        settings.save(new pl.aniolstroz.contracts.Settings(true, true, List.of(),
+                pl.aniolstroz.contracts.Sensitivity.STANDARD, 7, ""));
+        service.scheduledCleanup();
+        assertThat(jdbc.sql("SELECT COUNT(*) FROM alerts").query(Integer.class).single()).isZero();
+    }
+
+    @Test
+    void deleteAllAlsoRemovesTheEvaluationLabels() throws Exception {
+        java.nio.file.Files.writeString(labelsFile, "{}\n");
+        service.deleteAll();
+        assertThat(labelsFile).doesNotExist();
     }
 }

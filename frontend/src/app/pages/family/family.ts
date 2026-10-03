@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { DemoService } from '../../api/api/demo.service';
 import { EventsService } from '../../core/events.service';
 import {
@@ -18,7 +19,7 @@ import { SystemStatusBar } from '../../shared/system-status-bar';
 /** Family panel: mobile first from 360 px (WEB-12). Alerts newest first; levels and texts come from the backend. */
 @Component({
   selector: 'app-family',
-  imports: [AlertCard, Icon, ModeBadge, SystemStatusBar],
+  imports: [AlertCard, Icon, ModeBadge, RouterLink, SystemStatusBar],
   templateUrl: './family.html',
   styleUrl: './family.scss',
 })
@@ -33,6 +34,8 @@ export class Family {
 
   private readonly settings = inject(SettingsStore);
   /** The number being typed; starts as the saved one. */
+  /** Both consents missing in the saved settings: listening will be refused (AUD-07). */
+  protected readonly consentMissing = computed(() => this.settings.consented() === false);
   protected readonly phoneDraft = signal('');
   private draftTouched = false;
   /** The words being typed, one per line or separated by commas. */

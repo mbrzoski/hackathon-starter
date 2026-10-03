@@ -43,9 +43,19 @@ public class LabelWriter {
         this(Path.of(properties.labels().file()), mapper);
     }
 
-    LabelWriter(Path file, ObjectMapper mapper) {
+    public LabelWriter(Path file, ObjectMapper mapper) {
         this.file = file.toAbsolutePath();
         this.mapper = mapper;
+    }
+
+    /** DELETE /api/data: the labels are stored data too (DAT-02). */
+    public void deleteAll() throws IOException {
+        lock.lock();
+        try {
+            Files.deleteIfExists(file);
+        } finally {
+            lock.unlock();
+        }
     }
 
     public void append(Alert alert, Decision decision) throws IOException {

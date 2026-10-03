@@ -2,6 +2,7 @@ import { computed, signal } from '@angular/core';
 import { of } from 'rxjs';
 import { DemoService } from '../../api/api/demo.service';
 import { SeniorConfigService } from '../../api/api/senior-config.service';
+import { SettingsService } from '../../api/api/settings.service';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Alert, Decision, Mode, SystemStatus, TranscriptSegment } from '../../api/model/models';
 import { DecisionOutbox } from '../../core/decision-outbox';
@@ -82,6 +83,7 @@ describe('Senior', () => {
         { provide: SPEECH_SYNTHESIS, useValue: synth },
         { provide: DemoService, useValue: demo },
         { provide: SeniorConfigService, useValue: config },
+        { provide: SettingsService, useValue: { getSettings: vi.fn(() => of({ seniorConsent: true, familyConsent: true, contacts: [], sensitivity: 'standard', retentionDays: 30, seniorName: '' })), setSettings: vi.fn() } },
       ],
     });
     settings = TestBed.inject(SettingsStore);

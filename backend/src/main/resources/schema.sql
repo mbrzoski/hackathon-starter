@@ -97,3 +97,10 @@ CREATE TABLE IF NOT EXISTS senior_keywords (
     keyword  TEXT PRIMARY KEY,
     position INTEGER NOT NULL
 );
+
+-- Household settings (setup wizard): consents, trusted contacts, sensitivity, retention, senior's name. One JSON row;
+-- no row means the defaults (no consent). A setting, not data: not touched by DELETE /api/data. Never sent to Claude.
+CREATE TABLE IF NOT EXISTS settings (
+    id   INTEGER PRIMARY KEY CHECK (id = 1),
+    json TEXT NOT NULL
+);

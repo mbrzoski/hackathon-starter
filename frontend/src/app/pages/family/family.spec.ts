@@ -6,6 +6,8 @@ import { Observable, defer, of, throwError } from 'rxjs';
 import { AlertsService } from '../../api/api/alerts.service';
 import { DemoService } from '../../api/api/demo.service';
 import { SeniorConfigService } from '../../api/api/senior-config.service';
+import { SettingsService } from '../../api/api/settings.service';
+import { provideRouter } from '@angular/router';
 import {
   Alert,
   AlertWithDecisions,
@@ -78,6 +80,7 @@ describe('Family', () => {
   let notifier: { beep: ReturnType<typeof vi.fn> };
   let submit: () => Observable<unknown>;
   let demo: { setPhoneCall: ReturnType<typeof vi.fn>; stopReplay: ReturnType<typeof vi.fn> };
+  let settingsApi: { getSettings: ReturnType<typeof vi.fn>; setSettings: ReturnType<typeof vi.fn> };
   let config: { getSeniorConfig: ReturnType<typeof vi.fn>; setSeniorConfig: ReturnType<typeof vi.fn> };
 
   const el = (f: ComponentFixture<Family>) => f.nativeElement as HTMLElement;
@@ -99,6 +102,7 @@ describe('Family', () => {
     submit = () => of({});
     notifier = { beep: vi.fn() };
     demo = { setPhoneCall: vi.fn(() => of({})), stopReplay: vi.fn(() => of({})) };
+    settingsApi = { getSettings: vi.fn(() => of({ seniorConsent: true, familyConsent: true, contacts: [], sensitivity: 'standard', retentionDays: 30, seniorName: '' })), setSettings: vi.fn() };
     config = {
       getSeniorConfig: vi.fn(() => of({ familyPhone: '+48 602 000 222', keywords: ['testament'] })),
       setSeniorConfig: vi.fn((c: { familyPhone: string; keywords: string[] }) => of(c)),
@@ -110,6 +114,8 @@ describe('Family', () => {
         { provide: AlertNotifier, useValue: notifier },
         { provide: DemoService, useValue: demo },
         { provide: SeniorConfigService, useValue: config },
+        { provide: SettingsService, useValue: settingsApi },
+        provideRouter([]),
         {
           provide: AlertsService,
           useValue: {
@@ -491,6 +497,23 @@ describe('Family', () => {
       events.decisions.set([{ alertId: 'a1', actor: 'family', decision: 'false_alarm', at: T0 } as Decision]);
       const fixture = await render();
       expect(cards(fixture)[0].querySelector('.confirmed')).toBeNull();
+    });
+  });
+
+  describe('consent', () => {
+    it('asks to finish the setup when the consents are missing (AUD-07)', async () => {
+      settingsApi.getSettings.mockReturnValue(
+        of({ seniorConsent: false, familyConsent: true, contacts: [], sensitivity: 'standard', retentionDays: 30, seniorName: '' }),
+      );
+      const fixture = await render();
+      const banner = el(fixture).querySelector('.consent[role="alert"]');
+      expect(text(banner)).toContain('Brak zgód seniora i rodziny');
+      expect(banner?.querySelector('a')?.getAttribute('href')).toBe('/setup');
+    });
+
+    it('says nothing when both consents are given', async () => {
+      const fixture = await render();
+      expect(el(fixture).querySelector('.consent')).toBeNull();
     });
   });
 });

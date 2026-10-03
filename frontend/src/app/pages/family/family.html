@@ -4,11 +4,20 @@
     <strong>Anioł Stróż</strong>
     <span class="sub">Panel rodziny</span>
   </div>
+  <nav class="nav" aria-label="Panel rodziny">
+    <a routerLink="/setup">Ustawienia</a>
+    <a routerLink="/audit">Audyt</a>
+  </nav>
   <app-mode-badge />
 </header>
 <app-system-status-bar />
 
 <main>
+  @if (consentMissing()) {
+    <p class="error consent" role="alert">
+      Brak zgód seniora i rodziny: Nasłuch nie włączy mikrofonu. <a routerLink="/setup">Dokończ konfigurację</a>
+    </p>
+  }
   <details class="config">
     <summary>Konfiguracja konta seniora</summary>
     <form (submit)="$event.preventDefault(); saveConfig()">

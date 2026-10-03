@@ -76,6 +76,16 @@ class AudioSilenceTest {
         return client;
     }
 
+    @Autowired
+    pl.aniolstroz.settings.SettingsService settings;
+
+    /** LIVE audio needs both consents (AUD-07). */
+    @org.junit.jupiter.api.BeforeEach
+    void consentGiven() {
+        settings.save(new pl.aniolstroz.contracts.Settings(true, true, java.util.List.of(),
+                pl.aniolstroz.contracts.Sensitivity.STANDARD, 30, ""));
+    }
+
     @AfterEach
     void cleanUp() throws Exception {
         for (Client client : clients) {

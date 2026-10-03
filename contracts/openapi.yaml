@@ -261,6 +261,43 @@ paths:
       responses:
         "204":
           description: Everything stored was deleted.
+  /api/settings:
+    get:
+      operationId: getSettings
+      tags:
+        - settings
+      summary: Household settings (setup wizard). Without saved settings, consents are off and sensitivity is standard.
+      responses:
+        "200":
+          description: The current settings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+    put:
+      operationId: setSettings
+      tags:
+        - settings
+      summary: "Save the household settings: consents (AUD-07), trusted contacts, sensitivity and retention (DAT-02). Never sent to Claude or STT."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Settings"
+      responses:
+        "200":
+          description: The saved settings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+        "400":
+          description: The body is not valid Settings.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
   /api/dev/emit:
     post:
       operationId: emitDevEvent
@@ -1171,7 +1208,12 @@ components:
         - contacts
         - sensitivity
         - retentionDays
+        - seniorName
       properties:
+        seniorName:
+          type: string
+          maxLength: 60
+          description: How the family calls the senior ("Mama"), shown on the family panel only. Empty when not set.
         seniorConsent:
           type: boolean
         familyConsent:

@@ -1,21 +1,26 @@
 import { Component, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { ProtectionService } from '../../api/api/protection.service';
+import { RouterLink } from '@angular/router';
 import { Icon } from '../../shared/icon';
+import { SettingsWizard } from './settings-wizard';
 import { ModeBadge } from '../../shared/mode-badge';
 import { SystemStatusBar } from '../../shared/system-status-bar';
 
 /**
- * Admin portal (family build). For now: the protection switch. Protection is always on; this is the only place that
- * can turn it off, so the senior has nothing to press. The rest (consents, contacts, sensitivity, retention) comes
- * with the settings task (GET/PUT /api/settings).
+ * Admin portal (family build): the setup wizard (consents, contacts, sensitivity, retention; FE-06) and the protection
+ * switch. Protection is always on; this is the only place that can turn it off, so the senior has nothing to press.
  */
 @Component({
   selector: 'app-setup',
-  imports: [Icon, ModeBadge, SystemStatusBar],
+  imports: [Icon, ModeBadge, RouterLink, SettingsWizard, SystemStatusBar],
   template: `
     <header class="top">
       <div class="brand"><span class="logo"><app-icon name="shield" [size]="24" /></span><strong>Anioł Stróż</strong></div>
+      <nav class="nav" aria-label="Panel rodziny">
+        <a routerLink="/family">Panel rodziny</a>
+        <a routerLink="/audit">Audyt</a>
+      </nav>
       <app-mode-badge />
     </header>
     <app-system-status-bar />
@@ -63,7 +68,7 @@ import { SystemStatusBar } from '../../shared/system-status-bar';
         }
       </section>
 
-      <p class="rest">Zgody, zaufane kontakty, czułość i czas przechowywania. Ekran powstanie w zadaniu ustawień (GET/PUT /api/settings).</p>
+      <app-settings-wizard />
     </main>
   `,
   styles: `
@@ -74,7 +79,8 @@ import { SystemStatusBar } from '../../shared/system-status-bar';
     main { max-width: 800px; margin: 16px auto; }
     h2 { font-size: 18px; margin: 16px 0 8px; }
     p { margin: 0 0 12px; }
-    .rest { color: var(--muted); margin-top: 24px; }
+    .nav { display: flex; gap: 16px; font-weight: 700; }
+    .nav a { color: var(--primary); }
     .state { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px; background: var(--bg); font-weight: 700; }
     .state.off, .problem { background: var(--warn-bg); color: var(--warn-deep); border: 2px solid var(--warn); }
     .problem { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px; font-weight: 700; }

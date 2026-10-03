@@ -20,3 +20,6 @@ main { max-width: 960px; margin: 0 auto; padding: 16px; display: grid; gap: 16px
 .config input[aria-invalid='true'] { border-color: var(--alarm); }
 .config textarea { font: inherit; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; resize: vertical; }
 .config textarea[aria-invalid='true'] { border-color: var(--alarm); }
+.nav { display: flex; gap: 16px; font-weight: 700; }
+.nav a { color: var(--primary); }
+.consent a { color: inherit; font-weight: 700; }
