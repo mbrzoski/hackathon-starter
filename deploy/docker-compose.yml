@@ -1,0 +1,56 @@
+# Demo stack: backend + Caddy (+ Cloudflare Tunnel with --profile tunnel). Start it with deploy/run-demo.sh,
+# which builds the frontend and the backend jar first. Secrets only from the environment (rule 8).
+name: aniol-stroz
+
+services:
+  backend:
+    build: ../backend
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      APP_MODE: ${APP_MODE:-SCRIPTED}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # API-04: the public origin(s) of this server; empty = same origin only.
+      APP_EVENTS_ALLOWED_ORIGINS: ${PUBLIC_ORIGIN:-}
+      APP_DB_FILE: /data/aniol.db
+      APP_LABELS_FILE: /data/labels.jsonl
+    volumes:
+      - backend-data:/data
+    expose:
+      - "8080"
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    command: caddy run --config /etc/caddy/${CADDYFILE:-Caddyfile.lan} --adapter caddyfile
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-https://localhost}
+      DEFAULT_SNI: ${DEFAULT_SNI:-localhost}
+      BACKEND: backend:8080
+      SITE_ROOT: /srv/site
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy:/etc/caddy:ro
+      - ./site:/srv/site:ro
+      # Keeps Caddy's local CA: the root certificate installed on the tablets stays valid across restarts.
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # Plan B (WEB-03): public HTTPS address through a Cloudflare quick tunnel, no account needed.
+  # The address (https://<random>.trycloudflare.com) is printed in this service's log.
+  cloudflared:
+    profiles: ["tunnel"]
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate --url http://caddy:80
+    depends_on:
+      - caddy
+    restart: unless-stopped
+
+volumes:
+  backend-data:
+  caddy-data:
+  caddy-config:

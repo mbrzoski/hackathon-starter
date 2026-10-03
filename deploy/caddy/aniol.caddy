@@ -1,0 +1,50 @@
+# Shared site config for both variants (imported by Caddyfile.lan and Caddyfile.tunnel).
+# Three apps on one origin: /senior, /listen and /family|/setup|/audit. run-demo.sh copies frontend/dist/*/browser
+# into one folder; their files only clash on index.html, which it renames to index-<app>.html.
+(aniol) {
+	encode zstd gzip
+
+	# WEB-05. font-src also needs 'self': Public Sans is bundled (WEB-13), nothing comes from Google Fonts.
+	header {
+		Content-Security-Policy "default-src 'self'; connect-src 'self' wss://{hostport}; script-src 'self'; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com; img-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+		Permissions-Policy "microphone=(self)"
+		Referrer-Policy "no-referrer"
+		X-Content-Type-Options "nosniff"
+		-Server
+	}
+
+	# WEB-02: one origin, so no CORS. reverse_proxy sends X-Forwarded-For/-Proto/-Host by default;
+	# the backend trusts them (server.forward-headers-strategy=framework).
+	handle /api/* {
+		reverse_proxy {$BACKEND:backend:8080}
+	}
+	handle /ws/* {
+		reverse_proxy {$BACKEND:backend:8080} {
+			# WebSocket upgrade is automatic and an upgraded connection has no read deadline. These keep a call's
+			# socket open for up to 12 h and across a config reload.
+			stream_timeout 12h
+			stream_close_delay 5m
+		}
+	}
+
+	handle {
+		root * {$SITE_ROOT:/srv/site}
+
+		# WEB-04: each app's routes get its index.html; anything unknown falls back to the senior app.
+		@senior path / /senior /senior/*
+		rewrite @senior /index-senior.html
+		@listen path /listen /listen/*
+		rewrite @listen /index-listen.html
+		@family path /family /family/* /setup /setup/* /audit /audit/*
+		rewrite @family /index-family.html
+		try_files {path} /index-senior.html
+
+		# WEB-06: files with a content hash in their name never change; everything else is revalidated.
+		@hashed path_regexp -[A-Za-z0-9_-]{8}\.(js|css|woff2?)$
+		header @hashed Cache-Control "public, max-age=31536000, immutable"
+		@unhashed not path_regexp -[A-Za-z0-9_-]{8}\.(js|css|woff2?)$
+		header @unhashed Cache-Control "no-cache"
+
+		file_server
+	}
+}

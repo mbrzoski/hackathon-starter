@@ -1,0 +1,45 @@
+# Variant (a): HTTPS in the hackathon LAN with Caddy's own CA (WEB-03).
+# SITE_ADDRESS e.g. "https://192.168.1.50, https://localhost" (run-demo.sh sets it from the laptop's LAN IP).
+# Devices must trust Caddy's root certificate once: download it from http://<ip>/ca.crt (see deploy/README.md).
+{
+	# Ports can be moved for a run without root or Docker (HTTP_PORT=8080 HTTPS_PORT=8443).
+	http_port {$HTTP_PORT:80}
+	https_port {$HTTPS_PORT:443}
+	# Devices trust the root certificate by hand (README); never ask for sudo to add it to this machine.
+	skip_install_trust
+	# Clients that open https://<ip> send no SNI; in Docker, Caddy cannot tell the laptop's IP from the connection.
+	default_sni {$DEFAULT_SNI:localhost}
+	# The http:// site below does the redirect itself, so it can also hand out /ca.crt over plain HTTP.
+	auto_https disable_redirects
+}
+
+import aniol.caddy
+
+{$SITE_ADDRESS:https://localhost} {
+	tls internal
+	import aniol
+}
+
+# Plain HTTP: a start page for the devices (download the CA, open the right app), the CA itself, and a redirect
+# to HTTPS for everything else. Type http://<laptop-ip> on a tablet: no long address, no certificate needed yet.
+http:// {
+	handle / {
+		root * {$CADDY_DIR:/etc/caddy}
+		rewrite * /start.html
+		header Cache-Control "no-cache"
+		file_server
+	}
+	handle /ca.crt {
+		root * {$CADDY_CA_DIR:/data/caddy/pki/authorities/local}
+		rewrite * /root.crt
+		header Content-Type application/x-x509-ca-cert
+		file_server
+	}
+	# Buttons of the start page: /go/senior -> https://<host>/senior (handle_path strips /go before redir runs).
+	handle_path /go/* {
+		redir https://{host}{uri} 302
+	}
+	handle {
+		redir https://{host}{uri} permanent
+	}
+}

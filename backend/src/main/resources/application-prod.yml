@@ -12,3 +12,10 @@ server:
   error:
     include-message: never
     include-stacktrace: never
+
+app:
+  events:
+    # API-04: the public address of the web server, e.g. https://192.168.1.50 or https://xyz.trycloudflare.com
+    # (comma-separated for several). Used for /ws/events and CORS on /api/**. Empty = same origin only, which also
+    # works behind the proxy because X-Forwarded-* are honoured (server.forward-headers-strategy).
+    allowed-origins: ${APP_EVENTS_ALLOWED_ORIGINS:}
