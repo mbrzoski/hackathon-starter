@@ -1,5 +1,6 @@
 package pl.aniolstroz.demo;
 
+import static com.atlassian.oai.validator.mockmvc.OpenApiValidationMatchers.openApi;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -13,6 +14,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 class DevEmitControllerTest {
+
+    private static final String SPEC = "contract/openapi.yaml";
 
     private static final String VALID_EVENT = """
             {"type":"system.status","mode":"MOCK","at":"2026-10-03T21:00:00Z",
@@ -30,7 +33,8 @@ class DevEmitControllerTest {
         @Test
         void validEventIsAccepted() throws Exception {
             mockMvc.perform(post("/api/dev/emit").contentType(MediaType.APPLICATION_JSON).content(VALID_EVENT))
-                    .andExpect(status().isAccepted());
+                    .andExpect(status().isAccepted())
+                    .andExpect(openApi().isValid(SPEC));
         }
 
         @Test

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,13 +20,16 @@ import pl.aniolstroz.config.AppProperties;
 import pl.aniolstroz.contracts.Component;
 import pl.aniolstroz.contracts.EventEnvelope;
 import pl.aniolstroz.contracts.EventEnvelope.AlertCreatedEvent;
+import pl.aniolstroz.contracts.EventEnvelope.AlertDecisionEvent;
 import pl.aniolstroz.contracts.EventEnvelope.CallEndedEvent;
 import pl.aniolstroz.contracts.EventEnvelope.CallStartedEvent;
+import pl.aniolstroz.contracts.EventEnvelope.RiskUpdateEvent;
 import pl.aniolstroz.contracts.EventEnvelope.SystemStatusEvent;
 
 /**
  * Fan-out of events to /ws/events clients (CC-02) and the state snapshot sent on connect (API-03).
- * The snapshot holds the latest status of each component, the active call and the last alert.
+ * The snapshot holds the latest status of each component and, while a call is active, that call with its alerts,
+ * last risk update and decisions. Nothing of a call stays in it after {@code call.ended}.
  * Event payloads are never logged: they can contain transcript text.
  */
 @Service
@@ -44,7 +48,11 @@ public class EventBus {
     /** Guards the snapshot fields and keeps "snapshot, then live events" ordered for a new client. */
     private final ReentrantLock lock = new ReentrantLock();
     private CallStartedEvent activeCall;
-    private AlertCreatedEvent lastAlert;
+    /** Alerts of the current call by id, oldest first. Dropped when their call ends (API-03). */
+    private final Map<String, AlertCreatedEvent> alerts = new LinkedHashMap<>();
+    private RiskUpdateEvent lastRisk;
+    /** Decisions about the alerts in {@link #alerts}. */
+    private final List<AlertDecisionEvent> decisions = new ArrayList<>();
 
     EventBus(ObjectMapper mapper, AppProperties properties) {
         this.mapper = mapper;
@@ -96,26 +104,53 @@ public class EventBus {
     private void remember(EventEnvelope event) {
         switch (event) {
             case SystemStatusEvent e -> statuses.put(e.payload().component(), e);
-            case CallStartedEvent e -> activeCall = e;
-            case CallEndedEvent e -> {
-                if (activeCall != null && activeCall.payload().callId().equals(e.payload().callId())) {
-                    activeCall = null;
+            case CallStartedEvent e -> {
+                activeCall = e;
+                clearCallData();
+            }
+            case CallEndedEvent e -> endCall(e.payload().callId());
+            case RiskUpdateEvent e -> lastRisk = e;
+            case AlertCreatedEvent e -> alerts.put(e.payload().alertId(), e);
+            case AlertDecisionEvent e -> {
+                // A decision about an alert that is no longer current (stored alert of a finished call) is not state.
+                if (alerts.containsKey(e.payload().alertId())) {
+                    decisions.add(e);
                 }
             }
-            case AlertCreatedEvent e -> lastAlert = e;
             default -> {
             }
         }
     }
 
+    /** The call is over: its risk, alerts and decisions are no longer "current", so a refreshed UI does not show them. */
+    private void endCall(String callId) {
+        if (activeCall != null && activeCall.payload().callId().equals(callId)) {
+            activeCall = null;
+        }
+        alerts.values().removeIf(a -> a.payload().callId().equals(callId));
+        if (lastRisk != null && lastRisk.payload().callId().equals(callId)) {
+            lastRisk = null;
+        }
+        decisions.removeIf(d -> !alerts.containsKey(d.payload().alertId()));
+    }
+
+    private void clearCallData() {
+        alerts.clear();
+        lastRisk = null;
+        decisions.clear();
+    }
+
+    /** Latest statuses, the active call, then its alerts, last risk update and decisions, in the order they happened. */
     private List<EventEnvelope> snapshot() {
         List<EventEnvelope> events = new ArrayList<>(statuses.values());
         if (activeCall != null) {
             events.add(activeCall);
         }
-        if (lastAlert != null) {
-            events.add(lastAlert);
+        events.addAll(alerts.values());
+        if (lastRisk != null) {
+            events.add(lastRisk);
         }
+        events.addAll(decisions);
         return events;
     }
 

@@ -118,6 +118,8 @@
                                 <importMapping>Decision=pl.aniolstroz.contracts.Decision</importMapping>
                                 <importMapping>StageId=pl.aniolstroz.contracts.StageId</importMapping>
                                 <importMapping>ProblemDetail=org.springframework.http.ProblemDetail</importMapping>
+                                <importMapping>StatusResponse=pl.aniolstroz.config.StatusResponse</importMapping>
+                                <importMapping>EventEnvelope=pl.aniolstroz.contracts.EventEnvelope</importMapping>
                             </importMappings>
                             <configOptions>
                                 <interfaceOnly>true</interfaceOnly>

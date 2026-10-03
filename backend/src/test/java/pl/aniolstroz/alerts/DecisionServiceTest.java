@@ -55,6 +55,8 @@ class DecisionServiceTest {
     private static final class FakeLive implements LiveCallAccess {
         final List<Alert> alerts = new ArrayList<>();
         final List<Object[]> ignoreRequests = new ArrayList<>();
+        /** False once the call has ended: ignoreStages then changes nothing and says so. */
+        boolean callActive = true;
 
         @Override
         public List<Alert> alerts() {
@@ -64,7 +66,7 @@ class DecisionServiceTest {
         @Override
         public boolean ignoreStages(String callId, Set<StageId> stages) {
             ignoreRequests.add(new Object[] {callId, stages});
-            return true;
+            return callActive;
         }
     }
 
@@ -296,6 +298,30 @@ class DecisionServiceTest {
         assertThat(live.ignoreRequests.get(0)[0]).isEqualTo("call-a-1");
         assertThat((Set<StageId>) live.ignoreRequests.get(0)[1])
                 .containsExactlyInAnyOrder(StageId.AUTHORITY_CLAIM, StageId.MONEY_REQUEST);
+    }
+
+    @Test
+    void ignoredStagesForACallThatHasEndedAreRejectedAndNothingIsStoredOrPublished() throws IOException {
+        storedAlert("a-1");
+        live.callActive = false;
+
+        assertThatThrownBy(() -> service.record("a-1", new DecisionCommand(Actor.FAMILY, DecisionType.CONFIRMED_SCAM,
+                Set.of(StageId.AUTHORITY_CLAIM))))
+                .isInstanceOf(InvalidDecisionException.class);
+
+        assertThat(count("decisions")).isZero();
+        assertThat(events).isEmpty();
+        assertThat(labelLines()).isEmpty();
+    }
+
+    @Test
+    void aDecisionWithoutIgnoredStagesStillWorksAfterTheCallHasEnded() {
+        storedAlert("a-1");
+        live.callActive = false;
+
+        service.record("a-1", command(Actor.FAMILY, DecisionType.FALSE_ALARM));
+
+        assertThat(count("decisions")).isEqualTo(1);
     }
 
     @Test

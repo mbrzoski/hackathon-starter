@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 /**
  * Quote normalisation (CON-05): lowercase, NFD without combining marks, l-stroke to l, every run of
  * characters that are not letters or digits becomes one space, trimmed. Must stay identical to
- * {@code normalizeQuote} in contracts/ts/normalize.ts; both read contracts/test-vectors/normalize.json.
+ * {@code normalize} in frontend/src/app/shared/normalize.ts; both read contracts/test-vectors/normalize.json.
  */
 public final class QuoteNormalizer {
 

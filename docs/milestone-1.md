@@ -100,14 +100,14 @@ Zależności i ograniczenia, o których warto wiedzieć:
 **S5. Rodzina każe „nie liczyć tego etapu” w trakcie rozmowy.**
 1. Decyzja `family` z `ignoredStages: [SECRECY_DEMAND]`. W `decisions` zapisuje się `ignored_stages = "SECRECY_DEMAND"`.
 2. `CallService.ignoreStages` przelicza poziom bez tego etapu i publikuje `risk.update`. To jedyny wyjątek od zasady, że poziom tylko rośnie. Już utworzone alerty zostają.
-3. Jeśli rozmowa już się skończyła, etap nie jest ignorowany, ale decyzja i tak się zapisuje (finding F-09 z `tasks/backend-review-findings.md`).
+3. Jeśli rozmowa już się skończyła, backend odrzuca takie żądanie (400) i niczego nie zapisuje ani nie publikuje (finding F-09, naprawiony).
 
 **S6. Odświeżenie strony w trakcie rozmowy.**
 1. Nowy klient `/ws/events` dostaje snapshot: ostatnie statusy komponentów, aktywna rozmowa i ostatni alert.
-2. Snapshot nie zawiera poziomu ryzyka ani decyzji, a po końcu rozmowy nadal może zawierać stary alert (finding F-04). Frontend (FF-02) czyści stan przy każdym `call.started`, więc po ponownym połączeniu w trakcie rozmowy ekran seniora traci decyzje i pokaże ten sam alert jako niezdecydowany. `GET /api/alerts` mógłby odtworzyć listę z decyzjami, ale frontend jeszcze go nie woła.
+2. Snapshot zawiera alerty bieżącej rozmowy, ostatni `risk.update` i decyzje (finding F-04, naprawiony). Po `call.ended` dane tej rozmowy znikają ze snapshotu. Transkrypcji w snapshocie nadal nie ma, a frontend (FF-02) czyści stan przy każdym `call.started`, więc po ponownym połączeniu ekran traci widoczną transkrypcję, ale alerty i decyzje wracają ze snapshotu.
 
 ## 4. Znane luki M1
 
-Pełna lista w `tasks/backend-review-findings.md`. Najważniejsze dla M1: F-01 (endpointy poza kontraktem), F-03 (heartbeat nadpisuje awarię), F-04 (snapshot po odświeżeniu), F-06 (domyślny profil `dev`).
+Pełna lista w `tasks/backend-review-findings.md`. Naprawione: F-01 (kontrakt; wpisy do „Odstępstw” nadal do zrobienia), F-02, F-04, F-09. Otwarte najważniejsze dla M1: F-03 (heartbeat nadpisuje awarię, BE-10) i F-06 (domyślny profil `dev`, WEB-01).
 
-Frontend (`tasks/frontend-review-findings.md`): FF-02 (czyszczenie stanu przy ponownym `call.started`, razem z backendowym F-04 daje alert wracający jako niezdecydowany), FF-12 (głos bez `advice`), FF-13 (pauza nie zmienia stanu na „wstrzymana”), FF-05 (trzy aplikacje poza „Odstępstwami”).
+Frontend (`tasks/frontend-review-findings.md`): FF-02 (czyszczenie stanu przy ponownym `call.started`, po naprawie F-04 traci tylko transkrypcję), FF-12 (głos bez `advice`), FF-13 (pauza nie zmienia stanu na „wstrzymana”), FF-05 (trzy aplikacje poza „Odstępstwami”).

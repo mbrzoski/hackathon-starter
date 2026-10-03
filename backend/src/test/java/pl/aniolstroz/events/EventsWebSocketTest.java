@@ -20,16 +20,24 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+import pl.aniolstroz.contracts.Actor;
 import pl.aniolstroz.contracts.Alert;
+import pl.aniolstroz.contracts.CallEnded;
 import pl.aniolstroz.contracts.CallStarted;
 import pl.aniolstroz.contracts.Component;
 import pl.aniolstroz.contracts.ComponentState;
+import pl.aniolstroz.contracts.Decision;
+import pl.aniolstroz.contracts.DecisionType;
 import pl.aniolstroz.contracts.EventEnvelope.AlertCreatedEvent;
+import pl.aniolstroz.contracts.EventEnvelope.AlertDecisionEvent;
+import pl.aniolstroz.contracts.EventEnvelope.CallEndedEvent;
 import pl.aniolstroz.contracts.EventEnvelope.CallStartedEvent;
+import pl.aniolstroz.contracts.EventEnvelope.RiskUpdateEvent;
 import pl.aniolstroz.contracts.EventEnvelope.SystemStatusEvent;
 import pl.aniolstroz.contracts.HitSource;
 import pl.aniolstroz.contracts.Mode;
 import pl.aniolstroz.contracts.RiskLevel;
+import pl.aniolstroz.contracts.RiskUpdate;
 import pl.aniolstroz.contracts.SpeakerRole;
 import pl.aniolstroz.contracts.StageHit;
 import pl.aniolstroz.contracts.StageId;
@@ -148,6 +156,68 @@ class EventsWebSocketTest {
     }
 
     @Test
+    void snapshotCarriesAlertsRiskAndDecisionsOfTheActiveCall() throws Exception {
+        publishCallWithAlertAndDecision("call-full", "alert-full");
+
+        Client client = connect("?role=senior");
+
+        assertThat(snapshotKeys(client)).containsSubsequence(
+                "call.started:call-full", "alert.created:alert-full", "risk.update:call-full",
+                "alert.decision:alert-full");
+        client.session.close();
+    }
+
+    @Test
+    void snapshotKeepsEveryAlertOfTheActiveCallInOrder() throws Exception {
+        eventBus.publish(new CallStartedEvent(Mode.SCRIPTED, AT, new CallStarted("call-two")));
+        eventBus.publish(new AlertCreatedEvent(Mode.SCRIPTED, AT, alert("alert-medium", "call-two")));
+        eventBus.publish(new AlertCreatedEvent(Mode.SCRIPTED, AT, alert("alert-high", "call-two")));
+
+        Client client = connect("?role=family");
+
+        assertThat(snapshotKeys(client)).containsSubsequence(
+                "call.started:call-two", "alert.created:alert-medium", "alert.created:alert-high");
+        client.session.close();
+    }
+
+    @Test
+    void snapshotHasNothingOfACallThatEnded() throws Exception {
+        publishCallWithAlertAndDecision("call-over", "alert-over");
+        eventBus.publish(new CallEndedEvent(Mode.SCRIPTED, AT, new CallEnded("call-over", true)));
+
+        Client client = connect("?role=senior");
+
+        assertThat(snapshotKeys(client))
+                .noneMatch(key -> key.startsWith("call.started") || key.startsWith("alert.")
+                        || key.startsWith("risk.update"));
+        client.session.close();
+    }
+
+    @Test
+    void aNewCallStartsWithAnEmptySnapshotOfCallData() throws Exception {
+        publishCallWithAlertAndDecision("call-old", "alert-old");
+        eventBus.publish(new CallStartedEvent(Mode.SCRIPTED, AT, new CallStarted("call-new")));
+
+        Client client = connect("?role=senior");
+
+        assertThat(snapshotKeys(client)).contains("call.started:call-new")
+                .noneMatch(key -> key.startsWith("alert.") || key.startsWith("risk.update"));
+        client.session.close();
+    }
+
+    @Test
+    void aDecisionAboutAnAlertThatIsNotCurrentIsNotPartOfTheSnapshot() throws Exception {
+        eventBus.publish(new CallStartedEvent(Mode.SCRIPTED, AT, new CallStarted("call-current")));
+        eventBus.publish(new AlertDecisionEvent(Mode.SCRIPTED, AT,
+                new Decision("alert-from-an-earlier-call", Actor.FAMILY, DecisionType.FALSE_ALARM, AT)));
+
+        Client client = connect("?role=family");
+
+        assertThat(snapshotKeys(client)).noneMatch(key -> key.startsWith("alert.decision"));
+        client.session.close();
+    }
+
+    @Test
     void heartbeatPublishesBackendOk() throws Exception {
         Client client = connect("?role=family");
         Thread.sleep(300);
@@ -157,6 +227,42 @@ class EventsWebSocketTest {
         JsonNode event = drainUntil(client, "backend");
         assertThat(event.at("/payload/state").asText()).isEqualTo("ok");
         client.session.close();
+    }
+
+    private void publishCallWithAlertAndDecision(String callId, String alertId) {
+        eventBus.publish(new CallStartedEvent(Mode.SCRIPTED, AT, new CallStarted(callId)));
+        eventBus.publish(new AlertCreatedEvent(Mode.SCRIPTED, AT, alert(alertId, callId)));
+        eventBus.publish(new RiskUpdateEvent(Mode.SCRIPTED, AT,
+                new RiskUpdate(callId, RiskLevel.HIGH, RiskLevel.NONE, List.of(StageId.AUTHORITY_CLAIM), 1)));
+        eventBus.publish(new AlertDecisionEvent(Mode.SCRIPTED, AT,
+                new Decision(alertId, Actor.SENIOR, DecisionType.HUNG_UP, AT)));
+    }
+
+    /**
+     * The frames of the snapshot, as "type:id" keys in the order received. The snapshot is sent right after the
+     * handshake, so a marker event published afterwards tells where it ends.
+     */
+    private List<String> snapshotKeys(Client client) throws InterruptedException {
+        // Unique per call: an earlier marker may still be the latest backend status in later snapshots.
+        String marker = "snapshot-end-" + java.util.UUID.randomUUID();
+        Thread.sleep(300);
+        eventBus.publish(new SystemStatusEvent(Mode.SCRIPTED, AT,
+                new SystemStatus(Component.BACKEND, ComponentState.OK, marker, AT)));
+        List<String> keys = new ArrayList<>();
+        while (true) {
+            JsonNode event = client.next();
+            if (marker.equals(event.at("/payload/message").asText())) {
+                return keys;
+            }
+            String type = event.get("type").asText();
+            keys.add(switch (type) {
+                case "system.status" -> type + ":" + event.at("/payload/component").asText();
+                case "call.started", "risk.update" -> type + ":" + event.at("/payload/callId").asText();
+                case "alert.created" -> type + ":" + event.at("/payload/alertId").asText();
+                case "alert.decision" -> type + ":" + event.at("/payload/alertId").asText();
+                default -> type;
+            });
+        }
     }
 
     /** Skips snapshot frames until a system.status for the given component arrives. */

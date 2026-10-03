@@ -4,7 +4,7 @@ openapi: 3.1.0
 info:
   title: Anioł Stróż contract
   version: 0.0.1
-  description: Data contract shared by backend (Java), frontend (Angular) and Android. Paths cover /api/demo/* so far; other endpoints are added task by task (CON-02). StageHits is snake_case on purpose (Claude response); everything else is camelCase.
+  description: Data contract shared by backend (Java), frontend (Angular) and Android. Paths cover /api/status, /api/alerts, /api/demo/* and the dev-only /api/dev/emit so far; other endpoints are added task by task (CON-02). StageHits is snake_case on purpose (Claude response); everything else is camelCase.
 paths:
   /api/alerts:
     get:
@@ -63,7 +63,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Decision"
         "400":
-          description: Invalid body, or a decision the actor cannot make, or ignoredStages from the senior.
+          description: Invalid body, a decision the actor cannot make, ignoredStages from the senior, or ignoredStages for an alert whose call has ended.
           content:
             application/problem+json:
               schema:
@@ -131,6 +131,40 @@ paths:
       responses:
         "204":
           description: No active replay remains.
+  /api/status:
+    get:
+      operationId: getStatus
+      tags:
+        - status
+      summary: Operating mode, backend version and start time. A cheap check that the backend is up.
+      responses:
+        "200":
+          description: The backend is running.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusResponse"
+  /api/dev/emit:
+    post:
+      operationId: emitDevEvent
+      tags:
+        - dev
+      summary: Inject any event into /ws/events. Exists only in the dev profile (API-05); in prod it answers 404.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventEnvelope"
+      responses:
+        "202":
+          description: The event was published to every /ws/events client.
+        "400":
+          description: The body is not a valid EventEnvelope.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
 components:
   schemas:
     Alert:
@@ -486,6 +520,24 @@ components:
           maximum: 20
           default: 1
           description: Playback speed multiplier; each segment waits delayMs / speed.
+    StatusResponse:
+      title: StatusResponse
+      description: Body of GET /api/status.
+      type: object
+      additionalProperties: false
+      required:
+        - mode
+        - version
+        - startedAt
+      properties:
+        mode:
+          $ref: "#/components/schemas/Mode"
+        version:
+          type: string
+          description: Build version, or "dev" when the backend runs without build info.
+        startedAt:
+          type: string
+          format: date-time
     Scenario:
       title: Scenario
       description: A named demo scenario fed to the pipeline in REPLAY, SCRIPTED or MOCK mode.

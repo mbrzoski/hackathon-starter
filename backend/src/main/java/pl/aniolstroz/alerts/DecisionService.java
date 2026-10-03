@@ -61,11 +61,17 @@ public class DecisionService {
 
     /**
      * @throws AlertNotFoundException if there is no such alert (in the active call or the database)
-     * @throws InvalidDecisionException if the actor cannot make this decision, or the senior sends ignoredStages
+     * @throws InvalidDecisionException if the actor cannot make this decision, the senior sends ignoredStages, or the
+     *     call of the alert has ended so that ignoredStages cannot be applied
      */
     public Decision record(String alertId, DecisionCommand command) {
         Alert alert = findAlert(alertId).orElseThrow(() -> new AlertNotFoundException(alertId));
         validate(command);
+        // Ignoring stages changes a running call. Once the call has ended there is nothing to change, and a decision
+        // that claims otherwise would be stored without effect, so the whole request is refused first.
+        if (!command.ignoredStages().isEmpty() && !liveCall.ignoreStages(alert.callId(), command.ignoredStages())) {
+            throw new InvalidDecisionException("The call of this alert has ended, its stages can no longer be ignored");
+        }
 
         Decision decision = new Decision(alertId, command.actor(), command.decision(), clock.instant());
         decisions.save(decision, alert.mode(), command.ignoredStages());
@@ -73,9 +79,6 @@ public class DecisionService {
             writeLabel(alert, decision);
         }
         eventBus.publish(new AlertDecisionEvent(alert.mode(), decision.at(), decision));
-        if (!command.ignoredStages().isEmpty()) {
-            liveCall.ignoreStages(alert.callId(), command.ignoredStages());
-        }
         return decision;
     }
 

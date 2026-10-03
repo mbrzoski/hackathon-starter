@@ -2,13 +2,15 @@ package pl.aniolstroz.config;
 
 import java.time.Clock;
 import java.time.Instant;
-import org.springframework.boot.info.BuildProperties;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.boot.info.BuildProperties;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
+import pl.aniolstroz.contracts.api.StatusApi;
 
+/** GET /api/status; the interface is generated from contracts/openapi.yaml (CON-03). */
 @RestController
-class StatusController {
+class StatusController implements StatusApi {
 
     private final AppProperties properties;
     private final String version;
@@ -22,8 +24,8 @@ class StatusController {
         this.startedAt = clock.instant();
     }
 
-    @GetMapping("/api/status")
-    StatusResponse status() {
-        return new StatusResponse(properties.mode(), version, startedAt);
+    @Override
+    public ResponseEntity<StatusResponse> getStatus() {
+        return ResponseEntity.ok(new StatusResponse(properties.mode(), version, startedAt));
     }
 }
