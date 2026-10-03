@@ -50,7 +50,7 @@ public class CallService implements LiveCallAccess {
     private final EventBus eventBus;
     private final Clock clock;
     private final CallEndedHook endedHook;
-    private final KeywordDetector keywordDetector;
+    private final SegmentScanner scanner;
     private final SensitivitySource sensitivity;
     private final AlertFactory alertFactory;
     private final ApplicationEventPublisher publisher;
@@ -64,13 +64,13 @@ public class CallService implements LiveCallAccess {
     private final ReentrantLock slotLock = new ReentrantLock();
     private volatile CallState active;
 
-    public CallService(EventBus eventBus, Clock clock, CallEndedHook endedHook, KeywordDetector keywordDetector,
+    public CallService(EventBus eventBus, Clock clock, CallEndedHook endedHook, SegmentScanner scanner,
             SensitivitySource sensitivity, AlertFactory alertFactory,
             ApplicationEventPublisher publisher) {
         this.eventBus = eventBus;
         this.clock = clock;
         this.endedHook = endedHook;
-        this.keywordDetector = keywordDetector;
+        this.scanner = scanner;
         this.sensitivity = sensitivity;
         this.alertFactory = alertFactory;
         this.publisher = publisher;
@@ -120,7 +120,7 @@ public class CallService implements LiveCallAccess {
             // Keywords act on interim text too (DET-03), but that text may still change. Such a hit is provisional;
             // when the final segment comes, the hits are made again from the final text, which is what the transcript
             // keeps, so the evidence of a call never cites words that the transcript does not have.
-            List<StageHit> found = keywordDetector.detect(numbered);
+            List<StageHit> found = scanner.scan(numbered);
             boolean replaced = numbered.isFinal() && call.settleProvisionalHits(numbered.segId(), found);
             if (replaced) {
                 Trace.flow("call | call={} seg={} the final text does not confirm the interim keyword hits: they are replaced",

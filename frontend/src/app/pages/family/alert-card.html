@@ -33,9 +33,20 @@
     }
   </div>
 
+  @if (live()) {
+    <button type="button" class="end-call" (click)="endCall.emit()">
+      <app-icon name="phone" [size]="20" /> Zakończ połączenie
+    </button>
+  }
+
   <app-decision-bar [senior]="settings.senior()" [disabled]="!!familyDecision() || pending()" (decide)="decide($event)" />
   @if (pending()) {
     <p class="note" role="status">Zapisuję decyzję…</p>
+  }
+  @if (scamConfirmed()) {
+    <p class="note confirmed" role="status">
+      Numer został wysłany do bazy numerów podejrzanych. Jeśli masz więcej pytań, możesz także zgłosić sprawę na policję.
+    </p>
   }
   @if (failure(); as reason) {
     <p class="note failure" role="alert">Nie udało się zapisać decyzji: {{ reason }} Spróbuj ponownie.</p>

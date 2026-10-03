@@ -1,8 +1,7 @@
-import { Component, computed, input, output, signal } from '@angular/core';
-import { Alert, DecisionRequestDecisionEnum, TranscriptSegment } from '../../api/model/models';
+import { Component, computed, input, output } from '@angular/core';
+import { Alert, DecisionRequestDecisionEnum } from '../../api/model/models';
 import { Icon } from '../../shared/icon';
 import { DecisionButtons } from './decision-buttons';
-import { EvidenceQuotes } from './evidence-quotes';
 import { VoiceReadout } from './voice-readout';
 
 const SOURCE_LABEL: Record<Alert['triggeredBy'], string> = {
@@ -13,11 +12,11 @@ const SOURCE_LABEL: Record<Alert['triggeredBy'], string> = {
 
 /**
  * Red alert screen. Texts come from the backend template (FE-04). The page never scrolls and the decisions are always
- * on screen; if the text and "Dlaczego?" do not fit a small phone, only that area scrolls (WEB-11).
+ * on screen; if the text does not fit a small phone, only that area scrolls (WEB-11).
  */
 @Component({
   selector: 'app-alert-view',
-  imports: [DecisionButtons, EvidenceQuotes, Icon, VoiceReadout],
+  imports: [DecisionButtons, Icon, VoiceReadout],
   template: `
     <section class="alert" role="alert" aria-live="assertive">
       <div class="body">
@@ -29,28 +28,19 @@ const SOURCE_LABEL: Record<Alert['triggeredBy'], string> = {
       </div>
       <div class="tools">
         <app-voice-readout [text]="spoken()" [key]="alert().alertId" />
-        @if (alert().stages.length) {
-          <button type="button" class="why" [attr.aria-expanded]="showWhy()" (click)="showWhy.update((v) => !v)">
-            {{ showWhy() ? 'Ukryj' : 'Dlaczego?' }}
-          </button>
-        }
       </div>
-      @if (showWhy()) {
-        <app-evidence-quotes [alert]="alert()" [segments]="segments()" />
-      }
       </div>
-      <app-decision-buttons [contactName]="contactName()" (decide)="decide.emit($event)" />
+      <app-decision-buttons [contactName]="contactName()" (decide)="decide.emit($event)" (emergency)="emergency.emit()" />
     </section>
   `,
   styleUrl: './alert-view.scss',
 })
 export class AlertView {
   readonly alert = input.required<Alert>();
-  readonly segments = input<TranscriptSegment[]>([]);
   readonly contactName = input<string | null>(null);
   readonly decide = output<DecisionRequestDecisionEnum>();
+  readonly emergency = output<void>();
 
-  protected readonly showWhy = signal(false);
   protected readonly source = computed(() => SOURCE_LABEL[this.alert().triggeredBy]);
   /** The backend template is read as shortText, then advice, in one utterance (FF-12). */
   protected readonly spoken = computed(() => `${this.alert().shortText} ${this.alert().advice}`);

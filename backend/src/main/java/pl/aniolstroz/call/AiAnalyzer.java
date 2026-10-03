@@ -51,6 +51,7 @@ public class AiAnalyzer {
     private final Clock clock;
     private final ExecutorService executor;
     private final AiCallObserver observer;
+    private final AiHealth health;
 
     private final ReentrantLock lock = new ReentrantLock();
     private CallClassificationQueue queue;
@@ -60,13 +61,14 @@ public class AiAnalyzer {
 
     @Autowired
     public AiAnalyzer(CallService calls, StageClassifier classifier, EventBus eventBus, Clock clock,
-            @Qualifier("aiExecutor") ExecutorService executor, AiCallObserver observer) {
+            @Qualifier("aiExecutor") ExecutorService executor, AiCallObserver observer, AiHealth health) {
         this.calls = calls;
         this.classifier = classifier;
         this.eventBus = eventBus;
         this.clock = clock;
         this.executor = executor;
         this.observer = observer;
+        this.health = health;
     }
 
     @EventListener
@@ -109,11 +111,14 @@ public class AiAnalyzer {
         try {
             if (!late) {
                 if (result.failed()) {
+                    health.failed();
                     recordFailure(call);
                 } else {
                     List<StageHit> checked = QuoteValidator.validate(result.hits(), call.transcript());
                     finished = result.withHits(checked);
-                    List<StageHit> accepted = checked.stream().filter(StageHit::validated).toList();
+                    // FAMILY_KEYWORD is the backend's own stage: whatever the model says about it is ignored.
+                    List<StageHit> accepted = checked.stream().filter(StageHit::validated)
+                            .filter(h -> h.stage() != pl.aniolstroz.contracts.StageId.FAMILY_KEYWORD).toList();
                     valid = accepted.size();
                     for (StageHit hit : checked) {
                         Trace.flow("ai | call={} {} in {} by {}: {} (quote check)", Trace.id(call.callId()), hit.stage(), hit.segId(),
@@ -123,6 +128,7 @@ public class AiAnalyzer {
                                     hit.segId(), Trace.oneLine(hit.quote()), hit.validated() ? "accepted" : "rejected");
                         }
                     }
+                    health.succeeded();
                     recordSuccess(call);
                     addHits(call.callId(), accepted);
                 }

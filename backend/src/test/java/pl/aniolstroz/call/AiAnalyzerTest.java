@@ -98,7 +98,7 @@ class AiAnalyzerTest {
                 observerFailsOnce = false;
                 throw new IllegalStateException("audit down");
             }
-        }));
+        }, new AiHealth()));
         call = calls.start(Mode.SCRIPTED, "scenario-x");
     }
 

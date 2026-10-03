@@ -22,6 +22,7 @@ import pl.aniolstroz.contracts.TriggeredBy;
  *   <li>LOW: one stage.</li>
  *   <li>CALM: MEDIUM needs two stages and HIGH needs three (a HIGH combination of only two stages is MEDIUM).</li>
  *   <li>SENSITIVE: the STANDARD level moved one up (LOW to MEDIUM, MEDIUM to HIGH).</li>
+ *   <li>FAMILY_KEYWORD (a word the family asked for): at least MEDIUM, in every sensitivity.</li>
  * </ul>
  * Keyword hits take part in the same rules, so "policja" + "BLIK" is AUTHORITY_CLAIM + PAYMENT_CHANNEL and is HIGH.
  */
@@ -89,7 +90,12 @@ public final class RiskEngine {
         } else {
             level = highCombination ? RiskLevel.HIGH : count >= 2 ? RiskLevel.MEDIUM : RiskLevel.LOW;
         }
-        return sensitivity == Sensitivity.SENSITIVE ? oneUp(level) : level;
+        level = sensitivity == Sensitivity.SENSITIVE ? oneUp(level) : level;
+        // A word the family asked to be warned about is worth an alert on its own, whatever the sensitivity.
+        if (stages.contains(StageId.FAMILY_KEYWORD) && level.compareTo(RiskLevel.MEDIUM) < 0) {
+            return RiskLevel.MEDIUM;
+        }
+        return level;
     }
 
     private static RiskLevel oneUp(RiskLevel level) {

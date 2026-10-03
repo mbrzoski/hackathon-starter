@@ -11,3 +11,8 @@ h3 { margin: 0 0 8px; font-size: 13px; letter-spacing: 0.06em; text-transform: u
 .note { margin: 0; color: var(--muted); font-size: 14px; }
 .failure { color: var(--warn-deep); background: var(--warn-bg); padding: 10px 12px; border-radius: 8px; font-size: 15px; }
 @media (min-width: 900px) { .cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.end-call { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font: inherit; font-weight: 700;
+  min-height: 44px; padding: 0 16px; border-radius: 8px; border: 2px solid var(--alarm-deep); background: var(--surface);
+  color: var(--alarm-deep); cursor: pointer; }
+.end-call:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
+.confirmed { color: var(--text); background: var(--bg); padding: 10px 12px; border-radius: 8px; font-size: 15px; font-weight: 600; }

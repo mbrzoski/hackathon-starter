@@ -12,6 +12,8 @@ const ALERT = {
   advice: 'Rozłącz się.', triggeredBy: 'keywords', createdAt: AT, mode: 'SCRIPTED',
 } as unknown as Alert;
 
+const PHONE = { active: true, number: '+48 600 100 200' };
+
 type AudioError = { message: string; setupLink: boolean };
 
 describe('Listen', () => {
@@ -24,6 +26,7 @@ describe('Listen', () => {
     alerts: signal<Alert[]>([]),
     decisions: signal<Decision[]>([]),
     risk: signal(null),
+    phoneCall: signal<{ active: boolean; number: string } | null>(null),
     online: () => events.connection() === 'open',
   };
   const audio = {
@@ -67,6 +70,7 @@ describe('Listen', () => {
     audio.state.set('idle');
     audio.error.set(null);
     events.connection.set('open');
+    events.phoneCall.set(PHONE); // the simulated phone call is on: only then the device listens
     events.activeCall.set(null);
     events.alerts.set([]);
     events.decisions.set([]);
@@ -80,6 +84,32 @@ describe('Listen', () => {
     expect(audio.start).toHaveBeenCalledTimes(1);
     expect(heading(fixture)).toBe('Czekam na rozmowę');
     expect(el(fixture).querySelector('button')).toBeNull();
+  });
+
+  it('does not listen without a phone call, and listens as soon as one starts', async () => {
+    events.phoneCall.set(null);
+    const fixture = await open();
+    expect(audio.start).not.toHaveBeenCalled();
+    expect(heading(fixture)).toBe('Czekam na rozmowę');
+    expect(el(fixture).textContent).toContain('Mikrofon jest wyłączony');
+
+    events.phoneCall.set(PHONE);
+    await fixture.whenStable();
+    expect(audio.start).toHaveBeenCalledTimes(1);
+    expect(audio.state()).toBe('listening');
+  });
+
+  it('switches the microphone off when the phone call ends', async () => {
+    const fixture = await open();
+    expect(audio.state()).toBe('listening');
+
+    events.phoneCall.set(null);
+    await fixture.whenStable();
+
+    expect(audio.stop).toHaveBeenCalledTimes(1);
+    expect(audio.state()).toBe('idle');
+    expect(heading(fixture)).toBe('Czekam na rozmowę');
+    expect(audio.start).toHaveBeenCalledTimes(1); // no restart
   });
 
   it('does not start while offline, and starts when the connection is back', async () => {

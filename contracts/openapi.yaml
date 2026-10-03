@@ -202,6 +202,43 @@ paths:
       responses:
         "204":
           description: No active replay remains.
+  /api/demo/phone-call:
+    get:
+      operationId: getPhoneCall
+      tags:
+        - demo
+      summary: "The simulated incoming phone call (demo): whether it is on and the caller's number."
+      responses:
+        "200":
+          description: The current simulation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PhoneCall"
+    put:
+      operationId: setPhoneCall
+      tags:
+        - demo
+      summary: Switch the simulated phone call on or off (family panel). Publishes phone.call to every screen. Nothing is dialled.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PhoneCallRequest"
+      responses:
+        "200":
+          description: The new simulation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PhoneCall"
+        "400":
+          description: The body is not a valid PhoneCallRequest.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
   /api/status:
     get:
       operationId: getStatus
@@ -282,6 +319,43 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
+  /api/senior-config:
+    get:
+      operationId: getSeniorConfig
+      tags:
+        - senior-config
+      summary: The configuration of the senior's account (family panel). Empty familyPhone means none is set.
+      responses:
+        "200":
+          description: The current configuration.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeniorConfig"
+    put:
+      operationId: setSeniorConfig
+      tags:
+        - senior-config
+      summary: Save the configuration of the senior's account. The number is only shown to the senior as a tel link after a tap.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SeniorConfig"
+      responses:
+        "200":
+          description: The saved configuration.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeniorConfig"
+        "400":
+          description: The body is not a valid SeniorConfig, for example a malformed phone number.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
 x-websockets:
   /ws/events:
     description: Server to client. Every message is a text frame with one EventEnvelope. A new client first gets the current state (API-03).
@@ -303,7 +377,7 @@ components:
   schemas:
     AudioControl:
       title: AudioControl
-      description: "Control message on /ws/audio (text frame). start opens a LIVE call, stop ends it, pause drops the audio until resume."
+      description: "Control message on /ws/audio (text frame). start arms the session: a LIVE call opens when speech is heard and ends after 10 s without speech (the session stays armed), stop ends the session and its call, pause drops the audio until resume."
       type: object
       additionalProperties: false
       required:
@@ -780,6 +854,24 @@ components:
                 callId:
                   type: string
                   minLength: 1
+        - title: PhoneCallEvent
+          type: object
+          additionalProperties: false
+          required:
+            - type
+            - mode
+            - at
+            - payload
+          properties:
+            type:
+              const: phone.call
+            mode:
+              $ref: "#/components/schemas/Mode"
+            at:
+              type: string
+              format: date-time
+            payload:
+              $ref: "#/components/schemas/PhoneCall"
         - title: CallEndedEvent
           type: object
           additionalProperties: false
@@ -808,6 +900,52 @@ components:
                   minLength: 1
                 hadAlert:
                   type: boolean
+    SeniorConfig:
+      title: SeniorConfig
+      description: Configuration of the senior's account, set on the family panel. Never sent to Claude or STT.
+      type: object
+      additionalProperties: false
+      required:
+        - familyPhone
+        - keywords
+      properties:
+        keywords:
+          type: array
+          maxItems: 30
+          description: "Words and phrases the family wants this profile to be sensitive to. Matched on the backend in the transcript, never sent to Claude. A match raises at least a MEDIUM alert."
+          items:
+            type: string
+            minLength: 2
+            maxLength: 60
+        familyPhone:
+          type: string
+          pattern: ^(\+?[0-9 ]{9,15})?$
+          description: "Number of a family member that the senior's \"Zadzwoń do bliskiej osoby\" button offers to call. Empty: none."
+    PhoneCall:
+      title: PhoneCall
+      description: The simulated incoming phone call of the demo. While active, the senior screen shows the caller's number and the listening device (/listen) listens. Nothing is dialled.
+      type: object
+      additionalProperties: false
+      required:
+        - active
+        - number
+      properties:
+        active:
+          type: boolean
+        number:
+          type: string
+          minLength: 1
+          description: Made-up caller number shown to the senior.
+    PhoneCallRequest:
+      title: PhoneCallRequest
+      description: Body of PUT /api/demo/phone-call.
+      type: object
+      additionalProperties: false
+      required:
+        - active
+      properties:
+        active:
+          type: boolean
     Mode:
       title: Mode
       description: Honest operating mode carried by every event, audit record and screen.
@@ -1131,7 +1269,7 @@ components:
                   - unclear
     StageId:
       title: StageId
-      description: Manipulation stage recognised in a call.
+      description: "Manipulation stage recognised in a call. FAMILY_KEYWORD is not a manipulation stage: it marks a word the family asked to be warned about (SeniorConfig.keywords). Only the backend sets it; the model never returns it."
       type: string
       enum:
         - AUTHORITY_CLAIM
@@ -1142,6 +1280,7 @@ components:
         - PAYMENT_CHANNEL
         - REMOTE_ACCESS
         - PERSONAL_DATA_REQUEST
+        - FAMILY_KEYWORD
     SystemStatus:
       title: SystemStatus
       description: State of one component. Every failure is published, never silent.

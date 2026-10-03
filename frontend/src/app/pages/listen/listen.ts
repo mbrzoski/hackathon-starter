@@ -8,7 +8,7 @@ import { ModeBadge } from '../../shared/mode-badge';
 import { RISK_LEVEL_WORDS } from '../../shared/risk-level-chip';
 import { formatDuration, injectNow } from '../../shared/time';
 
-type ListenView = 'offline' | 'ended' | 'starting' | 'blocked' | 'audio_lost' | 'alarm' | 'listening' | 'waiting';
+type ListenView = 'offline' | 'idle' | 'ended' | 'starting' | 'blocked' | 'audio_lost' | 'alarm' | 'listening' | 'waiting';
 
 /** How often a microphone that is not running is tried again. */
 const RETRY_MS = 5000;
@@ -18,8 +18,9 @@ const NEXT_CALL_MS = 3000;
 
 /**
  * "Nasłuch": navy full-screen front for the tablet next to the landline. Connects to /ws/events as the senior.
- * Protection is always on: the screen starts the microphone by itself and tries again after a failure, so nobody has
- * to tap anything. The button only appears when the browser blocks the automatic start.
+ * It listens only while the (simulated) phone call is on (phone.call, switched on the family panel): then it starts
+ * the microphone by itself and tries again after a failure, so nobody has to tap anything. The button only appears
+ * when the browser blocks the automatic start. Without a phone call the microphone is off.
  */
 @Component({
   selector: 'app-listen',
@@ -37,6 +38,9 @@ export class Listen {
   private endedCallId: string | null = null;
   protected readonly bars = [14, 26, 40, 22, 52, 64, 34, 18, 30, 56, 64, 38, 20, 14, 30, 48, 60, 36, 20, 28];
 
+  /** The simulated phone call is on: only then the device listens. */
+  protected readonly phoneOn = computed(() => !!this.events.phoneCall());
+
   protected readonly alert = computed(() =>
     openAlert(this.events.alerts(), this.events.decisions(), DecisionActorEnum.senior),
   );
@@ -46,6 +50,10 @@ export class Listen {
     const call = this.events.activeCall();
     if (!this.events.online()) return 'offline';
     if (this.hungUp()) return 'ended';
+    if (!this.phoneOn()) {
+      // No phone call: the microphone is off. A call that is playing anyway (a scripted demo) is still shown.
+      return call && !call.endedAt ? (this.alert() ? 'alarm' : 'listening') : 'idle';
+    }
     const microphone = this.audio.state();
     if (microphone === 'idle' || microphone === 'requesting') return 'starting';
     if (microphone !== 'listening') return 'blocked';
@@ -93,8 +101,19 @@ export class Listen {
       }
     });
 
+    // The phone call ended (or never began): the microphone goes off.
+    effect(() => {
+      if (!this.phoneOn() && this.events.online()) {
+        untracked(() => {
+          if (this.audio.state() !== 'idle') {
+            this.audio.stop();
+          }
+        });
+      }
+    });
+
     effect((onCleanup) => {
-      if (!this.events.online()) {
+      if (!this.events.online() || !this.phoneOn()) {
         return;
       }
       const state = this.audio.state();

@@ -4,6 +4,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
 import { Observable, defer, of, throwError } from 'rxjs';
 import { AlertsService } from '../../api/api/alerts.service';
+import { DemoService } from '../../api/api/demo.service';
+import { SeniorConfigService } from '../../api/api/senior-config.service';
 import {
   Alert,
   AlertWithDecisions,
@@ -31,6 +33,7 @@ function fakeEvents() {
     segments: signal<TranscriptSegment[]>([]),
     alerts: signal<Alert[]>([]),
     decisions: signal<Decision[]>([]),
+    phoneCall: signal<{ active: boolean; number: string } | null>(null),
   };
 }
 
@@ -74,6 +77,8 @@ describe('Family', () => {
   let posted: { alertId: string; body: DecisionRequest }[];
   let notifier: { beep: ReturnType<typeof vi.fn> };
   let submit: () => Observable<unknown>;
+  let demo: { setPhoneCall: ReturnType<typeof vi.fn>; stopReplay: ReturnType<typeof vi.fn> };
+  let config: { getSeniorConfig: ReturnType<typeof vi.fn>; setSeniorConfig: ReturnType<typeof vi.fn> };
 
   const el = (f: ComponentFixture<Family>) => f.nativeElement as HTMLElement;
   const text = (e: Element | null) => e?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
@@ -93,11 +98,18 @@ describe('Family', () => {
     posted = [];
     submit = () => of({});
     notifier = { beep: vi.fn() };
+    demo = { setPhoneCall: vi.fn(() => of({})), stopReplay: vi.fn(() => of({})) };
+    config = {
+      getSeniorConfig: vi.fn(() => of({ familyPhone: '+48 602 000 222', keywords: ['testament'] })),
+      setSeniorConfig: vi.fn((c: { familyPhone: string; keywords: string[] }) => of(c)),
+    };
     TestBed.configureTestingModule({
       imports: [Family],
       providers: [
         { provide: EventsService, useValue: events },
         { provide: AlertNotifier, useValue: notifier },
+        { provide: DemoService, useValue: demo },
+        { provide: SeniorConfigService, useValue: config },
         {
           provide: AlertsService,
           useValue: {
@@ -304,5 +316,181 @@ describe('Family', () => {
     history = throwError(() => new HttpErrorResponse({ status: 500, error: { detail: 'Błąd serwera.' } }));
     const fixture = await render();
     expect(text(el(fixture).querySelector('.error'))).toContain('Błąd serwera.');
+  });
+
+  describe('simulated call', () => {
+    const toggle = (f: ComponentFixture<Family>) => el(f).querySelector<HTMLButtonElement>('.simulate button')!;
+
+    it('switches the simulated call on with a tap, and only then', async () => {
+      const fixture = await render();
+      expect(demo.setPhoneCall).not.toHaveBeenCalled();
+      expect(text(toggle(fixture))).toBe('Zasymuluj połączenie');
+
+      toggle(fixture).click();
+      await fixture.whenStable();
+
+      expect(demo.setPhoneCall).toHaveBeenCalledWith({ active: true });
+    });
+
+    it('switches it off again while it is on, on every screen it shows the same state', async () => {
+      const fixture = await render();
+      events.phoneCall.set({ active: true, number: '+48 600 100 200' });
+      await fixture.whenStable();
+      expect(text(toggle(fixture))).toBe('Zakończ symulację połączenia');
+      expect(text(el(fixture).querySelector('.simulate .note'))).toContain('+48 600 100 200');
+
+      toggle(fixture).click();
+      await fixture.whenStable();
+
+      expect(demo.setPhoneCall).toHaveBeenCalledWith({ active: false });
+    });
+
+    it('says so when the switch did not reach the backend (never silent)', async () => {
+      demo.setPhoneCall.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+      const fixture = await render();
+
+      toggle(fixture).click();
+      await fixture.whenStable();
+
+      expect(text(el(fixture).querySelector('.simulate [role="alert"]'))).toContain('Nie udało się zmienić symulacji');
+    });
+  });
+
+  describe('configuration of the senior\'s account', () => {
+    const input = (f: ComponentFixture<Family>) => el(f).querySelector<HTMLInputElement>('#family-phone')!;
+    const submit = (f: ComponentFixture<Family>) => button(el(f).querySelector('.config')!, 'Zapisz');
+    const type = async (f: ComponentFixture<Family>, value: string) => {
+      input(f).value = value;
+      input(f).dispatchEvent(new Event('input'));
+      await f.whenStable();
+    };
+
+    it('is a dropdown that shows the saved family number', async () => {
+      const fixture = await render();
+      expect(text(el(fixture).querySelector('.config summary'))).toBe('Konfiguracja konta seniora');
+      expect(el(fixture).querySelector('.config label')?.textContent).toContain('Numer telefonu osoby z rodziny');
+      expect(input(fixture).value).toBe('+48 602 000 222');
+    });
+
+    it('shows the saved words and saves new ones, one per line or separated by commas', async () => {
+      const fixture = await render();
+      const words = () => el(fixture).querySelector<HTMLTextAreaElement>('#family-keywords')!;
+      expect(words().value).toBe('testament');
+      expect(el(fixture).querySelector('.config')!.textContent).toContain('Słowa kluczowe, na które ten profil ma być wrażliwy');
+
+      words().value = 'akt własności\nDowód osobisty, akt własności; x';
+      words().dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+      submit(fixture).click();
+      await fixture.whenStable();
+
+      expect(config.setSeniorConfig).toHaveBeenCalledWith({
+        familyPhone: '+48 602 000 222',
+        keywords: ['akt własności', 'Dowód osobisty'],
+      });
+    });
+
+    it('does not save more than 30 words', async () => {
+      const fixture = await render();
+      const words = el(fixture).querySelector<HTMLTextAreaElement>('#family-keywords')!;
+      words.value = Array.from({ length: 31 }, (_, i) => `słowo${i}`).join(',');
+      words.dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+
+      expect(submit(fixture).disabled).toBe(true);
+      expect(text(el(fixture).querySelector('.config [role="alert"]'))).toContain('Najwyżej 30 słów');
+    });
+
+    it('saves a new number', async () => {
+      const fixture = await render();
+      await type(fixture, '+48 601 111 333');
+
+      submit(fixture).click();
+      await fixture.whenStable();
+
+      expect(config.setSeniorConfig).toHaveBeenCalledWith({ familyPhone: '+48 601 111 333', keywords: ['testament'] });
+      expect(text(el(fixture).querySelector('.config [role="status"]'))).toBe('Zapisano.');
+    });
+
+    it('does not save a malformed number', async () => {
+      const fixture = await render();
+      await type(fixture, 'abc');
+
+      expect(submit(fixture).disabled).toBe(true);
+      expect(text(el(fixture).querySelector('.config [role="alert"]'))).toContain('Podaj numer');
+      expect(config.setSeniorConfig).not.toHaveBeenCalled();
+    });
+
+    it('an empty number removes it', async () => {
+      const fixture = await render();
+      await type(fixture, '');
+      submit(fixture).click();
+      await fixture.whenStable();
+      expect(config.setSeniorConfig).toHaveBeenCalledWith({ familyPhone: '', keywords: ['testament'] });
+    });
+
+    it('says so when saving failed (never silent)', async () => {
+      config.setSeniorConfig.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+      const fixture = await render();
+      await type(fixture, '+48 601 111 333');
+      submit(fixture).click();
+      await fixture.whenStable();
+      expect(text(el(fixture).querySelector('.config [role="alert"]'))).toContain('Nie udało się zapisać');
+    });
+  });
+
+  describe('ending the call from an alert', () => {
+    const endButton = (f: ComponentFixture<Family>) => button(el(f), 'Zakończ połączenie');
+
+    it('is offered on the alert of the ongoing call only', async () => {
+      events.alerts.set([alert('live', T0, 'high', 'c1')]);
+      const fixture = await render();
+      expect(endButton(fixture)).toBeUndefined();
+
+      events.activeCall.set({ callId: 'c1', startedAt: T0, endedAt: null, hadAlert: true });
+      await fixture.whenStable();
+      expect(endButton(fixture)).toBeTruthy();
+
+      events.activeCall.set({ callId: 'c1', startedAt: T0, endedAt: T0, hadAlert: true });
+      await fixture.whenStable();
+      expect(endButton(fixture)).toBeUndefined();
+    });
+
+    it('ends the simulated phone call, so /listen stops listening', async () => {
+      events.alerts.set([alert('live', T0, 'high', 'c1')]);
+      events.activeCall.set({ callId: 'c1', startedAt: T0, endedAt: null, hadAlert: true });
+      const fixture = await render();
+
+      endButton(fixture).click();
+      await fixture.whenStable();
+
+      expect(demo.setPhoneCall).toHaveBeenCalledWith({ active: false });
+      expect(demo.stopReplay).toHaveBeenCalled();
+    });
+  });
+
+  describe('confirming a scam', () => {
+    const MESSAGE =
+      'Numer został wysłany do bazy numerów podejrzanych. Jeśli masz więcej pytań, możesz także zgłosić sprawę na policję.';
+
+    it('tells what happens with the number once "Potwierdzam oszustwo" is stored', async () => {
+      events.alerts.set([alert('a1', T0)]);
+      const fixture = await render();
+      expect(text(el(fixture))).not.toContain('bazy numerów podejrzanych');
+
+      button(cards(fixture)[0], 'Potwierdzam oszustwo').click();
+      await fixture.whenStable();
+      events.decisions.set([{ alertId: 'a1', actor: 'family', decision: 'confirmed_scam', at: T0 } as Decision]);
+      await fixture.whenStable();
+
+      expect(text(cards(fixture)[0].querySelector('.confirmed'))).toBe(MESSAGE);
+    });
+
+    it('does not show it after other decisions', async () => {
+      events.alerts.set([alert('a1', T0)]);
+      events.decisions.set([{ alertId: 'a1', actor: 'family', decision: 'false_alarm', at: T0 } as Decision]);
+      const fixture = await render();
+      expect(cards(fixture)[0].querySelector('.confirmed')).toBeNull();
+    });
   });
 });

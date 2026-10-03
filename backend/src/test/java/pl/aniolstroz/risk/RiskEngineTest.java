@@ -51,6 +51,13 @@ class RiskEngineTest {
                 // STANDARD: none, low, medium, high
                 Arguments.of("no hits", hits(), Sensitivity.STANDARD, RiskLevel.NONE),
                 Arguments.of("one stage", hits(AUTHORITY_CLAIM), Sensitivity.STANDARD, RiskLevel.LOW),
+                Arguments.of("a family word alone is an alert", hits(StageId.FAMILY_KEYWORD), Sensitivity.STANDARD,
+                        RiskLevel.MEDIUM),
+                Arguments.of("a family word alone, calm sensitivity", hits(StageId.FAMILY_KEYWORD), Sensitivity.CALM,
+                        RiskLevel.MEDIUM),
+                Arguments.of("a family word does not lower a high level",
+                        hits(AUTHORITY_CLAIM, PAYMENT_CHANNEL, StageId.FAMILY_KEYWORD), Sensitivity.STANDARD,
+                        RiskLevel.HIGH),
                 Arguments.of("money alone", hits(MONEY_REQUEST), Sensitivity.STANDARD, RiskLevel.LOW),
                 Arguments.of("same stage twice is one stage", hits(AUTHORITY_CLAIM, AUTHORITY_CLAIM),
                         Sensitivity.STANDARD, RiskLevel.LOW),

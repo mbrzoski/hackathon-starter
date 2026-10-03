@@ -10,3 +10,13 @@ main { max-width: 960px; margin: 0 auto; padding: 16px; display: grid; gap: 16px
 .empty h2 { margin: 0 0 6px; font-size: 18px; }
 .note { margin: 0; color: var(--muted); font-size: 14px; }
 .privacy { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; margin: 0; }
+.simulate { display: grid; gap: 8px; }
+.simulate button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.config { padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+.config summary { cursor: pointer; font-weight: 700; }
+.config form { display: grid; gap: 8px; margin-top: 12px; }
+.config label { font-weight: 600; }
+.config input { font: inherit; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; min-height: 44px; }
+.config input[aria-invalid='true'] { border-color: var(--alarm); }
+.config textarea { font: inherit; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; resize: vertical; }
+.config textarea[aria-invalid='true'] { border-color: var(--alarm); }

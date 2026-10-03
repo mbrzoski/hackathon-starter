@@ -42,10 +42,22 @@ final class ContractSchemas {
             Object resolved = resolve(schemas.get(name), schemas, false);
             @SuppressWarnings("unchecked")
             Map<String, Object> map = (Map<String, Object>) resolved;
+            removeBackendOnlyStages(map);
             return map;
         } catch (IOException e) {
             throw new IllegalStateException("Cannot read " + CONTRACT, e);
         }
+    }
+
+    /** FAMILY_KEYWORD is set by the backend only: the model's schema must not offer it (rule 5: family words stay home). */
+    @SuppressWarnings("unchecked")
+    private static void removeBackendOnlyStages(Map<String, Object> schema) {
+        Map<String, Object> hit = (Map<String, Object>) ((Map<String, Object>) ((Map<String, Object>) schema
+                .get("properties")).get("stage_hits")).get("items");
+        Map<String, Object> stage = (Map<String, Object>) ((Map<String, Object>) hit.get("properties")).get("stage");
+        List<Object> names = new java.util.ArrayList<>((List<Object>) stage.get("enum"));
+        names.remove("FAMILY_KEYWORD");
+        stage.put("enum", names);
     }
 
     /** @param propertyNames true when the node is a {@code properties} map, whose keys are names and not keywords */

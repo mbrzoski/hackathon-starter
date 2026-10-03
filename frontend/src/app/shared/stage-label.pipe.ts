@@ -10,6 +10,7 @@ export const STAGE_LABELS: Record<StageId, string> = {
   PAYMENT_CHANNEL: 'Sposób przekazania pieniędzy',
   REMOTE_ACCESS: 'Zdalny dostęp do urządzenia',
   PERSONAL_DATA_REQUEST: 'Prośba o dane osobowe',
+  FAMILY_KEYWORD: 'Słowo wskazane przez rodzinę',
 };
 
 /** StageId -> Polish name shown to people. */
