@@ -9,5 +9,7 @@ public enum StageId {
     MONEY_REQUEST,
     PAYMENT_CHANNEL,
     REMOTE_ACCESS,
-    PERSONAL_DATA_REQUEST
+    PERSONAL_DATA_REQUEST,
+    /** A word the family asked to be warned about; set by the backend only, never by the model. */
+    FAMILY_KEYWORD
 }

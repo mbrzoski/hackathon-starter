@@ -90,3 +90,10 @@ CREATE TABLE IF NOT EXISTS senior_config (
     id           INTEGER PRIMARY KEY CHECK (id = 1),
     family_phone TEXT NOT NULL
 );
+
+-- Words the family wants the profile to be sensitive to (SeniorConfig.keywords). A setting, kept in order. Matched on
+-- the backend only; never sent to Claude or STT.
+CREATE TABLE IF NOT EXISTS senior_keywords (
+    keyword  TEXT PRIMARY KEY,
+    position INTEGER NOT NULL
+);

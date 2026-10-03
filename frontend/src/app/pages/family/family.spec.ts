@@ -100,8 +100,8 @@ describe('Family', () => {
     notifier = { beep: vi.fn() };
     demo = { setPhoneCall: vi.fn(() => of({})), stopReplay: vi.fn(() => of({})) };
     config = {
-      getSeniorConfig: vi.fn(() => of({ familyPhone: '+48 602 000 222' })),
-      setSeniorConfig: vi.fn((c: { familyPhone: string }) => of(c)),
+      getSeniorConfig: vi.fn(() => of({ familyPhone: '+48 602 000 222', keywords: ['testament'] })),
+      setSeniorConfig: vi.fn((c: { familyPhone: string; keywords: string[] }) => of(c)),
     };
     TestBed.configureTestingModule({
       imports: [Family],
@@ -372,6 +372,35 @@ describe('Family', () => {
       expect(input(fixture).value).toBe('+48 602 000 222');
     });
 
+    it('shows the saved words and saves new ones, one per line or separated by commas', async () => {
+      const fixture = await render();
+      const words = () => el(fixture).querySelector<HTMLTextAreaElement>('#family-keywords')!;
+      expect(words().value).toBe('testament');
+      expect(el(fixture).querySelector('.config')!.textContent).toContain('Słowa kluczowe, na które ten profil ma być wrażliwy');
+
+      words().value = 'akt własności\nDowód osobisty, akt własności; x';
+      words().dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+      submit(fixture).click();
+      await fixture.whenStable();
+
+      expect(config.setSeniorConfig).toHaveBeenCalledWith({
+        familyPhone: '+48 602 000 222',
+        keywords: ['akt własności', 'Dowód osobisty'],
+      });
+    });
+
+    it('does not save more than 30 words', async () => {
+      const fixture = await render();
+      const words = el(fixture).querySelector<HTMLTextAreaElement>('#family-keywords')!;
+      words.value = Array.from({ length: 31 }, (_, i) => `słowo${i}`).join(',');
+      words.dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+
+      expect(submit(fixture).disabled).toBe(true);
+      expect(text(el(fixture).querySelector('.config [role="alert"]'))).toContain('Najwyżej 30 słów');
+    });
+
     it('saves a new number', async () => {
       const fixture = await render();
       await type(fixture, '+48 601 111 333');
@@ -379,7 +408,7 @@ describe('Family', () => {
       submit(fixture).click();
       await fixture.whenStable();
 
-      expect(config.setSeniorConfig).toHaveBeenCalledWith({ familyPhone: '+48 601 111 333' });
+      expect(config.setSeniorConfig).toHaveBeenCalledWith({ familyPhone: '+48 601 111 333', keywords: ['testament'] });
       expect(text(el(fixture).querySelector('.config [role="status"]'))).toBe('Zapisano.');
     });
 
@@ -397,7 +426,7 @@ describe('Family', () => {
       await type(fixture, '');
       submit(fixture).click();
       await fixture.whenStable();
-      expect(config.setSeniorConfig).toHaveBeenCalledWith({ familyPhone: '' });
+      expect(config.setSeniorConfig).toHaveBeenCalledWith({ familyPhone: '', keywords: ['testament'] });
     });
 
     it('says so when saving failed (never silent)', async () => {

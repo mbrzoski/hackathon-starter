@@ -40,7 +40,9 @@ class TemplateSelectorTest {
                 Arguments.of(RiskLevel.MEDIUM, EnumSet.of(ISOLATION, REMOTE_ACCESS, URGENT_THREAT),
                         "medium-isolation"),
                 Arguments.of(RiskLevel.MEDIUM, EnumSet.of(AUTHORITY_CLAIM, URGENT_THREAT), "medium-general"),
-                Arguments.of(RiskLevel.MEDIUM, EnumSet.of(MONEY_REQUEST, PAYMENT_CHANNEL), "medium-general"));
+                Arguments.of(RiskLevel.MEDIUM, EnumSet.of(MONEY_REQUEST, PAYMENT_CHANNEL), "medium-general"),
+                Arguments.of(RiskLevel.MEDIUM, EnumSet.of(StageId.FAMILY_KEYWORD), "medium-family-keyword"),
+                Arguments.of(RiskLevel.MEDIUM, EnumSet.of(StageId.FAMILY_KEYWORD, AUTHORITY_CLAIM), "medium-general"));
     }
 
     @ParameterizedTest(name = "{0} {1} -> {2}")

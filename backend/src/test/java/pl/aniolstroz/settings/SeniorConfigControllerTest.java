@@ -36,11 +36,16 @@ class SeniorConfigControllerTest {
     @AfterEach
     void nothingSet() {
         jdbc.sql("DELETE FROM senior_config").update();
+        jdbc.sql("DELETE FROM senior_keywords").update();
     }
 
     private org.springframework.test.web.servlet.ResultActions save(String phone) throws Exception {
+        return save(phone, "[]");
+    }
+
+    private org.springframework.test.web.servlet.ResultActions save(String phone, String keywordsJson) throws Exception {
         return mockMvc.perform(put("/api/senior-config").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"familyPhone\":\"" + phone + "\"}"));
+                .content("{\"familyPhone\":\"" + phone + "\",\"keywords\":" + keywordsJson + "}"));
     }
 
     @Test
@@ -64,6 +69,26 @@ class SeniorConfigControllerTest {
         save("602000222").andExpect(status().isOk());
         save("").andExpect(status().isOk()).andExpect(jsonPath("$.familyPhone").value(""));
         assertThat(config.current().familyPhone()).isEmpty();
+    }
+
+    @Test
+    void keywordsAreStoredInOrderCleanedAndWithoutDuplicates() throws Exception {
+        save("", "[\"akt własności\", \"  Dowód   osobisty \", \"AKT WŁASNOŚCI\", \"x\", \"  \"]")
+                .andExpect(status().isBadRequest()); // "x" is too short for the contract
+        save("", "[\"akt własności\", \"  Dowód   osobisty \", \"AKT WŁASNOŚCI\"]")
+                .andExpect(status().isOk()).andExpect(openApi().isValid(SPEC))
+                .andExpect(jsonPath("$.keywords.length()").value(2))
+                .andExpect(jsonPath("$.keywords[0]").value("akt własności"))
+                .andExpect(jsonPath("$.keywords[1]").value("Dowód osobisty"));
+        mockMvc.perform(get("/api/senior-config")).andExpect(jsonPath("$.keywords[1]").value("Dowód osobisty"));
+        assertThat(config.keywords()).containsExactly("akt własności", "Dowód osobisty");
+    }
+
+    @Test
+    void tooManyKeywordsAreRefused() throws Exception {
+        String many = java.util.stream.IntStream.range(0, 31).mapToObj(i -> "\"słowo" + i + "\"")
+                .collect(java.util.stream.Collectors.joining(",", "[", "]"));
+        save("", many).andExpect(status().isBadRequest());
     }
 
     @Test

@@ -17,3 +17,6 @@ templates:
   medium-general:
     shortText: W tej rozmowie są znane oznaki oszustwa.
     advice: Nie podawaj żadnych danych ani kodów. Jeśli masz wątpliwości, możesz się rozłączyć i zadzwonić do bliskich.
+  medium-family-keyword:
+    shortText: Rozmówca użył słowa, na które rodzina prosiła o szczególną uwagę.
+    advice: Nie podawaj żadnych danych ani kodów. Jeśli masz wątpliwości, możesz się rozłączyć i zadzwonić do bliskich.

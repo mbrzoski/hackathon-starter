@@ -63,6 +63,8 @@ make run-backend                  # picks up backend/models/vosk-model-small-pl-
 
 The script is idempotent and unpacks into `backend/models/` (git-ignored). Another location: set `APP_STT_VOSK_MODEL_PATH` to the model directory. `app.stt.provider=fake` (env `APP_STT_PROVIDER`) switches to the test double that recognises nothing.
 
+Who finds the warning signs: with `ANTHROPIC_API_KEY` set, Claude does (evidence only: stage and quote; the risk level is still computed by the code). The built-in keyword dictionary is only a safety net: `APP_RISK_KEYWORD_BASELINE=fallback` (default) uses it when the model is not available (no key, so MOCK, or its last call failed), `always` uses it next to the model, `off` never. The words that the family adds under "Konfiguracja konta seniora" on the family panel are always matched on the backend (never sent to Claude) and give at least a MEDIUM alert.
+
 A call opens when speech is heard on the listening device and ends after 10 s without speech; the device keeps listening for the next one. Tunable with `APP_STT_CALL_SILENCE_MS` (10000), `APP_STT_CALL_SPEECH_RMS` (300, of 32768) and `APP_STT_CALL_SPEECH_FRAMES` (3 frames of 100 ms in a row).
 
 The backend starts without the model; SCRIPTED and MOCK need none. A LIVE call without it is refused: `system.status` `stt` = `down` ("Brak modelu rozpoznawania mowy") and the `/ws/audio` session is closed with code 1011; no call is created.

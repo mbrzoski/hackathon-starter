@@ -25,7 +25,7 @@ public final class CallServices {
 
     public static CallService create(EventBus bus, Clock clock, CallEndedHook hook, SensitivitySource sensitivity,
             ApplicationEventPublisher publisher) {
-        return new CallService(bus, clock, hook, KeywordDetector.bundled(), sensitivity,
+        return new CallService(bus, clock, hook, segment -> KeywordDetector.bundled().detect(segment), sensitivity,
                 new AlertFactory(AlertTemplates.bundled(), clock), publisher);
     }
 }

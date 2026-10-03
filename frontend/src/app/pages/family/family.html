@@ -19,7 +19,20 @@
       @if (!phoneValid()) {
         <p class="error" role="alert">Podaj numer w formacie +48 602 000 222 (9 do 15 cyfr).</p>
       }
-      <button type="submit" class="btn-primary" [disabled]="!phoneValid() || configState() === 'saving'">Zapisz</button>
+
+      <label for="family-keywords">Słowa kluczowe, na które ten profil ma być wrażliwy</label>
+      <textarea id="family-keywords" rows="4" placeholder="np. akt własności&#10;testament&#10;wnuczek w szpitalu"
+                [value]="keywordsDraft()" (input)="editKeywords($any($event.target).value)"
+                [attr.aria-invalid]="!keywordsValid()"></textarea>
+      <p class="note">
+        Po jednym w linii albo po przecinku (do {{ maxKeywords }}). Gdy ktoś w rozmowie użyje takiego słowa, senior i rodzina
+        dostaną ostrzeżenie. Słowa zostają na serwerze i nie są wysyłane do AI. Teraz: {{ keywordList().length }}.
+      </p>
+      @if (!keywordsValid()) {
+        <p class="error" role="alert">Najwyżej {{ maxKeywords }} słów, każde do {{ maxKeywordLength }} znaków.</p>
+      }
+
+      <button type="submit" class="btn-primary" [disabled]="!phoneValid() || !keywordsValid() || configState() === 'saving'">Zapisz</button>
       @switch (configState()) {
         @case ('saved') { <p class="note" role="status">Zapisano.</p> }
         @case ('failed') { <p class="error" role="alert">Nie udało się zapisać. Spróbuj ponownie.</p> }

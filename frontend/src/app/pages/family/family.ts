@@ -1,7 +1,13 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { DemoService } from '../../api/api/demo.service';
 import { EventsService } from '../../core/events.service';
-import { SettingsStore, FAMILY_PHONE_PATTERN } from '../../core/settings.store';
+import {
+  FAMILY_PHONE_PATTERN,
+  MAX_KEYWORDS,
+  MAX_KEYWORD_LENGTH,
+  SettingsStore,
+  parseKeywords,
+} from '../../core/settings.store';
 import { Icon } from '../../shared/icon';
 import { ModeBadge } from '../../shared/mode-badge';
 import { problemDetailText } from '../../shared/problem-detail';
@@ -29,6 +35,15 @@ export class Family {
   /** The number being typed; starts as the saved one. */
   protected readonly phoneDraft = signal('');
   private draftTouched = false;
+  /** The words being typed, one per line or separated by commas. */
+  protected readonly keywordsDraft = signal('');
+  private keywordsTouched = false;
+  protected readonly keywordList = computed(() => parseKeywords(this.keywordsDraft()));
+  protected readonly keywordsValid = computed(
+    () => this.keywordList().length <= MAX_KEYWORDS && this.keywordList().every((w) => w.length <= MAX_KEYWORD_LENGTH),
+  );
+  protected readonly maxKeywords = MAX_KEYWORDS;
+  protected readonly maxKeywordLength = MAX_KEYWORD_LENGTH;
   protected readonly phoneValid = computed(() => FAMILY_PHONE_PATTERN.test(this.phoneDraft().trim()));
   protected readonly configState = signal<'idle' | 'saving' | 'saved' | 'failed'>('idle');
 
@@ -40,6 +55,12 @@ export class Family {
         this.phoneDraft.set(saved);
       }
     });
+    effect(() => {
+      const saved = this.settings.keywords();
+      if (saved !== null && !this.keywordsTouched) {
+        this.keywordsDraft.set(saved.join('\n'));
+      }
+    });
   }
 
   protected editPhone(value: string): void {
@@ -48,15 +69,22 @@ export class Family {
     this.configState.set('idle');
   }
 
-  /** Saves the number the senior's "Zadzwoń do bliskiej osoby" offers. Empty removes it. */
+  protected editKeywords(value: string): void {
+    this.keywordsTouched = true;
+    this.keywordsDraft.set(value);
+    this.configState.set('idle');
+  }
+
+  /** Saves the number the senior's "Zadzwoń do bliskiej osoby" offers (empty removes it) and the family's words. */
   protected saveConfig(): void {
-    if (!this.phoneValid()) {
+    if (!this.phoneValid() || !this.keywordsValid()) {
       return;
     }
     this.configState.set('saving');
-    this.settings.save(this.phoneDraft()).subscribe({
+    this.settings.save(this.phoneDraft(), this.keywordList()).subscribe({
       next: (config) => {
         this.phoneDraft.set(config.familyPhone);
+        this.keywordsDraft.set(config.keywords.join('\n'));
         this.configState.set('saved');
       },
       error: () => this.configState.set('failed'),

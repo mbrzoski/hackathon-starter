@@ -907,7 +907,16 @@ components:
       additionalProperties: false
       required:
         - familyPhone
+        - keywords
       properties:
+        keywords:
+          type: array
+          maxItems: 30
+          description: "Words and phrases the family wants this profile to be sensitive to. Matched on the backend in the transcript, never sent to Claude. A match raises at least a MEDIUM alert."
+          items:
+            type: string
+            minLength: 2
+            maxLength: 60
         familyPhone:
           type: string
           pattern: ^(\+?[0-9 ]{9,15})?$
@@ -1260,7 +1269,7 @@ components:
                   - unclear
     StageId:
       title: StageId
-      description: Manipulation stage recognised in a call.
+      description: "Manipulation stage recognised in a call. FAMILY_KEYWORD is not a manipulation stage: it marks a word the family asked to be warned about (SeniorConfig.keywords). Only the backend sets it; the model never returns it."
       type: string
       enum:
         - AUTHORITY_CLAIM
@@ -1271,6 +1280,7 @@ components:
         - PAYMENT_CHANNEL
         - REMOTE_ACCESS
         - PERSONAL_DATA_REQUEST
+        - FAMILY_KEYWORD
     SystemStatus:
       title: SystemStatus
       description: State of one component. Every failure is published, never silent.

@@ -118,7 +118,7 @@ describe('Senior', () => {
     outbox = { send: vi.fn(), unsaved, acknowledge: () => unsaved.set(false) };
     synth = new FakeSynth();
     demo = { setPhoneCall: vi.fn(() => of({})) };
-    config = { getSeniorConfig: vi.fn(() => of({ familyPhone: '' })), setSeniorConfig: vi.fn() };
+    config = { getSeniorConfig: vi.fn(() => of({ familyPhone: '', keywords: [] })), setSeniorConfig: vi.fn() };
   });
 
   afterEach(() => vi.unstubAllGlobals());
@@ -299,7 +299,7 @@ describe('Senior', () => {
     });
 
     it('offers the family number from the senior configuration as a tel: link, with the button label unchanged', async () => {
-      config.getSeniorConfig.mockReturnValue(of({ familyPhone: '+48 602 000 222' }));
+      config.getSeniorConfig.mockReturnValue(of({ familyPhone: '+48 602 000 222', keywords: [] }));
       const fixture = await withAlert();
       expect(button(fixture, 'Zadzwoń do bliskiej osoby')).toBeTruthy();
 

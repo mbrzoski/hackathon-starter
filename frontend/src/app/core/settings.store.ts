@@ -10,6 +10,19 @@ export interface TrustedContact {
 }
 
 /** What a family number may look like; the same rule as the contract (`SeniorConfig.familyPhone`). */
+/** "a, b" or one per line -> trimmed words, no empties, no duplicates (the backend cleans the same way). */
+export function parseKeywords(text: string): string[] {
+  const seen = new Map<string, string>();
+  for (const part of text.split(/[\n,;]+/)) {
+    const word = part.trim().replace(/\s+/g, ' ');
+    if (word.length >= 2) seen.set(word.toLowerCase(), seen.get(word.toLowerCase()) ?? word);
+  }
+  return [...seen.values()];
+}
+
+export const MAX_KEYWORDS = 30;
+export const MAX_KEYWORD_LENGTH = 60;
+
 export const FAMILY_PHONE_PATTERN = /^(\+?[0-9 ]{9,15})?$/;
 
 /**
@@ -24,6 +37,8 @@ export class SettingsStore {
   readonly firstContact = signal<TrustedContact | null>(null);
   /** The number saved in the senior's configuration, "" when none. Null until it has been loaded. */
   readonly familyPhone = signal<string | null>(null);
+  /** The words the family wants the profile to be sensitive to. Null until loaded. */
+  readonly keywords = signal<string[] | null>(null);
   /** The senior as the family calls them ("Mama") and their number, for the family panel's call link. */
   readonly senior = signal<TrustedContact | null>(null);
 
@@ -35,13 +50,16 @@ export class SettingsStore {
     });
   }
 
-  /** Saves the family number; the observable fails when the backend refuses it. */
-  save(phone: string): Observable<SeniorConfig> {
-    return this.api.setSeniorConfig({ familyPhone: phone.trim() }).pipe(tap((config) => this.apply(config)));
+  /** Saves the configuration; the observable fails when the backend refuses it. */
+  save(phone: string, keywords: readonly string[]): Observable<SeniorConfig> {
+    return this.api
+      .setSeniorConfig({ familyPhone: phone.trim(), keywords: [...keywords] })
+      .pipe(tap((config) => this.apply(config)));
   }
 
   private apply(config: SeniorConfig): void {
     this.familyPhone.set(config.familyPhone);
+    this.keywords.set(config.keywords);
     this.firstContact.set(config.familyPhone ? { name: '', phone: config.familyPhone } : null);
   }
 }

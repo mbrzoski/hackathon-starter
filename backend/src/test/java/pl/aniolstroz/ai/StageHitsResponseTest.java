@@ -104,7 +104,8 @@ class StageHitsResponseTest {
         assertThat((List<Object>) hit.get("required")).containsExactlyInAnyOrder("stage", "segment_id", "quote", "speaker_role");
         Map<?, ?> hitProps = (Map<?, ?>) hit.get("properties");
         assertThat((List<Object>) ((Map<?, ?>) hitProps.get("stage")).get("enum"))
-                .containsExactlyElementsOf(java.util.Arrays.stream(StageId.values()).map(Enum::name).toList());
+                .containsExactlyElementsOf(java.util.Arrays.stream(StageId.values()).map(Enum::name)
+                        .filter(n -> !n.equals("FAMILY_KEYWORD")).toList()); // the backend's own stage is not offered
         assertThat((List<Object>) ((Map<?, ?>) hitProps.get("speaker_role")).get("enum"))
                 .containsExactly("caller", "senior", "background", "unclear");
     }
