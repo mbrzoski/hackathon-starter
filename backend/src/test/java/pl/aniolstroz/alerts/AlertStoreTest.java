@@ -99,6 +99,28 @@ class AlertStoreTest {
     }
 
     @Test
+    void findReturnsTheStoredAlertUnchanged() {
+        store.save(alert("a-1"), List.of());
+
+        assertThat(store.find("a-1")).contains(alert("a-1"));
+    }
+
+    @Test
+    void findOfAnUnknownAlertIsEmpty() {
+        assertThat(store.find("missing")).isEmpty();
+    }
+
+    @Test
+    void recentReturnsTheLatestSavedAlertsFirstWithinTheLimit() {
+        store.save(alert("a-1"), List.of());
+        store.save(alert("a-2"), List.of());
+        store.save(alert("a-3"), List.of());
+
+        assertThat(store.recent(2)).extracting(Alert::alertId).containsExactly("a-3", "a-2");
+        assertThat(store.recent(10)).extracting(Alert::alertId).containsExactly("a-3", "a-2", "a-1");
+    }
+
+    @Test
     void twoAlertsOfOneCallKeepTheirOwnExcerpts() {
         store.save(alert("a-1"), List.of(segment(2)));
         store.save(alert("a-2"), List.of(segment(2), segment(3)));

@@ -2,6 +2,7 @@ package pl.aniolstroz.call;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -32,6 +33,7 @@ public final class CallState {
     private final List<StageHit> hits = new ArrayList<>();
     private final Set<HitKey> hitKeys = new HashSet<>();
     private final List<Alert> alerts = new ArrayList<>();
+    private final Set<StageId> ignoredStages = EnumSet.noneOf(StageId.class);
     private int segmentCount;
     private RiskLevel level = RiskLevel.NONE;
     private boolean ended;
@@ -71,6 +73,11 @@ public final class CallState {
     /** Copy of the alerts raised so far, one per level. */
     public List<Alert> alerts() {
         return locked(() -> List.copyOf(alerts));
+    }
+
+    /** Stages the family asked not to count for this call. */
+    public Set<StageId> ignoredStages() {
+        return locked(() -> Set.copyOf(ignoredStages));
     }
 
     public boolean hadAlert() {
@@ -132,6 +139,16 @@ public final class CallState {
     /** Caller must hold the lock. */
     void recordAlert(Alert alert) {
         alerts.add(alert);
+    }
+
+    /** Returns true if at least one of the stages was not ignored yet. Caller must hold the lock. */
+    boolean addIgnoredStages(Set<StageId> stages) {
+        return ignoredStages.addAll(stages);
+    }
+
+    /** Caller must hold the lock. */
+    boolean hasAlertAt(RiskLevel alertLevel) {
+        return alerts.stream().anyMatch(a -> a.level() == alertLevel);
     }
 
     /** Caller must hold the lock. */

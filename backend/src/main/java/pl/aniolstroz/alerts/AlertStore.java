@@ -1,18 +1,26 @@
 package pl.aniolstroz.alerts;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.support.TransactionOperations;
 import pl.aniolstroz.contracts.Alert;
+import pl.aniolstroz.contracts.Mode;
+import pl.aniolstroz.contracts.RiskLevel;
 import pl.aniolstroz.contracts.SpeakerLabel;
 import pl.aniolstroz.contracts.StageHit;
 import pl.aniolstroz.contracts.TranscriptSegment;
+import pl.aniolstroz.contracts.TriggeredBy;
 
 /**
  * SQLite storage (BE-07) for alerted calls only: the alert and the transcript excerpt around the cited segments
@@ -66,6 +74,35 @@ public class AlertStore {
                         .update();
             }
         });
+    }
+
+    public Optional<Alert> find(String alertId) {
+        return jdbc.sql("SELECT * FROM alerts WHERE alert_id = :id").param("id", alertId)
+                .query(this::toAlert).optional();
+    }
+
+    /** The most recently stored alerts, newest first. */
+    public List<Alert> recent(int limit) {
+        return jdbc.sql("SELECT * FROM alerts ORDER BY rowid DESC LIMIT :limit").param("limit", limit)
+                .query(this::toAlert).list();
+    }
+
+    private Alert toAlert(ResultSet rs, int row) throws SQLException {
+        List<StageHit> stages;
+        try {
+            stages = mapper.readValue(rs.getString("stages_json"), new TypeReference<List<StageHit>>() { });
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Stored alert " + rs.getString("alert_id") + " has unreadable stages", e);
+        }
+        return new Alert(rs.getString("alert_id"), rs.getString("call_id"),
+                RiskLevel.valueOf(upper(rs.getString("level"))), stages, rs.getString("template_id"),
+                rs.getString("short_text"), rs.getString("advice"),
+                TriggeredBy.valueOf(upper(rs.getString("triggered_by"))),
+                Instant.parse(rs.getString("created_at")), Mode.valueOf(rs.getString("mode")));
+    }
+
+    private static String upper(String value) {
+        return value.toUpperCase(Locale.ROOT);
     }
 
     /** The stored excerpt of an alert in transcript order. */

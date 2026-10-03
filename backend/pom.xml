@@ -114,6 +114,9 @@
                             <!-- Shared schemas stay as the hand-written records in pl.aniolstroz.contracts. -->
                             <importMappings>
                                 <importMapping>Mode=pl.aniolstroz.contracts.Mode</importMapping>
+                                <importMapping>Alert=pl.aniolstroz.contracts.Alert</importMapping>
+                                <importMapping>Decision=pl.aniolstroz.contracts.Decision</importMapping>
+                                <importMapping>StageId=pl.aniolstroz.contracts.StageId</importMapping>
                                 <importMapping>ProblemDetail=org.springframework.http.ProblemDetail</importMapping>
                             </importMappings>
                             <configOptions>
@@ -128,7 +131,7 @@
                                 <useBeanValidation>true</useBeanValidation>
                             </configOptions>
                             <globalProperties>
-                                <models>ReplayRequest,ScenarioSummary</models>
+                                <models>ReplayRequest,ScenarioSummary,DecisionRequest,AlertWithDecisions</models>
                             </globalProperties>
                         </configuration>
                     </execution>
