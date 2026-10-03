@@ -1,7 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import contract from '../../../public/assets/contracts/openapi-schemas.json';
-import { CONTRACT_LOADER, EventsService, WEB_SOCKET_FACTORY, eventsUrl, roleForUrl } from './events.service';
+import {
+  BACKEND_STARTED_AT,
+  CONTRACT_LOADER,
+  EventsService,
+  WEB_SOCKET_FACTORY,
+  eventsUrl,
+  roleForUrl,
+} from './events.service';
 
 class FakeSocket {
   onopen: (() => void) | null = null;
@@ -41,11 +48,15 @@ function segment(segId: string, text: string, isFinal = true) {
 describe('EventsService', () => {
   let sockets: FakeSocket[];
   let service: EventsService;
+  let backendStart: string;
+  let statusFails: boolean;
 
   const lastSocket = () => sockets[sockets.length - 1];
 
   beforeEach(async () => {
     sockets = [];
+    backendStart = '2026-10-04T09:00:00Z';
+    statusFails = false;
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
@@ -58,11 +69,19 @@ describe('EventsService', () => {
           },
         },
         { provide: CONTRACT_LOADER, useValue: async () => contract },
+        {
+          provide: BACKEND_STARTED_AT,
+          useValue: async () => {
+            if (statusFails) throw new Error('status unavailable');
+            return backendStart;
+          },
+        },
       ],
     });
     service = TestBed.inject(EventsService);
     await service.connect('family');
     lastSocket().serverOpen();
+    await new Promise((r) => setTimeout(r, 0)); // first GET /api/status
   });
 
   afterEach(() => {
@@ -189,6 +208,56 @@ describe('EventsService', () => {
     expect(service.risk()?.level).toBe('high');
     expect(service.alerts().map((a) => a.alertId)).toEqual(['a1']);
     expect(service.decisions().map((d) => d.decision)).toEqual(['hung_up']);
+  });
+
+  describe('backend restart during a call (UC-01 test, bug 1b)', () => {
+    const flush = () => new Promise((r) => setTimeout(r, 0));
+    async function reconnect(newStart: string) {
+      backendStart = newStart;
+      vi.useFakeTimers();
+      lastSocket().serverClose();
+      vi.advanceTimersByTime(1000);
+      vi.useRealTimers();
+      lastSocket().serverOpen();
+      await flush();
+    }
+
+    it('marks the ongoing call interrupted when the backend comes back with a new start time', async () => {
+      lastSocket().serverSend(event('call.started', { callId: 'c1' }));
+      await reconnect('2026-10-04T11:00:00Z');
+
+      const call = service.activeCall();
+      expect(call?.callId).toBe('c1');
+      expect(call?.interrupted).toBe(true);
+      expect(call?.endedAt).not.toBeNull();
+    });
+
+    it('keeps the call after a reconnect to the same backend', async () => {
+      lastSocket().serverSend(event('call.started', { callId: 'c1' }));
+      await reconnect(backendStart);
+      expect(service.activeCall()).toEqual({ callId: 'c1', startedAt: AT, endedAt: null, hadAlert: null });
+    });
+
+    it('leaves a new call from the restarted backend alone', async () => {
+      lastSocket().serverSend(event('call.started', { callId: 'c1' }));
+      backendStart = '2026-10-04T11:00:00Z';
+      vi.useFakeTimers();
+      lastSocket().serverClose();
+      vi.advanceTimersByTime(1000);
+      vi.useRealTimers();
+      lastSocket().serverOpen();
+      lastSocket().serverSend(event('call.started', { callId: 'c2' }));
+      await flush();
+      expect(service.activeCall()).toEqual({ callId: 'c2', startedAt: AT, endedAt: null, hadAlert: null });
+    });
+
+    it('does nothing when the status cannot be read', async () => {
+      lastSocket().serverSend(event('call.started', { callId: 'c1' }));
+      statusFails = true;
+      await reconnect('2026-10-04T11:00:00Z');
+      expect(service.activeCall()?.interrupted).toBeUndefined();
+      expect(service.activeCall()?.endedAt).toBeNull();
+    });
   });
 
   it('reconnects with backoff capped at 10 s', () => {

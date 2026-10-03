@@ -1,6 +1,7 @@
 import { DestroyRef, Injectable, InjectionToken, computed, inject, signal } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { filter } from 'rxjs';
+import { filter, firstValueFrom } from 'rxjs';
+import { StatusService } from '../api/api/status.service';
 import {
   Alert,
   AlertCreatedEvent,
@@ -29,6 +30,8 @@ export interface ActiveCall {
   startedAt: string;
   endedAt: string | null;
   hadAlert: boolean | null;
+  /** The backend restarted during the call and no longer knows it: nothing about it will arrive any more. */
+  interrupted?: boolean;
 }
 
 /** Creates the socket; replaced by a fake in tests. */
@@ -46,6 +49,15 @@ export const CONTRACT_LOADER = new InjectionToken<() => Promise<{ $id: string }>
       throw new Error(`Cannot load ${CONTRACT_SCHEMAS_URL} (${response.status})`);
     }
     return response.json();
+  },
+});
+
+/** Start time of the running backend (GET /api/status); a new value means it restarted. Replaced in tests. */
+export const BACKEND_STARTED_AT = new InjectionToken<() => Promise<string>>('BACKEND_STARTED_AT', {
+  providedIn: 'root',
+  factory: () => {
+    const status = inject(StatusService);
+    return async () => (await firstValueFrom(status.getStatus())).startedAt;
   },
 });
 
@@ -68,6 +80,7 @@ const MAX_BACKOFF_MS = 10_000;
 export class EventsService {
   private readonly createSocket = inject(WEB_SOCKET_FACTORY);
   private readonly loadContract = inject(CONTRACT_LOADER);
+  private readonly backendStartedAt = inject(BACKEND_STARTED_AT);
   private readonly router = inject(Router);
 
   private readonly _connection = signal<ConnectionState>('closed');
@@ -94,6 +107,8 @@ export class EventsService {
   private role: EventsRole | null = null;
   private backoffMs = INITIAL_BACKOFF_MS;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  /** startedAt of the backend this client last talked to. */
+  private knownBackendStart: string | null = null;
 
   constructor() {
     this.router.events
@@ -149,6 +164,7 @@ export class EventsService {
     socket.onopen = () => {
       this.backoffMs = INITIAL_BACKOFF_MS;
       this._connection.set('open');
+      void this.checkBackendRestart(this._activeCall()?.callId ?? null);
     };
     socket.onmessage = (msg: MessageEvent) => this.receive(msg.data);
     socket.onclose = () => {
@@ -159,6 +175,29 @@ export class EventsService {
       this._connection.set('closed');
       this.scheduleReconnect();
     };
+  }
+
+  /**
+   * The backend keeps a call only in memory. After a restart it does not know the call that was going on, so no
+   * call.ended will ever come for it: mark it interrupted so screens stop showing it as ongoing (UC-01 test, bug 1b).
+   */
+  private async checkBackendRestart(callIdAtOpen: string | null): Promise<void> {
+    let startedAt: string;
+    try {
+      startedAt = await this.backendStartedAt();
+    } catch {
+      return; // Unknown: keep the state. The socket will tell if the backend is gone.
+    }
+    const restarted = this.knownBackendStart !== null && this.knownBackendStart !== startedAt;
+    this.knownBackendStart = startedAt;
+    if (!restarted || callIdAtOpen === null) {
+      return;
+    }
+    this._activeCall.update((call) =>
+      call && call.callId === callIdAtOpen && !call.endedAt
+        ? { ...call, endedAt: new Date().toISOString(), interrupted: true }
+        : call,
+    );
   }
 
   private scheduleReconnect(): void {

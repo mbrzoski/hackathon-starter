@@ -28,3 +28,7 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 1
 .unsaved button { font: inherit; min-height: 64px; padding: 0 24px; border-radius: 14px; border: 0; background: var(--primary);
   color: #fff; cursor: pointer; }
 .unsaved button:focus-visible { outline: 4px solid var(--primary); outline-offset: 3px; }
+.offline { flex: none; margin: 0; display: flex; align-items: center; gap: 12px; padding: 10px 16px;
+  background: var(--alarm-deep); color: #fff; font-weight: 800; }
+.notice.interrupted { background: var(--highlight); border: 4px solid var(--warn); }
+.notice .sub { font-size: 28px; font-weight: 600; }

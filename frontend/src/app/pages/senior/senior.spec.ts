@@ -1,4 +1,4 @@
-import { signal } from '@angular/core';
+import { computed, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Alert, Decision, Mode, SystemStatus, TranscriptSegment } from '../../api/model/models';
 import { AudioService } from '../../core/audio.service';
@@ -12,8 +12,10 @@ const AT = '2026-10-04T10:00:00Z';
 const CALL: ActiveCall = { callId: 'c1', startedAt: AT, endedAt: null, hadAlert: null };
 
 function fakeEvents() {
+  const connection = signal<ConnectionState>('open');
   return {
-    connection: signal<ConnectionState>('open'),
+    connection,
+    online: computed(() => connection() === 'open'),
     mode: signal<Mode | null>(Mode.SCRIPTED),
     systemStatus: signal<Partial<Record<string, SystemStatus>>>({}),
     activeCall: signal<ActiveCall | null>(null),
@@ -310,6 +312,34 @@ describe('Senior', () => {
 
       button(fixture, 'Powtórz').click();
       expect(synth!.spoken.filter((u) => u.text).length).toBe(2);
+    });
+  });
+
+  describe('backend failure during an alert (UC-01 test, bug 1)', () => {
+    beforeEach(setup);
+
+    it('keeps the warning on screen and says that Anioł Stróż is offline', async () => {
+      const fixture = await withAlert();
+      events.connection.set('closed');
+      await fixture.whenStable();
+
+      expect($(fixture, 'app-alert-view')).toBeTruthy();
+      expect($(fixture, '.offline')?.textContent).toContain('Anioł Stróż jest offline');
+
+      events.connection.set('open');
+      await fixture.whenStable();
+      expect($(fixture, '.offline')).toBeNull();
+    });
+
+    it('closes the alert and warns when the backend lost the call', async () => {
+      const fixture = await withAlert();
+      events.activeCall.set({ ...CALL, endedAt: AT, interrupted: true });
+      await fixture.whenStable();
+
+      expect($(fixture, 'app-alert-view')).toBeNull();
+      expect(text(fixture)).toContain('Połączenie z Aniołem Stróżem zostało przerwane.');
+      expect(text(fixture)).toContain('Ta rozmowa nie jest już sprawdzana.');
+      expect(text(fixture)).not.toContain('Rozmowa zakończona');
     });
   });
 

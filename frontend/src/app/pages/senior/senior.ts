@@ -16,18 +16,20 @@ import { StatusPanel } from './status-panel';
 
 const ALERTING_LEVELS: ReadonlySet<RiskLevel> = new Set([RiskLevel.medium, RiskLevel.high]);
 const ENDED_NOTICE_MS = 6000;
+/** Longer: the senior has to understand that this call is no longer being checked. */
+const INTERRUPTED_NOTICE_MS = 15_000;
 
 type View =
   | { kind: 'start' }
   | { kind: 'status' }
   | { kind: 'alert'; alert: Alert }
   | { kind: 'outcome'; alert: Alert; decision: 'hung_up' | 'called_trusted' }
-  | { kind: 'ended' };
+  | { kind: 'ended'; interrupted: boolean };
 
 /**
  * Senior screen: full screen in portrait and landscape, never scrolls, text >= 28 px (WEB-11).
  * Resting state from selectSeniorStatus (FE-06). A medium or high alert shows AlertView until the senior decides
- * or the call ends (then "Rozmowa zakończona" for a few seconds).
+ * or the call ends (then "Rozmowa zakończona" for a few seconds, or a warning if the backend lost the call).
  */
 @Component({
   selector: 'app-senior',
@@ -37,8 +39,12 @@ type View =
       <div class="brand"><span class="logo"><app-icon name="shield" [size]="32" /></span><span class="name">Anioł Stróż</span></div>
       <app-mode-badge [large]="true" [compact]="true" />
     </header>
+    @let v = view();
+    @if (!events.online() && (v.kind === 'alert' || v.kind === 'outcome' || v.kind === 'ended')) {
+      <!-- FE-06: the warning stays on screen, but the senior must know that nothing new can arrive. -->
+      <p class="offline" role="alert"><app-icon name="cloud-off" [size]="32" /> Anioł Stróż jest offline</p>
+    }
     <main>
-      @let v = view();
       @if (v.kind === 'alert') {
         <app-alert-view
           [alert]="v.alert"
@@ -52,10 +58,18 @@ type View =
           [contact]="settings.firstContact()"
           (done)="close(v.alert.alertId)" />
       } @else if (v.kind === 'ended') {
-        <section class="notice" role="status" aria-live="polite">
-          <app-icon name="check" [size]="96" />
-          <p>Rozmowa zakończona</p>
-        </section>
+        @if (v.interrupted) {
+          <section class="notice interrupted" role="alert">
+            <app-icon name="warning" [size]="96" />
+            <p>Połączenie z Aniołem Stróżem zostało przerwane.</p>
+            <p class="sub">Ta rozmowa nie jest już sprawdzana. Jeśli coś Cię niepokoi, rozłącz się.</p>
+          </section>
+        } @else {
+          <section class="notice" role="status" aria-live="polite">
+            <app-icon name="check" [size]="96" />
+            <p>Rozmowa zakończona</p>
+          </section>
+        }
       } @else if (v.kind === 'start') {
         <section class="start">
           <app-icon name="shield" [size]="96" />
@@ -145,7 +159,9 @@ export class Senior {
     if (alert) {
       if (!this.callInProgress()) {
         const seen = this.endedSeenAt();
-        return seen !== null && this.now() - seen < ENDED_NOTICE_MS ? { kind: 'ended' } : this.restingView();
+        const interrupted = !!this.events.activeCall()?.interrupted;
+        const showFor = interrupted ? INTERRUPTED_NOTICE_MS : ENDED_NOTICE_MS;
+        return seen !== null && this.now() - seen < showFor ? { kind: 'ended', interrupted } : this.restingView();
       }
       const decision = this.decided().get(alert.alertId);
       if (decision === DecisionRequestDecisionEnum.hung_up || decision === DecisionRequestDecisionEnum.called_trusted) {
