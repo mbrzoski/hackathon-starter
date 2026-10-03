@@ -1,0 +1,19 @@
+{
+  "description": "Quote normalisation vectors (CON-05). Same cases as backend QuoteNormalizerTest; both implementations must pass all of them.",
+  "vectors": [
+    { "input": "Zażółć gęślą jaźń", "expected": "zazolc gesla jazn" },
+    { "input": "ŁÓDŹ", "expected": "lodz" },
+    { "input": "Łukasz", "expected": "lukasz" },
+    { "input": "wypłać złoto", "expected": "wyplac zloto" },
+    { "input": "Nikomu nie mów, proszę!", "expected": "nikomu nie mow prosze" },
+    { "input": "   wielokrotne     spacje  ", "expected": "wielokrotne spacje" },
+    { "input": "kod BLIK: 123-456", "expected": "kod blik 123 456" },
+    { "input": "to zostaje między nami — proszę", "expected": "to zostaje miedzy nami prosze" },
+    { "input": "bezpieczne–konto", "expected": "bezpieczne konto" },
+    { "input": "...!!! ?", "expected": "" },
+    { "input": "ąęćńóśźż ĄĘĆŃÓŚŹŻ", "expected": "aecnoszz aecnoszz" },
+    { "input": "Kurier odbierze 5000 zł", "expected": "kurier odbierze 5000 zl" },
+    { "input": "café Zoé", "expected": "cafe zoe" },
+    { "input": "kod blik", "expected": "kod blik" }
+  ]
+}

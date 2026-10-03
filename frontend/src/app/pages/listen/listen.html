@@ -1,0 +1,64 @@
+<div class="screen" [class]="view()">
+  <header>
+    <div class="brand">
+      <span class="logo"><app-icon name="shield" [size]="28" /></span>
+      <strong>Nasłuch</strong>
+    </div>
+    <app-mode-badge [dark]="true" />
+  </header>
+
+  <main aria-live="polite">
+    @switch (view()) {
+      @case ('offline') {
+        <div class="mic alarm-icon"><app-icon name="warning" [size]="72" /></div>
+        <h1 role="alert">Anioł Stróż jest offline</h1>
+        <p class="sub">Brak połączenia z serwerem. Rozmowa nie jest teraz sprawdzana.</p>
+      }
+      @case ('idle') {
+        <div class="mic"><app-icon name="mic" [size]="72" /></div>
+        <h1>Ochrona jest wyłączona</h1>
+        <p class="sub">Włącz ochronę, aby urządzenie zaczęło słuchać rozmowy przy telefonie.</p>
+        <button type="button" class="start" (click)="start()">Włącz ochronę</button>
+      }
+      @case ('audio_lost') {
+        <div class="mic warn-icon"><app-icon name="mic" [size]="72" /></div>
+        <h1 role="alert">Nie słyszę rozmowy</h1>
+        <p class="sub">{{ events.systemStatus().audio?.message }}</p>
+      }
+      @case ('alarm') {
+        @let a = alert()!;
+        <div class="mic alarm-icon"><app-icon name="warning" [size]="72" /></div>
+        <p class="eyebrow">ALARM</p>
+        <h1 role="alert">{{ a.shortText }}</h1>
+        @if (firstQuote(); as quote) {
+          <blockquote>„{{ quote }}”</blockquote>
+        }
+        @if (riskWord(); as word) {
+          <p class="risk">Poziom ryzyka <strong>{{ word }}</strong></p>
+        }
+      }
+      @case ('listening') {
+        <div class="mic rings"><app-icon name="mic" [size]="72" /></div>
+        <h1>Słucham rozmowy</h1>
+        <div class="bars" aria-hidden="true">
+          @for (b of bars; track $index) {
+            <span [style.animation-delay.ms]="$index * 60" [style.--h.px]="b"></span>
+          }
+        </div>
+        <div class="cards">
+          <div class="info"><span>Czas</span><strong>{{ callTime() }}</strong></div>
+        </div>
+      }
+      @default {
+        <div class="mic"><app-icon name="mic" [size]="72" /></div>
+        <h1>Czekam na rozmowę</h1>
+        <p class="sub">Ochrona jest włączona. Ekran zmieni się, gdy rozmowa się zacznie.</p>
+      }
+    }
+  </main>
+
+  <footer>
+    <p><app-icon name="lock" [size]="22" /> Dźwięk nie jest nagrywany ani zapisywany</p>
+    <p><app-icon name="monitor" [size]="22" /> Ekran pozostaje włączony</p>
+  </footer>
+</div>
