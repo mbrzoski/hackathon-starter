@@ -4,7 +4,65 @@ openapi: 3.1.0
 info:
   title: Anioł Stróż contract
   version: 0.0.1
-  description: Data contract shared by backend (Java), frontend (Angular) and Android. Schemas only, no paths. StageHits is snake_case on purpose (Claude response); everything else is camelCase.
+  description: Data contract shared by backend (Java), frontend (Angular) and Android. Paths cover /api/demo/* so far; other endpoints are added task by task (CON-02). StageHits is snake_case on purpose (Claude response); everything else is camelCase.
+paths:
+  /api/demo/scenarios:
+    get:
+      operationId: listScenarios
+      tags:
+        - demo
+      summary: List the demo scenarios available for replay.
+      responses:
+        "200":
+          description: Scenarios in file-name order.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScenarioSummary"
+  /api/demo/replay:
+    post:
+      operationId: startReplay
+      tags:
+        - demo
+      summary: Start replaying a scenario as a call. Only SCRIPTED is supported for now.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplayRequest"
+      responses:
+        "202":
+          description: The call has started and segments are being played.
+        "400":
+          description: Unsupported mode or invalid body.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Unknown scenarioId.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Another call is already active (BE-04).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+  /api/demo/stop:
+    post:
+      operationId: stopReplay
+      tags:
+        - demo
+      summary: Stop the running replay and end its call. Does nothing if none is running.
+      responses:
+        "204":
+          description: No active replay remains.
 components:
   schemas:
     Alert:
@@ -282,6 +340,42 @@ components:
           type: integer
           minimum: 0
           description: Number of distinct validated stages.
+    ProblemDetail:
+      title: ProblemDetail
+      description: RFC 9457 error body. detail is Polish text for the UI (API-06).
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+    ReplayRequest:
+      title: ReplayRequest
+      description: Body of POST /api/demo/replay.
+      type: object
+      additionalProperties: false
+      required:
+        - scenarioId
+        - mode
+      properties:
+        scenarioId:
+          type: string
+          pattern: ^[a-z0-9-]+$
+        mode:
+          $ref: "#/components/schemas/Mode"
+        speed:
+          type: number
+          format: double
+          minimum: 0.1
+          maximum: 20
+          default: 1
+          description: Playback speed multiplier; each segment waits delayMs / speed.
     Scenario:
       title: Scenario
       description: A named demo scenario fed to the pipeline in REPLAY, SCRIPTED or MOCK mode.
@@ -360,6 +454,23 @@ components:
               delayMs:
                 type: integer
                 minimum: 0
+    ScenarioSummary:
+      title: ScenarioSummary
+      description: Listing entry for GET /api/demo/scenarios.
+      type: object
+      additionalProperties: false
+      required:
+        - scenarioId
+        - title
+        - description
+      properties:
+        scenarioId:
+          type: string
+          pattern: ^[a-z0-9-]+$
+        title:
+          type: string
+        description:
+          type: string
     Sensitivity:
       title: Sensitivity
       description: Household sensitivity setting.

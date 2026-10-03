@@ -45,6 +45,7 @@ class ApiExceptionHandler extends ResponseEntityExceptionHandler {
             case 400 -> "Nieprawidłowe żądanie.";
             case 404 -> "Nie znaleziono zasobu.";
             case 405 -> "Ta metoda nie jest obsługiwana.";
+            case 409 -> "Ta operacja jest teraz niedostępna: rozmowa już trwa.";
             case 406 -> "Nieobsługiwany format odpowiedzi.";
             case 415 -> "Nieobsługiwany format danych.";
             default -> status.is4xxClientError()

@@ -1,0 +1,6 @@
+{
+  "scenarioId": "missing-title",
+  "description": "Brak tytułu.",
+  "mode": "SCRIPTED",
+  "segments": [ { "speaker": "B", "text": "Dzień dobry.", "delayMs": 1000 } ]
+}
