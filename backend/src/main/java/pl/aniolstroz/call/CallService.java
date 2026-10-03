@@ -55,11 +55,13 @@ public class CallService implements LiveCallAccess {
     private final ApplicationEventPublisher publisher;
 
     /**
-     * Guards {@link #active}. Lock order is always slot lock, then call lock; code holding a call lock never
-     * takes the slot lock, so the two cannot deadlock.
+     * Guards writes to {@link #active}. Lock order is always slot lock, then call lock; code holding a call lock never
+     * takes the slot lock, so the two cannot deadlock. For that reason {@link #active} is volatile and
+     * {@link #active()} reads it without a lock: the listeners of a segment (the AI layer) call it while the call is
+     * locked, and a lock there deadlocked with {@link #end()}.
      */
     private final ReentrantLock slotLock = new ReentrantLock();
-    private CallState active;
+    private volatile CallState active;
 
     public CallService(EventBus eventBus, Clock clock, CallEndedHook endedHook, KeywordDetector keywordDetector,
             SensitivitySource sensitivity, AlertFactory alertFactory,
@@ -160,13 +162,9 @@ public class CallService implements LiveCallAccess {
         }
     }
 
+    /** Lock-free on purpose, see {@link #slotLock}. */
     public Optional<CallState> active() {
-        slotLock.lock();
-        try {
-            return Optional.ofNullable(active);
-        } finally {
-            slotLock.unlock();
-        }
+        return Optional.ofNullable(active);
     }
 
     private CallState activeCall(String callId) {

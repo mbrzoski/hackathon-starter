@@ -1,4 +1,4 @@
-.PHONY: build test run-backend run-frontend
+.PHONY: build test run-backend run-frontend download-vosk-model
 
 # Build the backend without running tests.
 build:
@@ -15,3 +15,7 @@ run-backend:
 # Start the three frontend apps: senior :4201, listen :4202, family :4203.
 run-frontend:
 	cd frontend && npm install && npm start
+
+# Download the Polish Vosk model into backend/models/ (needed for LIVE mode only).
+download-vosk-model:
+	./scripts/download-vosk-model.sh

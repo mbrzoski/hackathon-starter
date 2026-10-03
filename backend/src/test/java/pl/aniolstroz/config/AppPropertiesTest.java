@@ -72,4 +72,29 @@ class AppPropertiesTest {
         runner.withPropertyValues("app.mode=PRODUCTION")
                 .run(context -> assertThat(context).hasFailed());
     }
+
+    @Test
+    void sttDefaultsToLocalVoskWithTheSmallPolishModel() {
+        runner.run(context -> {
+            AppProperties.Stt stt = context.getBean(AppProperties.class).stt();
+            assertThat(stt.provider()).isEqualTo(AppProperties.Stt.Provider.VOSK);
+            assertThat(stt.vosk().modelPath()).isEqualTo("models/vosk-model-small-pl-0.22");
+        });
+    }
+
+    @Test
+    void sttProviderAndModelPathCanBeChanged() {
+        runner.withPropertyValues("app.stt.provider=fake", "app.stt.vosk.model-path=/opt/model")
+                .run(context -> {
+                    AppProperties.Stt stt = context.getBean(AppProperties.class).stt();
+                    assertThat(stt.provider()).isEqualTo(AppProperties.Stt.Provider.FAKE);
+                    assertThat(stt.vosk().modelPath()).isEqualTo("/opt/model");
+                });
+    }
+
+    @Test
+    void unknownSttProviderOrBlankModelPathFailsStartup() {
+        runner.withPropertyValues("app.stt.provider=azure").run(context -> assertThat(context).hasFailed());
+        runner.withPropertyValues("app.stt.vosk.model-path=").run(context -> assertThat(context).hasFailed());
+    }
 }

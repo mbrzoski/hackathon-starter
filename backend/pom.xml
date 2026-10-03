@@ -19,6 +19,8 @@
         <archunit.version>1.4.1</archunit.version>
         <networknt.version>2.0.1</networknt.version>
         <sqlite-jdbc.version>3.53.4.0</sqlite-jdbc.version>
+        <vosk.version>0.3.45</vosk.version>
+        <jna.version>5.17.0</jna.version>
         <anthropic-java.version>2.68.0</anthropic-java.version>
         <wiremock.version>3.13.2</wiremock.version>
         <openapi-generator.version>7.25.0</openapi-generator.version>
@@ -60,6 +62,18 @@
             <groupId>com.anthropic</groupId>
             <artifactId>anthropic-java</artifactId>
             <version>${anthropic-java.version}</version>
+        </dependency>
+        <dependency>
+            <!-- Local offline speech recognition (AUD-03). Apache 2.0. Ships its native libraries in the jar. -->
+            <groupId>com.alphacephei</groupId>
+            <artifactId>vosk</artifactId>
+            <version>${vosk.version}</version>
+        </dependency>
+        <dependency>
+            <!-- Vosk pulls in JNA 5.7.0 (2020); declare a newer one explicitly so it wins. -->
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>${jna.version}</version>
         </dependency>
         <dependency>
             <groupId>org.wiremock</groupId>
