@@ -11,6 +11,8 @@ import {
   Decision,
   EventEnvelope,
   Mode,
+  PhoneCall,
+  PhoneCallEvent,
   RiskUpdate,
   RiskUpdateEvent,
   SystemStatus,
@@ -78,6 +80,7 @@ export class EventsService {
   private readonly _risk = signal<RiskUpdate | null>(null);
   private readonly _alerts = signal<Alert[]>([]);
   private readonly _decisions = signal<Decision[]>([]);
+  private readonly _phoneCall = signal<PhoneCall | null>(null);
 
   readonly connection = this._connection.asReadonly();
   readonly mode = this._mode.asReadonly();
@@ -87,6 +90,8 @@ export class EventsService {
   readonly risk = this._risk.asReadonly();
   readonly alerts = this._alerts.asReadonly();
   readonly decisions = this._decisions.asReadonly();
+  /** The simulated incoming phone call (demo) while it is on, else null. */
+  readonly phoneCall = this._phoneCall.asReadonly();
   readonly online = computed(() => this._connection() === 'open');
 
   private readonly validator = createEventValidator();
@@ -135,6 +140,8 @@ export class EventsService {
       return;
     }
     this._connection.set('connecting');
+    // The snapshot after connecting brings it back if it is still on; one switched off meanwhile must not linger.
+    this._phoneCall.set(null);
     const socket = this.createSocket(eventsUrl(role));
     this.socket = socket;
     socket.onopen = () => {
@@ -246,6 +253,11 @@ export class EventsService {
       case 'alert.created': {
         const alert = (event as AlertCreatedEvent).payload;
         this._alerts.update((list) => [...list.filter((a) => a.alertId !== alert.alertId), alert]);
+        break;
+      }
+      case 'phone.call': {
+        const call = (event as PhoneCallEvent).payload;
+        this._phoneCall.set(call.active ? call : null);
         break;
       }
       case 'alert.decision':

@@ -7,7 +7,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import pl.aniolstroz.call.CallAlreadyActiveException;
 import pl.aniolstroz.contracts.Mode;
+import pl.aniolstroz.contracts.PhoneCall;
 import pl.aniolstroz.contracts.api.DemoApi;
+import pl.aniolstroz.contracts.model.PhoneCallRequest;
 import pl.aniolstroz.contracts.model.ReplayRequest;
 import pl.aniolstroz.contracts.model.ScenarioSummary;
 
@@ -20,10 +22,22 @@ class DemoController implements DemoApi {
 
     private final ScenarioRepository scenarios;
     private final ScriptedPlayer player;
+    private final PhoneCallSimulation phoneCall;
 
-    DemoController(ScenarioRepository scenarios, ScriptedPlayer player) {
+    DemoController(ScenarioRepository scenarios, ScriptedPlayer player, PhoneCallSimulation phoneCall) {
         this.scenarios = scenarios;
         this.player = player;
+        this.phoneCall = phoneCall;
+    }
+
+    @Override
+    public ResponseEntity<PhoneCall> getPhoneCall() {
+        return ResponseEntity.ok(phoneCall.current());
+    }
+
+    @Override
+    public ResponseEntity<PhoneCall> setPhoneCall(PhoneCallRequest request) {
+        return ResponseEntity.ok(phoneCall.set(request.getActive()));
     }
 
     @Override

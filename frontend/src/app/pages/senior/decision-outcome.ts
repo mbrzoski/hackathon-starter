@@ -15,7 +15,11 @@ import { Icon } from '../../shared/icon';
         <p class="big">{{ alert().advice }}</p>
       } @else {
         @if (contact(); as c) {
-          <p>Zadzwoń do: <strong>{{ c.name }}</strong></p>
+          @if (c.name) {
+            <p>Zadzwoń do: <strong>{{ c.name }}</strong></p>
+          } @else {
+            <p>Zadzwoń do bliskiej osoby</p>
+          }
           <p class="number">{{ c.phone }}</p>
           <!-- FE-09: nothing is dialled until the senior taps the link. -->
           <a class="decision call" [href]="'tel:' + c.phone"><app-icon name="phone" [size]="32" /> Zadzwoń teraz</a>

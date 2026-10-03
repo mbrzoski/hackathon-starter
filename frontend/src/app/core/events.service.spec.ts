@@ -115,6 +115,21 @@ describe('EventsService', () => {
     expect(service.systemStatus().stt?.state).toBe('down');
   });
 
+  it('follows the simulated phone call and forgets it when the connection restarts', () => {
+    const s = lastSocket();
+    expect(service.phoneCall()).toBeNull();
+    s.serverSend(event('phone.call', { active: true, number: '+48 600 100 200' }));
+    expect(service.phoneCall()).toEqual({ active: true, number: '+48 600 100 200' });
+    s.serverSend(event('phone.call', { active: false, number: '+48 600 100 200' }));
+    expect(service.phoneCall()).toBeNull();
+
+    s.serverSend(event('phone.call', { active: true, number: '+48 600 100 200' }));
+    vi.useFakeTimers();
+    s.serverClose();
+    vi.advanceTimersByTime(1000);
+    expect(service.phoneCall()).toBeNull();
+  });
+
   it('rejects invalid messages with a console warning', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const s = lastSocket();

@@ -4,6 +4,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
 import { Observable, defer, of, throwError } from 'rxjs';
 import { AlertsService } from '../../api/api/alerts.service';
+import { DemoService } from '../../api/api/demo.service';
+import { SeniorConfigService } from '../../api/api/senior-config.service';
 import {
   Alert,
   AlertWithDecisions,
@@ -31,6 +33,7 @@ function fakeEvents() {
     segments: signal<TranscriptSegment[]>([]),
     alerts: signal<Alert[]>([]),
     decisions: signal<Decision[]>([]),
+    phoneCall: signal<{ active: boolean; number: string } | null>(null),
   };
 }
 
@@ -74,6 +77,8 @@ describe('Family', () => {
   let posted: { alertId: string; body: DecisionRequest }[];
   let notifier: { beep: ReturnType<typeof vi.fn> };
   let submit: () => Observable<unknown>;
+  let demo: { setPhoneCall: ReturnType<typeof vi.fn> };
+  let config: { getSeniorConfig: ReturnType<typeof vi.fn>; setSeniorConfig: ReturnType<typeof vi.fn> };
 
   const el = (f: ComponentFixture<Family>) => f.nativeElement as HTMLElement;
   const text = (e: Element | null) => e?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
@@ -93,11 +98,18 @@ describe('Family', () => {
     posted = [];
     submit = () => of({});
     notifier = { beep: vi.fn() };
+    demo = { setPhoneCall: vi.fn(() => of({})) };
+    config = {
+      getSeniorConfig: vi.fn(() => of({ familyPhone: '+48 602 000 222' })),
+      setSeniorConfig: vi.fn((c: { familyPhone: string }) => of(c)),
+    };
     TestBed.configureTestingModule({
       imports: [Family],
       providers: [
         { provide: EventsService, useValue: events },
         { provide: AlertNotifier, useValue: notifier },
+        { provide: DemoService, useValue: demo },
+        { provide: SeniorConfigService, useValue: config },
         {
           provide: AlertsService,
           useValue: {
@@ -304,5 +316,97 @@ describe('Family', () => {
     history = throwError(() => new HttpErrorResponse({ status: 500, error: { detail: 'Błąd serwera.' } }));
     const fixture = await render();
     expect(text(el(fixture).querySelector('.error'))).toContain('Błąd serwera.');
+  });
+
+  describe('simulated call', () => {
+    const toggle = (f: ComponentFixture<Family>) => el(f).querySelector<HTMLButtonElement>('.simulate button')!;
+
+    it('switches the simulated call on with a tap, and only then', async () => {
+      const fixture = await render();
+      expect(demo.setPhoneCall).not.toHaveBeenCalled();
+      expect(text(toggle(fixture))).toBe('Zasymuluj połączenie');
+
+      toggle(fixture).click();
+      await fixture.whenStable();
+
+      expect(demo.setPhoneCall).toHaveBeenCalledWith({ active: true });
+    });
+
+    it('switches it off again while it is on, on every screen it shows the same state', async () => {
+      const fixture = await render();
+      events.phoneCall.set({ active: true, number: '+48 600 100 200' });
+      await fixture.whenStable();
+      expect(text(toggle(fixture))).toBe('Zakończ symulację połączenia');
+      expect(text(el(fixture).querySelector('.simulate .note'))).toContain('+48 600 100 200');
+
+      toggle(fixture).click();
+      await fixture.whenStable();
+
+      expect(demo.setPhoneCall).toHaveBeenCalledWith({ active: false });
+    });
+
+    it('says so when the switch did not reach the backend (never silent)', async () => {
+      demo.setPhoneCall.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+      const fixture = await render();
+
+      toggle(fixture).click();
+      await fixture.whenStable();
+
+      expect(text(el(fixture).querySelector('.simulate [role="alert"]'))).toContain('Nie udało się zmienić symulacji');
+    });
+  });
+
+  describe('configuration of the senior\'s account', () => {
+    const input = (f: ComponentFixture<Family>) => el(f).querySelector<HTMLInputElement>('#family-phone')!;
+    const submit = (f: ComponentFixture<Family>) => button(el(f).querySelector('.config')!, 'Zapisz');
+    const type = async (f: ComponentFixture<Family>, value: string) => {
+      input(f).value = value;
+      input(f).dispatchEvent(new Event('input'));
+      await f.whenStable();
+    };
+
+    it('is a dropdown that shows the saved family number', async () => {
+      const fixture = await render();
+      expect(text(el(fixture).querySelector('.config summary'))).toBe('Konfiguracja konta seniora');
+      expect(el(fixture).querySelector('.config label')?.textContent).toContain('Numer telefonu osoby z rodziny');
+      expect(input(fixture).value).toBe('+48 602 000 222');
+    });
+
+    it('saves a new number', async () => {
+      const fixture = await render();
+      await type(fixture, '+48 601 111 333');
+
+      submit(fixture).click();
+      await fixture.whenStable();
+
+      expect(config.setSeniorConfig).toHaveBeenCalledWith({ familyPhone: '+48 601 111 333' });
+      expect(text(el(fixture).querySelector('.config [role="status"]'))).toBe('Zapisano.');
+    });
+
+    it('does not save a malformed number', async () => {
+      const fixture = await render();
+      await type(fixture, 'abc');
+
+      expect(submit(fixture).disabled).toBe(true);
+      expect(text(el(fixture).querySelector('.config [role="alert"]'))).toContain('Podaj numer');
+      expect(config.setSeniorConfig).not.toHaveBeenCalled();
+    });
+
+    it('an empty number removes it', async () => {
+      const fixture = await render();
+      await type(fixture, '');
+      submit(fixture).click();
+      await fixture.whenStable();
+      expect(config.setSeniorConfig).toHaveBeenCalledWith({ familyPhone: '' });
+    });
+
+    it('says so when saving failed (never silent)', async () => {
+      config.setSeniorConfig.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+      const fixture = await render();
+      await type(fixture, '+48 601 111 333');
+      submit(fixture).click();
+      await fixture.whenStable();
+      expect(text(el(fixture).querySelector('.config [role="alert"]'))).toContain('Nie udało się zapisać');
+    });
   });
 });

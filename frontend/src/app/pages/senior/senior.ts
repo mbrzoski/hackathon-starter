@@ -1,5 +1,6 @@
-import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
+import { Component, computed, effect, inject, linkedSignal, signal, untracked } from '@angular/core';
 import { Alert, DecisionRequestDecisionEnum, RiskLevel } from '../../api/model/models';
+import { DemoService } from '../../api/api/demo.service';
 import { DecisionOutbox } from '../../core/decision-outbox';
 import { EventsService } from '../../core/events.service';
 import { selectSeniorStatus } from '../../core/senior-status';
@@ -7,10 +8,10 @@ import { SettingsStore } from '../../core/settings.store';
 import { VoiceService } from '../../core/voice.service';
 import { Icon } from '../../shared/icon';
 import { ModeBadge } from '../../shared/mode-badge';
+import { problemDetailText } from '../../shared/problem-detail';
 import { injectNow } from '../../shared/time';
 import { AlertView } from './alert-view';
 import { DecisionOutcome } from './decision-outcome';
-import { STATUS_VIEW } from '../../shared/status-view';
 import { TranscriptDebugPanel, keywordHighlights } from '../../shared/transcript-debug-panel';
 import { StatusPanel } from './status-panel';
 
@@ -20,7 +21,6 @@ const ENDED_NOTICE_MS = 6000;
 const INTERRUPTED_NOTICE_MS = 15_000;
 
 type View =
-  | { kind: 'start' }
   | { kind: 'status' }
   | { kind: 'alert'; alert: Alert }
   | { kind: 'outcome'; alert: Alert; decision: 'hung_up' | 'called_trusted' }
@@ -40,6 +40,12 @@ type View =
       <app-mode-badge [large]="true" [compact]="true" />
     </header>
     @let v = view();
+    @if (events.phoneCall(); as call) {
+      <!-- Demo: the family panel simulates an incoming call; nothing is dialled. -->
+      <p class="phone-call" role="status">
+        <app-icon name="phone" [size]="36" /> Trwa połączenie telefoniczne z numerem {{ call.number }}
+      </p>
+    }
     @if (!events.online() && (v.kind === 'alert' || v.kind === 'outcome' || v.kind === 'ended')) {
       <!-- FE-06: the warning stays on screen, but the senior must know that nothing new can arrive. -->
       <p class="offline" role="alert"><app-icon name="cloud-off" [size]="32" /> Anioł Stróż jest offline</p>
@@ -48,8 +54,8 @@ type View =
       @if (v.kind === 'alert') {
         <app-alert-view
           [alert]="v.alert"
-          [segments]="events.segments()"
-          [contactName]="settings.firstContact()?.name ?? null"
+          [contactName]="settings.firstContact()?.name || null"
+          (emergency)="endPhoneCall()"
           (decide)="decide(v.alert, $event)" />
       } @else if (v.kind === 'outcome') {
         <app-decision-outcome
@@ -70,19 +76,6 @@ type View =
             <p>Rozmowa zakończona</p>
           </section>
         }
-      } @else if (v.kind === 'start') {
-        <section class="start">
-          <app-icon name="shield" [size]="96" />
-          <p>Dotknij, aby włączyć ochronę i głos.</p>
-          @if (status() !== 'protected') {
-            <!-- FE-06: a failure is visible before the senior starts, too. -->
-            <p class="start-status" [class]="startStatus().tone" role="status">
-              <app-icon [name]="startStatus().icon" [size]="36" /> {{ startStatus().text }}
-            </p>
-          }
-          <!-- WEB-07: the tap unlocks speech now and will start the microphone. -->
-          <button type="button" class="decision" (click)="start()">Włącz ochronę</button>
-        </section>
       } @else {
         @if (outbox.unsaved()) {
           <!-- FF-11: a decision that did not reach the backend is never silent. -->
@@ -105,15 +98,18 @@ type View =
     }
   `,
   styleUrl: './senior.scss',
+  host: { '(document:pointerdown)': 'unlockVoice()' },
 })
 export class Senior {
   protected readonly events = inject(EventsService);
   protected readonly settings = inject(SettingsStore);
   private readonly voice = inject(VoiceService);
+  private readonly demo = inject(DemoService);
   protected readonly outbox = inject(DecisionOutbox);
   private readonly now = injectNow();
 
-  private readonly started = signal(false);
+  /** Speech is allowed by the browser after the first touch anywhere on the screen (WEB-07). */
+  private voiceUnlocked = false;
   /** Transcript for the team, hidden unless switched on. */
   protected readonly showTranscript = signal(false);
   protected readonly highlights = computed(() => keywordHighlights(this.events.alerts()));
@@ -125,8 +121,6 @@ export class Senior {
   protected readonly status = computed(() =>
     selectSeniorStatus(this.events.connection(), this.events.systemStatus(), this.events.activeCall()),
   );
-
-  protected readonly startStatus = computed(() => STATUS_VIEW[this.status()]);
 
   protected readonly callInProgress = computed(() => {
     const call = this.events.activeCall();
@@ -174,10 +168,23 @@ export class Senior {
     return this.restingView();
   });
 
-  protected start(): void {
-    // The microphone belongs to the Nasłuch device (/listen), not to this phone (use-cases.md, step 2).
-    this.voice.unlock();
-    this.started.set(true);
+  /** Protection is always on (the Nasłuch device listens), so the first touch only unlocks the voice (WEB-07). */
+  protected unlockVoice(): void {
+    if (!this.voiceUnlocked) {
+      this.voiceUnlocked = true;
+      this.voice.unlock();
+    }
+  }
+
+  /**
+   * The senior hung up, or went on to call a family member or 112: the simulated phone call ends everywhere, so
+   * /listen stops listening until the family panel starts a new one. Nothing is dialled or cut by the app itself
+   * (FE-09): the number opens only as a link the senior taps.
+   */
+  protected endPhoneCall(): void {
+    this.demo.setPhoneCall({ active: false }).subscribe({
+      error: (err: unknown) => console.warn(`Ending the simulated phone call failed: ${problemDetailText(err)}`),
+    });
   }
 
   protected decide(alert: Alert, decision: DecisionRequestDecisionEnum): void {
@@ -186,14 +193,27 @@ export class Senior {
       this.close(alert.alertId);
     }
     this.outbox.send(alert.alertId, decision);
+    if (decision === DecisionRequestDecisionEnum.hung_up || decision === DecisionRequestDecisionEnum.called_trusted) {
+      this.endPhoneCall();
+    }
   }
 
   protected close(alertId: string): void {
     this.closed.update((set) => new Set(set).add(alertId));
   }
 
+  constructor() {
+    this.settings.load();
+    // The family may change the number any time: read it again when an alert appears, before the senior can tap it.
+    effect(() => {
+      if (this.openAlerts()[0]) {
+        untracked(() => this.settings.load());
+      }
+    });
+  }
+
   private restingView(): View {
-    return this.started() ? { kind: 'status' } : { kind: 'start' };
+    return { kind: 'status' };
   }
 }
 

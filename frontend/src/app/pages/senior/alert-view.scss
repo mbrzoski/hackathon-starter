@@ -10,9 +10,6 @@
 .advice { margin: 0; font-size: clamp(28px, 3.5vmin, 40px); line-height: 1.2; font-weight: 700; }
 .source { margin: 0; opacity: 0.95; }
 .tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-.why { font: inherit; font-size: 28px; font-weight: 700; min-height: 64px; padding: 0 24px; border-radius: 14px;
-  border: 3px solid #fff; background: #fff; color: var(--alarm-deep); cursor: pointer; }
-.why:focus-visible { outline: 4px solid var(--highlight); outline-offset: 2px; }
 
 // On its side: decisions in their own column next to the text.
 @media (orientation: landscape) {

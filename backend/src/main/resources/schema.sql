@@ -83,3 +83,10 @@ CREATE TABLE IF NOT EXISTS protection (
     id      INTEGER PRIMARY KEY CHECK (id = 1),
     enabled INTEGER NOT NULL
 );
+
+-- Configuration of the senior's account (family panel). One row; no row means nothing is set. A setting, not data:
+-- not touched by DELETE /api/data. Never sent to Claude or STT.
+CREATE TABLE IF NOT EXISTS senior_config (
+    id           INTEGER PRIMARY KEY CHECK (id = 1),
+    family_phone TEXT NOT NULL
+);

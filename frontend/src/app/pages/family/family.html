@@ -9,6 +9,38 @@
 <app-system-status-bar />
 
 <main>
+  <details class="config">
+    <summary>Konfiguracja konta seniora</summary>
+    <form (submit)="$event.preventDefault(); saveConfig()">
+      <label for="family-phone">Numer telefonu osoby z rodziny</label>
+      <input id="family-phone" type="tel" inputmode="tel" autocomplete="off" placeholder="np. +48 602 000 222"
+             [value]="phoneDraft()" (input)="editPhone($any($event.target).value)" [attr.aria-invalid]="!phoneValid()" />
+      <p class="note">Na ten numer senior zadzwoni po dotknięciu „Zadzwoń do bliskiej osoby”. Aplikacja sama nie dzwoni. Puste pole usuwa numer.</p>
+      @if (!phoneValid()) {
+        <p class="error" role="alert">Podaj numer w formacie +48 602 000 222 (9 do 15 cyfr).</p>
+      }
+      <button type="submit" class="btn-primary" [disabled]="!phoneValid() || configState() === 'saving'">Zapisz</button>
+      @switch (configState()) {
+        @case ('saved') { <p class="note" role="status">Zapisano.</p> }
+        @case ('failed') { <p class="error" role="alert">Nie udało się zapisać. Spróbuj ponownie.</p> }
+      }
+    </form>
+  </details>
+
+  <section class="simulate">
+    <!-- Demo: only a tap switches it. On: /senior shows who is calling and /listen listens. Nothing is dialled. -->
+    <button type="button" [class]="phoneCall() ? 'btn-neutral' : 'btn-primary'" [disabled]="simulating()" (click)="toggleCall()">
+      <app-icon name="phone" [size]="20" />
+      {{ phoneCall() ? 'Zakończ symulację połączenia' : 'Zasymuluj połączenie' }}
+    </button>
+    @if (phoneCall(); as call) {
+      <p class="note">Trwa symulowane połączenie z numerem {{ call.number }}. Nasłuch słucha.</p>
+    }
+    @if (simulateError(); as error) {
+      <p class="error" role="alert">{{ error }}</p>
+    }
+  </section>
+
   @if (feed.error(); as error) {
     <div class="error" role="alert">
       <span>Nie udało się wczytać historii alertów: {{ error }}</span>

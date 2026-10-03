@@ -154,6 +154,8 @@
                                 <importMapping>ClassifierError=pl.aniolstroz.ai.ClassifierError</importMapping>
                                 <importMapping>RiskLevel=pl.aniolstroz.contracts.RiskLevel</importMapping>
                                 <importMapping>Protection=pl.aniolstroz.contracts.Protection</importMapping>
+                                <importMapping>PhoneCall=pl.aniolstroz.contracts.PhoneCall</importMapping>
+                                <importMapping>SeniorConfig=pl.aniolstroz.contracts.SeniorConfig</importMapping>
                             </importMappings>
                             <configOptions>
                                 <interfaceOnly>true</interfaceOnly>
@@ -167,7 +169,7 @@
                                 <useBeanValidation>true</useBeanValidation>
                             </configOptions>
                             <globalProperties>
-                                <models>ReplayRequest,ScenarioSummary,DecisionRequest,AlertWithDecisions</models>
+                                <models>ReplayRequest,ScenarioSummary,DecisionRequest,AlertWithDecisions,PhoneCallRequest</models>
                             </globalProperties>
                         </configuration>
                     </execution>

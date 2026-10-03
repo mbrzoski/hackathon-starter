@@ -38,3 +38,6 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 1
 .team-toggle[aria-pressed='true'] { opacity: 1; }
 .team-panel { position: fixed; left: 0; right: 0; bottom: 0; max-height: 45dvh; display: flex; flex-direction: column;
   padding: 10px 16px 44px; background: var(--surface); border-top: 2px solid var(--border); z-index: 10; }
+
+.phone-call { flex: none; margin: 0; display: flex; align-items: center; gap: 12px; padding: 10px 16px;
+  background: var(--primary); color: #fff; font-weight: 800; }

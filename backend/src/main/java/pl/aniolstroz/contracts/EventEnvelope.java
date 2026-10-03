@@ -18,7 +18,8 @@ import java.time.Instant;
     @JsonSubTypes.Type(value = EventEnvelope.AlertDecisionEvent.class, name = "alert.decision"),
     @JsonSubTypes.Type(value = EventEnvelope.SystemStatusEvent.class, name = "system.status"),
     @JsonSubTypes.Type(value = EventEnvelope.CallStartedEvent.class, name = "call.started"),
-    @JsonSubTypes.Type(value = EventEnvelope.CallEndedEvent.class, name = "call.ended")
+    @JsonSubTypes.Type(value = EventEnvelope.CallEndedEvent.class, name = "call.ended"),
+    @JsonSubTypes.Type(value = EventEnvelope.PhoneCallEvent.class, name = "phone.call")
 })
 public sealed interface EventEnvelope {
 
@@ -45,5 +46,8 @@ public sealed interface EventEnvelope {
     }
 
     record CallEndedEvent(@NotNull Mode mode, @NotNull Instant at, @NotNull @Valid CallEnded payload) implements EventEnvelope {
+    }
+
+    record PhoneCallEvent(@NotNull Mode mode, @NotNull Instant at, @NotNull @Valid PhoneCall payload) implements EventEnvelope {
     }
 }

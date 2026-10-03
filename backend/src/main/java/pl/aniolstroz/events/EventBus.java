@@ -23,6 +23,7 @@ import pl.aniolstroz.contracts.EventEnvelope.AlertCreatedEvent;
 import pl.aniolstroz.contracts.EventEnvelope.AlertDecisionEvent;
 import pl.aniolstroz.contracts.EventEnvelope.CallEndedEvent;
 import pl.aniolstroz.contracts.EventEnvelope.CallStartedEvent;
+import pl.aniolstroz.contracts.EventEnvelope.PhoneCallEvent;
 import pl.aniolstroz.contracts.EventEnvelope.RiskUpdateEvent;
 import pl.aniolstroz.contracts.EventEnvelope.SystemStatusEvent;
 
@@ -48,6 +49,8 @@ public class EventBus {
     /** Guards the snapshot fields and keeps "snapshot, then live events" ordered for a new client. */
     private final ReentrantLock lock = new ReentrantLock();
     private CallStartedEvent activeCall;
+    /** The simulated phone call while it is on (demo); a new client must learn about it. */
+    private PhoneCallEvent phoneCall;
     /** Alerts of the current call by id, oldest first. Dropped when their call ends (API-03). */
     private final Map<String, AlertCreatedEvent> alerts = new LinkedHashMap<>();
     private RiskUpdateEvent lastRisk;
@@ -109,6 +112,7 @@ public class EventBus {
                 clearCallData();
             }
             case CallEndedEvent e -> endCall(e.payload().callId());
+            case PhoneCallEvent e -> phoneCall = e.payload().active() ? e : null;
             case RiskUpdateEvent e -> lastRisk = e;
             case AlertCreatedEvent e -> alerts.put(e.payload().alertId(), e);
             case AlertDecisionEvent e -> {
@@ -140,9 +144,12 @@ public class EventBus {
         decisions.clear();
     }
 
-    /** Latest statuses, the active call, then its alerts, last risk update and decisions, in the order they happened. */
+    /** Latest statuses, the simulated phone call, the active call, then its alerts, last risk update and decisions, in the order they happened. */
     private List<EventEnvelope> snapshot() {
         List<EventEnvelope> events = new ArrayList<>(statuses.values());
+        if (phoneCall != null) {
+            events.add(phoneCall);
+        }
         if (activeCall != null) {
             events.add(activeCall);
         }

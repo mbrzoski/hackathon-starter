@@ -33,8 +33,8 @@ const check = (ok, label, detail = '') => {
   if (!ok) failures++;
   console.log(`${ok ? 'ok  ' : 'FAIL'}  ${label}${detail ? `  (${detail})` : ''}`);
 };
-const api = (path, body) =>
-  fetch(`${apps.api}${path}`, body === undefined ? {} : { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+const api = (path, body, method = 'POST') =>
+  fetch(`${apps.api}${path}`, body === undefined ? {} : { method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
 
 // Contract validator for the events seen by this script (the apps use the compiled one).
 const require = createRequire(import.meta.url);
@@ -98,8 +98,15 @@ try {
       return /LIVE|REPLAY|SCRIPTED|MOCK/.test(t); })()`, 15_000);
     check(connected, `${name}: loads and connects to /ws/events`);
   }
-  check(await senior.click('Włącz ochronę'), 'senior: "Włącz ochronę"');
-  check(await listen.click('Włącz ochronę'), 'listen: "Włącz ochronę"');
+  check(!(await senior.click('Włącz ochronę')), 'senior: protection is on from the start (no button)');
+  check(await listen.waitFor(`document.body.innerText.includes('Mikrofon jest wyłączony')`, 5_000), 'listen: microphone off without a phone call');
+
+  // 1b. The family panel simulates a phone call: senior shows who calls, then it is switched off again.
+  const phone = (active) => api('/api/demo/phone-call', { active }, 'PUT');
+  check((await phone(true)).status === 200, 'family: "Zasymuluj połączenie" (PUT /api/demo/phone-call)');
+  check(await senior.waitFor(`document.body.innerText.includes('Trwa połączenie telefoniczne z numerem')`, 5_000), 'senior: phone call badge');
+  check((await phone(false)).status === 200, 'family: "Zakończ symulację połączenia"');
+  check(await senior.waitFor(`!document.body.innerText.includes('Trwa połączenie telefoniczne')`, 5_000), 'senior: phone call badge gone');
 
   // 2. A normal call (04, grandson borrows money): no alert anywhere.
   const normal = await play('04-real-grandson', 10);

@@ -1,4 +1,7 @@
 import { computed, signal } from '@angular/core';
+import { of } from 'rxjs';
+import { DemoService } from '../../api/api/demo.service';
+import { SeniorConfigService } from '../../api/api/senior-config.service';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Alert, Decision, Mode, SystemStatus, TranscriptSegment } from '../../api/model/models';
 import { DecisionOutbox } from '../../core/decision-outbox';
@@ -21,6 +24,7 @@ function fakeEvents() {
     segments: signal<TranscriptSegment[]>([]),
     alerts: signal<Alert[]>([]),
     decisions: signal<Decision[]>([]),
+    phoneCall: signal<{ active: boolean; number: string } | null>(null),
   };
 }
 
@@ -60,6 +64,8 @@ describe('Senior', () => {
   let outbox: { send: ReturnType<typeof vi.fn>; unsaved: ReturnType<typeof signal<boolean>>; acknowledge: () => void };
   let settings: SettingsStore;
   let synth: FakeSynth | null;
+  let demo: { setPhoneCall: ReturnType<typeof vi.fn> };
+  let config: { getSeniorConfig: ReturnType<typeof vi.fn>; setSeniorConfig: ReturnType<typeof vi.fn> };
 
   const text = (f: ComponentFixture<Senior>) => (f.nativeElement as HTMLElement).textContent?.replace(/\s+/g, ' ') ?? '';
   const $ = (f: ComponentFixture<Senior>, selector: string) => (f.nativeElement as HTMLElement).querySelector(selector);
@@ -73,16 +79,16 @@ describe('Senior', () => {
         { provide: EventsService, useValue: events },
         { provide: DecisionOutbox, useValue: outbox },
         { provide: SPEECH_SYNTHESIS, useValue: synth },
+        { provide: DemoService, useValue: demo },
+        { provide: SeniorConfigService, useValue: config },
       ],
     });
     settings = TestBed.inject(SettingsStore);
   }
 
-  /** Renders the screen and taps "Włącz ochronę". */
+  /** Renders the screen: protection is on from the start, nothing to tap. */
   async function started() {
     const fixture = TestBed.createComponent(Senior);
-    await fixture.whenStable();
-    button(fixture, 'Włącz ochronę').click();
     await fixture.whenStable();
     return fixture;
   }
@@ -110,6 +116,8 @@ describe('Senior', () => {
     const unsaved = signal(false);
     outbox = { send: vi.fn(), unsaved, acknowledge: () => unsaved.set(false) };
     synth = new FakeSynth();
+    demo = { setPhoneCall: vi.fn(() => of({})) };
+    config = { getSeniorConfig: vi.fn(() => of({ familyPhone: '' })), setSeniorConfig: vi.fn() };
   });
 
   afterEach(() => vi.unstubAllGlobals());
@@ -117,16 +125,34 @@ describe('Senior', () => {
   describe('resting state', () => {
     beforeEach(setup);
 
-    it('starts with "Włącz ochronę", which unlocks speech and unlocks speech without starting a microphone (WEB-07)', async () => {
-      const fixture = TestBed.createComponent(Senior);
-      await fixture.whenStable();
-      expect($(fixture, 'app-status-panel')).toBeNull();
-
-      button(fixture, 'Włącz ochronę').click();
-      await fixture.whenStable();
-
-      expect(synth!.spoken.length).toBe(1);
+    it('is protected from the start, without a button to switch protection on', async () => {
+      const fixture = await started();
+      expect($(fixture, 'app-status-panel')).not.toBeNull();
       expect(text(fixture)).toContain('Anioł Stróż słucha. Nic nie jest nagrywane.');
+      expect(text(fixture)).not.toContain('Włącz ochronę');
+    });
+
+    it('unlocks speech with the first touch, once (WEB-07)', async () => {
+      const fixture = await started();
+      document.dispatchEvent(new Event('pointerdown'));
+      document.dispatchEvent(new Event('pointerdown'));
+      await fixture.whenStable();
+      expect(synth!.spoken.length).toBe(1);
+    });
+
+    it('shows who is calling while the simulated phone call is on', async () => {
+      const fixture = await started();
+      expect($(fixture, '.phone-call')).toBeNull();
+
+      events.phoneCall.set({ active: true, number: '+48 600 100 200' });
+      await fixture.whenStable();
+      expect(($(fixture, '.phone-call') as HTMLElement).textContent).toContain(
+        'Trwa połączenie telefoniczne z numerem +48 600 100 200',
+      );
+
+      events.phoneCall.set(null);
+      await fixture.whenStable();
+      expect($(fixture, '.phone-call')).toBeNull();
     });
 
     it('hides the transcript for the team until it is switched on', async () => {
@@ -141,13 +167,6 @@ describe('Senior', () => {
       button(fixture, 'Dla zespołu').click();
       await fixture.whenStable();
       expect($(fixture, 'app-transcript-debug-panel')).toBeNull();
-    });
-
-    it('shows offline on the start screen too (FE-06)', async () => {
-      events.connection.set('closed');
-      const fixture = TestBed.createComponent(Senior);
-      await fixture.whenStable();
-      expect($(fixture, '.start-status.red')?.textContent).toContain('Anioł Stróż jest offline');
     });
 
     it('shows offline in red when the socket is down', async () => {
@@ -216,17 +235,12 @@ describe('Senior', () => {
       expect($(fixture, 'app-alert-view .advice')?.textContent).toContain('Odczekaj minutę, zanim do kogoś zadzwonisz.');
     });
 
-    it('"Dlaczego?" shows the stage name, the quote and the time from the start of the call', async () => {
-      const fixture = await withAlert('medium');
+    it('has no "Dlaczego?", "Powtórz" or "To fałszywy alarm"', async () => {
+      const fixture = await withAlert();
+      expect(button(fixture, 'Dlaczego?')).toBeUndefined();
+      expect(button(fixture, 'Powtórz')).toBeUndefined();
+      expect(button(fixture, 'To fałszywy alarm')).toBeUndefined();
       expect($(fixture, 'app-evidence-quotes')).toBeNull();
-
-      button(fixture, 'Dlaczego?').click();
-      await fixture.whenStable();
-
-      expect(text(fixture)).toContain('Prośba o tajemnicę');
-      expect($(fixture, 'q')?.textContent).toBe('proszę nikomu nie mówić');
-      expect(text(fixture)).toContain('00:37 od początku rozmowy');
-      expect(text(fixture)).not.toContain('nie liczy się');
     });
 
     it('"Rozłączam się" sends hung_up and shows the advice', async () => {
@@ -241,15 +255,58 @@ describe('Senior', () => {
       expect($(fixture, 'app-status-panel')).toBeTruthy();
     });
 
-    it('"Zadzwoń do…" sends called_trusted and shows the number from settings as a tel: link (FE-09, FE-10)', async () => {
-      settings.firstContact.set({ name: 'Ania', phone: '+48 602 000 222' });
+    it('"Rozłączam się" also ends the simulated phone call, so /listen stops listening', async () => {
       const fixture = await withAlert();
-      button(fixture, 'Zadzwoń do: Ania').click();
+      expect(demo.setPhoneCall).not.toHaveBeenCalled();
+
+      button(fixture, 'Rozłączam się').click();
+      await fixture.whenStable();
+
+      expect(demo.setPhoneCall).toHaveBeenCalledWith({ active: false });
+    });
+
+    it('"Zadzwoń do bliskiej osoby" also ends the simulated phone call', async () => {
+      const fixture = await withAlert();
+      button(fixture, 'Zadzwoń do bliskiej osoby').click();
+      await fixture.whenStable();
+      expect(demo.setPhoneCall).toHaveBeenCalledWith({ active: false });
+    });
+
+    it('"Zadzwoń na 112" ends the simulated phone call too, and does not stop the tel: link', async () => {
+      const fixture = await withAlert();
+      const link = $(fixture, 'a[href="tel:112"]') as HTMLAnchorElement;
+      const click = new MouseEvent('click', { bubbles: true, cancelable: true });
+      link.dispatchEvent(click);
+      await fixture.whenStable();
+
+      expect(demo.setPhoneCall).toHaveBeenCalledWith({ active: false });
+      expect(click.defaultPrevented).toBe(false);
+      expect(outbox.send).not.toHaveBeenCalled();
+    });
+
+    it('offers the family number from the senior configuration as a tel: link, with the button label unchanged', async () => {
+      config.getSeniorConfig.mockReturnValue(of({ familyPhone: '+48 602 000 222' }));
+      const fixture = await withAlert();
+      expect(button(fixture, 'Zadzwoń do bliskiej osoby')).toBeTruthy();
+
+      button(fixture, 'Zadzwoń do bliskiej osoby').click();
       await fixture.whenStable();
 
       expect(outbox.send).toHaveBeenCalledWith('a1', 'called_trusted');
       expect(text(fixture)).toContain('+48 602 000 222');
       expect($(fixture, 'a[href^="tel:"]')?.getAttribute('href')).toBe('tel:+48 602 000 222');
+    });
+
+    it('"Zadzwoń na 112" is a tel: link right below "Zadzwoń do…", and dials nothing by itself (FE-09)', async () => {
+      const fixture = await withAlert();
+      const buttons = [...(fixture.nativeElement as HTMLElement).querySelectorAll('app-decision-buttons .decision')];
+      expect(buttons.map((b) => b.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
+        'Rozłączam się',
+        'Zadzwoń do bliskiej osoby',
+        'Zadzwoń na 112',
+      ]);
+      expect(buttons[2].getAttribute('href')).toBe('tel:112');
+      expect(outbox.send).not.toHaveBeenCalled();
     });
 
     it('without a saved contact says so instead of showing any number', async () => {
@@ -260,15 +317,6 @@ describe('Senior', () => {
       expect(outbox.send).toHaveBeenCalledWith('a1', 'called_trusted');
       expect(text(fixture)).toContain('Brak zapisanego numeru.');
       expect($(fixture, 'a[href^="tel:"]')).toBeNull();
-    });
-
-    it('"To fałszywy alarm" sends false_alarm and returns to StatusPanel', async () => {
-      const fixture = await withAlert();
-      button(fixture, 'To fałszywy alarm').click();
-      await fixture.whenStable();
-
-      expect(outbox.send).toHaveBeenCalledWith('a1', 'false_alarm');
-      expect($(fixture, 'app-status-panel')).toBeTruthy();
     });
 
     it('closes when the call ends and shows "Rozmowa zakończona"', async () => {
@@ -287,7 +335,7 @@ describe('Senior', () => {
       expect($(fixture, 'app-status-panel')).toBeTruthy();
     });
 
-    it('reads the alert aloud once with the Polish voice and again on "Powtórz"', async () => {
+    it('reads the alert aloud once with the Polish voice', async () => {
       const fixture = await withAlert();
       const said = synth!.spoken.filter((u) => u.text);
       // shortText, then advice, as one utterance (backend template, FF-12).
@@ -295,9 +343,6 @@ describe('Senior', () => {
         'Ta rozmowa może być oszustwem. Odczekaj minutę, zanim do kogoś zadzwonisz.',
       ]);
       expect(said[0].voice?.lang).toBe('pl-PL');
-
-      button(fixture, 'Powtórz').click();
-      expect(synth!.spoken.filter((u) => u.text).length).toBe(2);
     });
   });
 
@@ -339,11 +384,10 @@ describe('Senior', () => {
       const fixture = await withAlert();
       expect(text(fixture)).toContain('Ta rozmowa może być oszustwem.');
       expect(text(fixture)).toContain('Brak głosu po polsku. Przeczytaj tekst na ekranie.');
-      expect(button(fixture, 'Powtórz')).toBeUndefined();
 
-      button(fixture, 'To fałszywy alarm').click();
+      button(fixture, 'Rozłączam się').click();
       await fixture.whenStable();
-      expect(outbox.send).toHaveBeenCalledWith('a1', 'false_alarm');
+      expect(outbox.send).toHaveBeenCalledWith('a1', 'hung_up');
     });
   });
 });
