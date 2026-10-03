@@ -48,6 +48,18 @@ class ArchitectureTest {
             .should().dependOnClassesThat().resideInAnyPackage("..call..", "..risk..", "..alerts..", "..demo..")
             .allowEmptyShould(true);
 
+    /** Speech recognition only hands segments to the call; it knows nothing of the AI, risk, alerts, audit or demo. */
+    @ArchTest
+    static final ArchRule sttDoesNotDependOnAiRiskAlertsAuditOrDemo = noClasses()
+            .that().resideInAPackage("..stt..")
+            .should().dependOnClassesThat().resideInAnyPackage("..ai..", "..risk..", "..alerts..", "..audit..", "..demo..");
+
+    /** The call does not know where its segments come from: stt depends on call, never the reverse. */
+    @ArchTest
+    static final ArchRule callDoesNotDependOnStt = noClasses()
+            .that().resideInAPackage("..call..")
+            .should().dependOnClassesThat().resideInAPackage("..stt..");
+
     @ArchTest
     static final ArchRule alertsDoNotDependOnCall = noClasses()
             .that().resideInAPackage("..alerts..")

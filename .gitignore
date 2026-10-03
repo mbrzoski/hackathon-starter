@@ -25,3 +25,6 @@ Thumbs.db
 
 ### Evaluation labels written at runtime ###
 backend/data/
+
+### Vosk speech model (not in the repository) ###
+backend/models/
