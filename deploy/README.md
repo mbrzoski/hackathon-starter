@@ -32,6 +32,7 @@ Jeden origin oznacza jeden certyfikat, jeden adres tunelu i brak CORS (WEB-02). 
 | `caddy/Caddyfile.tunnel` | Wariant (b): HTTP za tunelem HTTPS (Cloudflare Tunnel). |
 | `caddy/start.html` | Strona startowa pod `http://<adres>/`: certyfikat i przyciski do trzech aplikacji. |
 | `smoke-test.mjs` | Test dymny serwera (czysty Node): trasy, nagłówki, cache, TLS sprawdzany pobranym `ca.crt`, API, WebSocket, strona startowa. `make smoke`. |
+| `make clean-demo` | Zatrzymuje kontenery demo i usuwa `deploy/site/` i `deploy/ca.crt` (robi to też samo `make demo` na końcu). |
 | `trust-ca.sh` | Dodaje CA demo do zaufanych na tym laptopie (macOS: pęk kluczy logowania, Linux: `update-ca-certificates`). |
 | `../frontend/e2e/uc-01.mjs` | Test UC-01 w Chrome: trzy aplikacje naraz, scenariusz, alert, decyzje. `make e2e` (dev) i `make e2e-demo` (demo). |
 
@@ -111,7 +112,9 @@ Uwagi do CSP (WEB-05):
 
 ## Zatrzymanie i dane
 
-- Ctrl+C w terminalu ze skryptem zatrzymuje kontenery (`docker compose down`).
+- Ctrl+C w terminalu z `make demo` (także zamknięcie terminala albo błąd skryptu) zatrzymuje kontenery i usuwa wygenerowane pliki `deploy/site/` i `deploy/ca.crt`, więc w `git status` nic nie zostaje. Komunikat `make: *** [demo] Error 130` po Ctrl+C jest normalny.
+- Jeśli skrypt został zabity inaczej (np. `kill -9`), posprzątaj ręcznie: `make clean-demo`.
+- Wolumeny zostają, więc certyfikat zainstalowany na urządzeniach działa przy następnym `make demo`.
 - Baza SQLite i `labels.jsonl` są w wolumenie `backend-data`, a CA Caddy w `caddy-data`. Usunięcie wszystkiego: `docker compose -f deploy/docker-compose.yml down -v`. Wtedy certyfikat CA na urządzeniach trzeba zainstalować od nowa.
 
 ## Bez Dockera
