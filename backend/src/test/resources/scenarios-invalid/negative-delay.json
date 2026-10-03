@@ -1,0 +1,10 @@
+{
+  "scenarioId": "negative-delay",
+  "title": "Zły czas",
+  "description": "Ujemne opóźnienie.",
+  "mode": "SCRIPTED",
+  "segments": [
+    { "speaker": "B", "text": "Dzień dobry.", "delayMs": 1000 },
+    { "speaker": "A", "text": "Halo?", "delayMs": -5 }
+  ]
+}

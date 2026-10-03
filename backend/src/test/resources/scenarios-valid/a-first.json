@@ -1,0 +1,7 @@
+{
+  "scenarioId": "a-first",
+  "title": "Pierwszy",
+  "description": "Opis pierwszy.",
+  "mode": "SCRIPTED",
+  "segments": [ { "speaker": "B", "text": "Halo.", "delayMs": 500 }, { "speaker": "unknown", "text": "Tak?", "delayMs": 700 } ]
+}
