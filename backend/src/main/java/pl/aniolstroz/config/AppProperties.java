@@ -1,6 +1,8 @@
 package pl.aniolstroz.config;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -23,7 +25,12 @@ public record AppProperties(
         @Valid @NotNull @DefaultValue Claude claude,
         @Valid @NotNull @DefaultValue Events events,
         @Valid @NotNull @DefaultValue Labels labels,
-        @Valid @NotNull @DefaultValue Audit audit) {
+        @Valid @NotNull @DefaultValue Audit audit,
+        @Valid @NotNull @DefaultValue Retention retention) {
+
+    /** How long alerts, excerpts, decisions and audit rows are kept (DAT-02): 1 to 90 days, 30 by default. */
+    public record Retention(@Min(1) @Max(90) @DefaultValue("30") int days) {
+    }
 
     /** AI audit settings (OBS-04). */
     public record Audit(@Valid @NotNull @DefaultValue Pricing pricing) {

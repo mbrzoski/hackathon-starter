@@ -8,9 +8,13 @@ import java.sql.SQLException;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
 import pl.aniolstroz.ai.ClassifierError;
 import pl.aniolstroz.ai.ClassifierResult;
@@ -25,9 +29,10 @@ import pl.aniolstroz.contracts.StageHit;
  * listed. After a call without an alert the text fields are emptied and the numbers stay (DAT-03). Text is never
  * logged (OBS-05).
  *
- * <p>Records of a call are written while it is running, so the text is on disk until the call ends. That is why a
- * call left open by a crash is closed and cleaned at startup ({@link #closeOrphanedCalls}): a call that never ended
- * has no alert in the database, and the safe default for its text is to delete it.
+ * <p>While a call is running its text (raw answer and quotes) is kept in memory only; the row in SQLite already holds
+ * just the numbers. When the call ends with an alert the text is written to the row (D-33, rule 4 of CLAUDE.md); when
+ * it ends without one the text is dropped. A crash therefore never leaves text of a call without an alert on disk.
+ * {@link #closeOrphanedCalls} still closes calls left open and clears any text older versions left behind.
  */
 @Service
 public class AuditService {
@@ -38,6 +43,12 @@ public class AuditService {
     private final ObjectMapper mapper;
     private final Clock clock;
     private final Pricing pricing;
+    /** Text of records of calls that are still running, by record id. Memory only. */
+    private final Map<Long, PendingText> pendingText = new ConcurrentHashMap<>();
+
+    /** The text-bearing columns of one record, kept in memory until its call ends. */
+    private record PendingText(String callId, String rawOutput, String hitsJson, String keywordHitsJson) {
+    }
 
     @Autowired
     public AuditService(JdbcClient jdbc, ObjectMapper mapper, Clock clock, AppProperties properties) {
@@ -57,20 +68,24 @@ public class AuditService {
     }
 
     /**
-     * Stores one record. If the call already ended without an alert, the record is stored with its text already
-     * removed: a late answer must not bring text back.
+     * Stores one record. The text is kept in memory while the call runs and written only if it ends with an alert.
+     * If the call already ended without an alert, the record is stored with its text removed: a late answer must not
+     * bring text back.
      */
     public void record(AuditEntry entry) {
         ClassifierResult result = entry.result();
-        boolean cleared = endedWithoutAlert(entry.callId());
-        List<AuditHit> hits = result.hits().stream().map(AuditHit::of).toList();
-        List<AuditHit> keywordHits = entry.keywordHits().stream().map(AuditHit::of).toList();
-        if (cleared) {
-            hits = hits.stream().map(AuditHit::withoutQuote).toList();
-            keywordHits = keywordHits.stream().map(AuditHit::withoutQuote).toList();
-        }
         // A call whose start was missed (a database hiccup) still shows up in the list.
         callStarted(entry.callId(), entry.mode(), clock.instant());
+        CallState state = callState(entry.callId());
+        List<AuditHit> hits = result.hits().stream().map(AuditHit::of).toList();
+        List<AuditHit> keywordHits = entry.keywordHits().stream().map(AuditHit::of).toList();
+        // Text goes to the row only for a call that already ended with an alert; otherwise the row holds numbers.
+        boolean keepText = state == CallState.ENDED_WITH_ALERT;
+        boolean cleared = !keepText;
+        String hitsJson = json(keepText ? hits : hits.stream().map(AuditHit::withoutQuote).toList());
+        String keywordHitsJson = json(
+                keepText ? keywordHits : keywordHits.stream().map(AuditHit::withoutQuote).toList());
+        KeyHolder keys = new GeneratedKeyHolder();
         jdbc.sql("""
                 INSERT INTO audit_records (call_id, mode, recorded_at, segment_range, model, effort, input_tokens,
                     cache_read_input_tokens, output_tokens, latency_ms, stop_reason, error, raw_output, hits_json,
@@ -89,22 +104,41 @@ public class AuditService {
                 .param("latency", result.latencyMs())
                 .param("stop", result.stopReason())
                 .param("error", result.error() == null ? null : result.error().name())
-                .param("raw", cleared ? null : result.rawOutput())
-                .param("hits", json(hits))
-                .param("keywordHits", json(keywordHits))
+                .param("raw", keepText ? result.rawOutput() : null)
+                .param("hits", hitsJson)
+                .param("keywordHits", keywordHitsJson)
                 .param("before", entry.levelBefore().name())
                 .param("after", entry.levelAfter().name())
                 .param("hitCount", result.hits().size())
                 .param("rejected", (int) result.hits().stream().filter(h -> !h.validated()).count())
                 .param("cleared", cleared ? 1 : 0)
-                .update();
+                .update(keys);
+        if (state == CallState.OPEN && keys.getKey() != null) {
+            pendingText.put(keys.getKey().longValue(), new PendingText(entry.callId(), result.rawOutput(),
+                    json(hits), json(keywordHits)));
+        }
     }
 
-    /** Closes the call and, when it had no alert, removes the text of its records (DAT-03). */
+    /**
+     * Closes the call. With an alert the text kept in memory is written to its records (D-33); without one it is
+     * dropped and any text already on disk is removed (DAT-03).
+     */
     public void callEnded(String callId, Instant at, RiskLevel maxLevel, boolean hadAlert) {
         jdbc.sql("UPDATE audit_calls SET ended_at = :at, max_level = :level, had_alert = :alert WHERE call_id = :id")
                 .param("at", at.toString()).param("level", maxLevel.name()).param("alert", hadAlert ? 1 : 0)
                 .param("id", callId).update();
+        var pending = pendingText.entrySet().stream().filter(e -> e.getValue().callId().equals(callId)).toList();
+        if (hadAlert) {
+            for (var e : pending) {
+                PendingText text = e.getValue();
+                jdbc.sql("""
+                        UPDATE audit_records SET raw_output = :raw, hits_json = :hits, keyword_hits_json = :keywordHits,
+                            text_cleared = 0 WHERE id = :id""")
+                        .param("raw", text.rawOutput()).param("hits", text.hitsJson())
+                        .param("keywordHits", text.keywordHitsJson()).param("id", e.getKey()).update();
+            }
+        }
+        pending.forEach(e -> pendingText.remove(e.getKey()));
         if (!hadAlert) {
             clearText(callId);
         }
@@ -161,9 +195,14 @@ public class AuditService {
         return open.size();
     }
 
-    private boolean endedWithoutAlert(String callId) {
-        return jdbc.sql("SELECT count(*) FROM audit_calls WHERE call_id = :id AND ended_at IS NOT NULL AND had_alert = 0")
-                .param("id", callId).query(Integer.class).single() > 0;
+    private enum CallState { OPEN, ENDED_WITH_ALERT, ENDED_WITHOUT_ALERT }
+
+    private CallState callState(String callId) {
+        return jdbc.sql("SELECT ended_at IS NOT NULL AS ended, had_alert FROM audit_calls WHERE call_id = :id")
+                .param("id", callId)
+                .query((rs, row) -> !rs.getBoolean("ended") ? CallState.OPEN
+                        : rs.getInt("had_alert") == 1 ? CallState.ENDED_WITH_ALERT : CallState.ENDED_WITHOUT_ALERT)
+                .optional().orElse(CallState.OPEN);
     }
 
     private void clearText(String callId) {
@@ -204,16 +243,21 @@ public class AuditService {
 
     private AuditRecord toRecord(ResultSet rs, int row) throws SQLException {
         String error = rs.getString("error");
+        // Text of a running call lives in memory only; the stored row has the numbers.
+        PendingText pending = pendingText.get(rs.getLong("id"));
+        String rawOutput = pending != null ? pending.rawOutput() : rs.getString("raw_output");
+        String hitsJson = pending != null ? pending.hitsJson() : rs.getString("hits_json");
+        String keywordHitsJson = pending != null ? pending.keywordHitsJson() : rs.getString("keyword_hits_json");
         return new AuditRecord(rs.getLong("id"), rs.getString("call_id"), Mode.valueOf(rs.getString("mode")),
                 Instant.parse(rs.getString("recorded_at")), rs.getString("segment_range"), rs.getString("model"),
                 rs.getString("effort"),
                 new AuditRecord.Usage(rs.getLong("input_tokens"), rs.getLong("cache_read_input_tokens"),
                         rs.getLong("output_tokens")),
                 rs.getLong("latency_ms"), rs.getString("stop_reason"),
-                error == null ? null : ClassifierError.valueOf(error), rs.getString("raw_output"),
-                readHits(rs.getString("hits_json")), readHits(rs.getString("keyword_hits_json")),
+                error == null ? null : ClassifierError.valueOf(error), rawOutput,
+                readHits(hitsJson), readHits(keywordHitsJson),
                 RiskLevel.valueOf(rs.getString("level_before")), RiskLevel.valueOf(rs.getString("level_after")),
-                rs.getInt("text_cleared") == 1);
+                pending == null && rs.getInt("text_cleared") == 1);
     }
 
     private String json(Object value) {

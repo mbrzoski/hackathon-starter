@@ -181,6 +181,39 @@ class AuditServiceTest {
     }
 
     @Test
+    void textOfARunningCallIsOnlyInMemoryUntilTheCallEndsWithAnAlert() {
+        audit.callStarted("c1", Mode.SCRIPTED, T0);
+        audit.record(simpleEntry("c1"));
+
+        String onDisk = jdbc.sql("SELECT coalesce(raw_output, '') || hits_json || keyword_hits_json FROM audit_records")
+                .query(String.class).single();
+        assertThat(onDisk).doesNotContain("nikomu nie mów").doesNotContain("cytat z rozmowy");
+        // The audit screen still sees the text while the call runs.
+        assertThat(records("c1").get(0).rawOutput()).isNotNull();
+        assertThat(records("c1").get(0).hits().get(0).quote()).isEqualTo("nikomu nie mów");
+
+        audit.callEnded("c1", T0.plusSeconds(60), RiskLevel.HIGH, true);
+
+        String afterAlert = jdbc.sql("SELECT coalesce(raw_output, '') || hits_json FROM audit_records")
+                .query(String.class).single();
+        assertThat(afterAlert).contains("nikomu nie mów").contains("cytat z rozmowy");
+        assertThat(records("c1").get(0).textCleared()).isFalse();
+    }
+
+    @Test
+    void textOfARunningCallIsDroppedWhenItEndsWithoutAnAlert() {
+        audit.callStarted("c1", Mode.SCRIPTED, T0);
+        audit.record(simpleEntry("c1"));
+
+        audit.callEnded("c1", T0.plusSeconds(60), RiskLevel.NONE, false);
+
+        AuditRecord record = records("c1").get(0);
+        assertThat(record.textCleared()).isTrue();
+        assertThat(record.rawOutput()).isNull();
+        assertThat(record.hits()).extracting(AuditHit::quote).containsOnlyNulls();
+    }
+
+    @Test
     void anAlertedCallKeepsItsText() {
         audit.callStarted("c1", Mode.SCRIPTED, T0);
         audit.record(simpleEntry("c1"));

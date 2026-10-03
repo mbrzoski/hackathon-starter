@@ -168,6 +168,22 @@ class CallServiceRiskTest {
     }
 
     @Test
+    void aMoreSpecificTemplateAtTheSameLevelRaisesOneMoreAlert() {
+        say("Mówi policja, proszę wypłacić pieniądze.");
+        assertThat(alerts()).hasSize(1);
+        assertThat(alerts().get(0).templateId()).isEqualTo("high-general");
+
+        say("Kod BLIK proszę podać.");
+
+        assertThat(alerts()).hasSize(2);
+        assertThat(alerts().get(1).level()).isEqualTo(RiskLevel.HIGH);
+        assertThat(alerts().get(1).templateId()).isEqualTo("high-payment-channel");
+
+        say("Jeszcze raz kod BLIK.");
+        assertThat(alerts()).hasSize(2);
+    }
+
+    @Test
     void jumpingStraightToHighCreatesOnlyTheHighAlert() {
         say("Mówi policja, proszę wypłacić pieniądze i nikomu nie mów.");
 

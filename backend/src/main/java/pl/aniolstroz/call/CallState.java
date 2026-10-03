@@ -168,6 +168,11 @@ public final class CallState {
     }
 
     /** Caller must hold the lock. */
+    boolean hasAlertWithTemplate(RiskLevel alertLevel, String templateId) {
+        return alerts.stream().anyMatch(a -> a.level() == alertLevel && a.templateId().equals(templateId));
+    }
+
+    /** Caller must hold the lock. */
     boolean isEnded() {
         return ended;
     }

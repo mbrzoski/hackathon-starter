@@ -33,4 +33,5 @@ management:
 
 # Defaults for app.* live in AppProperties (mode=SCRIPTED, claude.model, claude.timeout-ms).
 # Override with APP_MODE, APP_CLAUDE_MODEL, APP_CLAUDE_TIMEOUT_MS. Secrets only come from the environment.
+# app.retention.days: 1-90 (default 30), APP_RETENTION_DAYS (DAT-02).
 # app.events.*: allowed-origins (empty = same origin), send-time-limit-ms, buffer-size-limit-bytes, heartbeat-interval-ms.

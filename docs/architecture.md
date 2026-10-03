@@ -133,7 +133,9 @@ Verified against the official Anthropic models overview (platform.claude.com/doc
 
 **Risk rules (default "medium" sensitivity):**
 - **High:** a MONEY_REQUEST or PAYMENT_CHANNEL hit, together with at least one of AUTHORITY_CLAIM, URGENT_THREAT, SECRECY_DEMAND or ISOLATION.
-- **Medium:** two different manipulation stages without money yet, or a keyword-layer combination such as "policja" + "BLIK".
+- **Medium:** two different manipulation stages, without the money-plus-pressure combination above.
+- The rules are the same for every source. "policja" + "BLIK" from the keyword layer alone is therefore **High** (authority claim plus payment channel); this is required so that scenario 01 reaches High without the AI. Known cost: a TV in the background can cause a false High from keywords (scenario 06); the AI role `background` and `speakerRole` are what correct it.
+- Per call there is one alert per level. At the same level one more alert is raised when a more specific template applies (for example the payment channel appearing after authority and money), at most once per template.
 - **Low:** one stage only. Logged, nothing is shown to the senior.
 - "Sensitive" setting moves each rule one level up; "Calm" requires two stages for medium and three for high.
 

@@ -2,6 +2,7 @@ package pl.aniolstroz.alerts;
 
 import java.time.Clock;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 import pl.aniolstroz.contracts.Alert;
@@ -21,6 +22,11 @@ public class AlertFactory {
     public AlertFactory(AlertTemplates templates, Clock clock) {
         this.templates = templates;
         this.clock = clock;
+    }
+
+    /** The template an alert for these hits would use; empty below MEDIUM. */
+    public Optional<String> templateId(RiskLevel level, List<StageHit> hits) {
+        return TemplateSelector.select(level, RiskEngine.stagesOf(hits.stream().filter(StageHit::validated).toList()));
     }
 
     /** @throws IllegalArgumentException below MEDIUM, where there is no alert */

@@ -185,7 +185,8 @@ public class CallService implements LiveCallAccess {
 
     /**
      * Stores the new hits, then publishes risk.update, then (when the level rose to MEDIUM or HIGH) the one alert for
-     * that level. The level never drops (DET-05). Caller holds the call lock.
+     * that level, or another alert when a more specific template applies at the same level (D-05). The level never drops
+     * (DET-05). Caller holds the call lock.
      */
     private void applyHits(CallState call, List<StageHit> hits) {
         boolean changed = false;
@@ -204,8 +205,13 @@ public class CallService implements LiveCallAccess {
         List<StageHit> counted = RiskEngine.countedHits(considered);
         publishRiskUpdate(call, level, previous, counted);
 
-        // One alert per level and call, also when the level fell (ignored stage) and rises again.
-        if (level.compareTo(previous) > 0 && level.compareTo(RiskLevel.MEDIUM) >= 0 && !call.hasAlertAt(level)) {
+        // One alert per level and call, also when the level fell (ignored stage) and rises again. Exception (D-05): at
+        // the same level a more specific template (for example the payment channel appearing after authority and
+        // money) raises one more alert, so the text read to the senior names the most important stage.
+        boolean rose = level.compareTo(previous) > 0 && !call.hasAlertAt(level);
+        boolean sharper = level == previous && call.hasAlertAt(level)
+                && alertFactory.templateId(level, counted).filter(id -> !call.hasAlertWithTemplate(level, id)).isPresent();
+        if (level.compareTo(RiskLevel.MEDIUM) >= 0 && (rose || sharper)) {
             Alert alert = alertFactory.create(call.callId(), call.mode(), level, counted, assessment.triggeredBy());
             call.recordAlert(alert);
             eventBus.publish(new AlertCreatedEvent(call.mode(), clock.instant(), alert));

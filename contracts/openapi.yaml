@@ -215,6 +215,15 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StatusResponse"
+  /api/data:
+    delete:
+      operationId: deleteAllData
+      tags:
+        - data
+      summary: Erase every stored alert, transcript excerpt, decision and audit row (DAT-02). Does not touch the active call.
+      responses:
+        "204":
+          description: Everything stored was deleted.
   /api/dev/emit:
     post:
       operationId: emitDevEvent
