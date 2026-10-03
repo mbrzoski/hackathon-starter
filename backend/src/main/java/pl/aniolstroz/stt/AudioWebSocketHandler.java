@@ -8,10 +8,13 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -28,6 +31,7 @@ import pl.aniolstroz.call.CallService;
 import pl.aniolstroz.call.CallState;
 import pl.aniolstroz.call.NoActiveCallException;
 import pl.aniolstroz.config.AppProperties;
+import pl.aniolstroz.config.Trace;
 import pl.aniolstroz.contracts.AudioControl;
 import pl.aniolstroz.contracts.ComponentState;
 import pl.aniolstroz.contracts.Mode;
@@ -60,6 +64,7 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
     static final String LISTENING = "Ochrona działa";
     static final String PAUSED = "Ochrona wstrzymana przez użytkownika";
     static final String NO_SOUND = "Brak dźwięku z mikrofonu. Ochrona nie działa";
+    private static final Duration SUMMARY_EVERY = Duration.ofSeconds(5);
     static final String CONNECTION_LOST = "Połączenie z mikrofonem zostało przerwane. Ochrona nie działa";
 
     private final CallService calls;
@@ -97,6 +102,11 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
         final SttSupervisor supervisor;
         final SilenceWatch silence;
         volatile boolean paused;
+        /** What arrived since the last summary line (numbers only, never the audio). */
+        final AtomicLong frames = new AtomicLong();
+        final AtomicLong bytes = new AtomicLong();
+        final AtomicInteger peak = new AtomicInteger();
+        volatile Instant lastSummary;
 
         LiveAudio(WebSocketSession session, String callId, SttSupervisor supervisor, SilenceWatch silence) {
             this.session = session;
@@ -104,6 +114,12 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
             this.supervisor = supervisor;
             this.silence = silence;
         }
+    }
+
+    @Override
+    public void afterConnectionEstablished(WebSocketSession session) {
+        Trace.flow("audio-ws | connected session={} remote={} origin={}", Trace.id(session.getId()),
+                session.getRemoteAddress(), Trace.oneLine(session.getHandshakeHeaders().getFirst("Origin"), 100));
     }
 
     @Override
@@ -117,6 +133,7 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
 
     private void control(WebSocketSession session, String payload) throws IOException {
         AudioControl.Command command = commandOf(payload);
+        Trace.flow("audio-ws | session={} control={}", Trace.id(session.getId()), command == null ? "INVALID" : command);
         if (command == null) {
             reject(session, CloseStatus.POLICY_VIOLATION, BAD_COMMAND);
             return;
@@ -165,6 +182,9 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
         if (live.silence.onFrame(pcm) == SilenceWatch.Change.RECOVERED) {
             status.publish(pl.aniolstroz.contracts.Component.AUDIO, ComponentState.OK, LISTENING);
         }
+        live.frames.incrementAndGet();
+        live.bytes.addAndGet(pcm.length);
+        live.peak.accumulateAndGet(SilenceWatch.peak(pcm), Math::max);
         live.supervisor.write(pcm);
     }
 
@@ -174,11 +194,35 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
      */
     @Scheduled(fixedDelayString = "${app.stt.silence.check-interval-ms:1000}")
     void checkSilence() {
+        Instant now = clock.instant();
         for (LiveAudio live : sessions.values()) {
             if (live.silence.check() == SilenceWatch.Change.SILENT) {
+                Trace.flow("audio-ws | session={} call={} no sound for {} ms", Trace.id(live.session.getId()),
+                        Trace.id(live.callId), silenceTimeout.toMillis());
                 status.publish(pl.aniolstroz.contracts.Component.AUDIO, ComponentState.DOWN, NO_SOUND);
             }
+            summarize(live, now);
         }
+    }
+
+    /**
+     * Every few seconds: how much audio arrived and how loud the loudest sample was (0..32768). Frames of 3200 bytes
+     * come ten per second, so 50 frames in 5 s is a healthy stream; a peak near 0 is a muted microphone. These are
+     * numbers about the audio, not the audio (AUD-02).
+     */
+    private void summarize(LiveAudio live, Instant now) {
+        Instant last = live.lastSummary;
+        if (last == null) {
+            live.lastSummary = now;
+            return;
+        }
+        if (Duration.between(last, now).compareTo(SUMMARY_EVERY) < 0) {
+            return;
+        }
+        live.lastSummary = now;
+        Trace.flow("audio-ws | session={} call={} last {} s: frames={} bytes={} peak={} paused={}", Trace.id(live.session.getId()),
+                Trace.id(live.callId), Duration.between(last, now).toSeconds(), live.frames.getAndSet(0),
+                live.bytes.getAndSet(0), live.peak.getAndSet(0), live.paused);
     }
 
     private void start(WebSocketSession session, LiveAudio existing) throws IOException {
@@ -210,6 +254,8 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
             return;
         }
         String callId = call.callId();
+        Trace.flow("audio-ws | session={} call={} LIVE call opened, starting speech recognition", Trace.id(session.getId()),
+                Trace.id(callId));
         var supervisor = new SttSupervisor(factory, segment -> forward(callId, segment), status, clock, retries,
                 executor);
         try {
@@ -224,6 +270,8 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
         }
         sessions.put(session.getId(),
                 new LiveAudio(session, callId, supervisor, new SilenceWatch(clock, silenceTimeout)));
+        Trace.flow("audio-ws | session={} call={} speech recognition running, waiting for audio", Trace.id(session.getId()),
+                Trace.id(callId));
         status.publish(pl.aniolstroz.contracts.Component.STT, ComponentState.OK, RUNNING);
         status.publish(pl.aniolstroz.contracts.Component.AUDIO, ComponentState.OK, LISTENING);
     }
@@ -251,6 +299,8 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
         if (live == null) {
             return;
         }
+        Trace.flow("audio-ws | session={} call={} ending: {}", Trace.id(sessionId), Trace.id(live.callId),
+                lost ? "connection lost (no stop)" : "stop, protection switched off or shutdown");
         try {
             live.supervisor.stop();
         } finally {
@@ -306,6 +356,8 @@ class AudioWebSocketHandler extends BinaryWebSocketHandler {
     }
 
     private void reject(WebSocketSession session, CloseStatus code, String reason) throws IOException {
+        Trace.flow("audio-ws | session={} closed by the backend: code={} reason=\"{}\"", Trace.id(session.getId()), code.getCode(),
+                reason);
         session.close(code.withReason(reason));
     }
 

@@ -208,7 +208,13 @@ export class EventsService {
   }
 
   private apply(event: EventEnvelope): void {
-    this._mode.set(event.mode);
+    // The mode is the mode of the call while one runs. A system status belongs to no call (the heartbeat), so during a
+    // call it must not change the badge: LIVE would flicker to the mode of the application every 10 s (rule 6).
+    const call = this._activeCall();
+    const callRuns = call !== null && call.endedAt === null;
+    if ((event.type as string) !== 'system.status' || !callRuns) {
+      this._mode.set(event.mode);
+    }
     // The generated union is not discriminated (`type: any`), so narrow on the validated type string.
     switch (event.type as string) {
       case 'call.started': {

@@ -29,6 +29,7 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.handler.AbstractWebSocketHandler;
 import pl.aniolstroz.call.CallService;
+import pl.aniolstroz.config.LogCapture;
 import pl.aniolstroz.contracts.Mode;
 import pl.aniolstroz.settings.ConsentChecker;
 import pl.aniolstroz.settings.ProtectionService;
@@ -282,6 +283,53 @@ class AudioWebSocketTest {
         assertThat(status.getReason()).isEqualTo(AudioWebSocketHandler.PROTECTION_OFF);
         assertThat(calls.active()).isEmpty();
         assertThat(FACTORY.created).isEmpty();
+    }
+
+    /** Starts a call, lets the fake recognizer "hear" two utterances and ends it; returns once the call has ended. */
+    private void speakAndHangUp() throws Exception {
+        Client events = watchEvents();
+        Client audio = connect("/ws/audio");
+        audio.send("{\"type\":\"start\"}");
+        events.awaitEvent(e -> isType(e, "call.started"));
+        audio.sendFrames(4);
+        events.awaitEvent(e -> isType(e, "transcript.segment") && e.at("/payload/text").asText().equals("mówi policja")
+                && e.at("/payload/isFinal").asBoolean());
+        audio.send("{\"type\":\"stop\"}");
+        events.awaitEvent(e -> isType(e, "call.ended"));
+        awaitNoActiveCall();
+    }
+
+    @Test
+    void theProcessIsTracedStepByStepButTheWordsOfTheCallStayOutOfTheLogByDefault() throws Exception {
+        try (LogCapture log = LogCapture.start(false)) {
+            speakAndHangUp();
+
+            assertThat(log.all())
+                    .contains("audio-ws | connected")
+                    .contains("audio-ws | session=")
+                    .contains("control=START")
+                    .contains("LIVE call opened")
+                    .contains("event | call.started mode=LIVE")
+                    .contains("event | transcript.segment mode=LIVE")
+                    .contains("final=true chars=12")
+                    .contains("control=STOP")
+                    .contains("event | call.ended mode=LIVE")
+                    .contains("retention | call=")
+                    .contains("stt | recognizer generation 1 running")
+                    .doesNotContain("mówi policja").doesNotContain("dzień dobry");
+        }
+    }
+
+    @Test
+    void withTheContentTraceOnTheRecognizedWordsAppearInTheLog() throws Exception {
+        try (LogCapture log = LogCapture.start(true)) {
+            speakAndHangUp();
+
+            assertThat(log.all())
+                    .contains("transcript.segment call=")
+                    .contains("text=\"mówi policja\"")
+                    .contains("evidence stage=AUTHORITY_CLAIM source=KEYWORDS quote=\"mówi policja\"");
+        }
     }
 
     @Test

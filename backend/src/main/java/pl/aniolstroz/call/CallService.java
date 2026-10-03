@@ -12,6 +12,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import pl.aniolstroz.alerts.AlertFactory;
 import pl.aniolstroz.alerts.LiveCallAccess;
+import pl.aniolstroz.config.Trace;
 import pl.aniolstroz.contracts.Alert;
 import pl.aniolstroz.contracts.CallEnded;
 import pl.aniolstroz.contracts.CallStarted;
@@ -88,6 +89,7 @@ public class CallService implements LiveCallAccess {
             }
             CallState call = new CallState(UUID.randomUUID().toString(), mode, scenarioId, clock.instant());
             active = call;
+            Trace.flow("call | call={} started, mode={} scenario={}", Trace.id(call.callId()), mode, scenarioId == null ? "-" : scenarioId);
             eventBus.publish(new CallStartedEvent(mode, clock.instant(), new CallStarted(call.callId())));
             announce(new CallOpened(call.callId(), mode, scenarioId, call.startedAt()));
             return call;
@@ -120,6 +122,10 @@ public class CallService implements LiveCallAccess {
             // keeps, so the evidence of a call never cites words that the transcript does not have.
             List<StageHit> found = keywordDetector.detect(numbered);
             boolean replaced = numbered.isFinal() && call.settleProvisionalHits(numbered.segId(), found);
+            if (replaced) {
+                Trace.flow("call | call={} seg={} the final text does not confirm the interim keyword hits: they are replaced",
+                        Trace.id(call.callId()), numbered.segId());
+            }
             applyHits(call, found, !numbered.isFinal(), replaced);
             if (numbered.isFinal()) {
                 announce(call);
@@ -202,7 +208,16 @@ public class CallService implements LiveCallAccess {
     private void applyHits(CallState call, List<StageHit> hits, boolean provisional, boolean recompute) {
         boolean changed = recompute;
         for (StageHit hit : hits) {
-            changed |= call.addHit(hit, provisional);
+            boolean added = call.addHit(hit, provisional);
+            if (added) {
+                Trace.flow("call | call={} seg={} new evidence: stage={} source={} provisional={}", Trace.id(call.callId()),
+                        hit.segId(), hit.stage(), hit.source(), provisional);
+                if (Trace.content()) {
+                    Trace.content("call | call={} seg={} evidence stage={} source={} quote=\"{}\"", Trace.id(call.callId()),
+                            hit.segId(), hit.stage(), hit.source(), Trace.oneLine(hit.quote()));
+                }
+            }
+            changed |= added;
         }
         if (!changed) {
             return;
@@ -300,6 +315,9 @@ public class CallService implements LiveCallAccess {
         call.lock().lock();
         try {
             call.markEnded();
+            Trace.flow("call | call={} ended, mode={} segments={} maxLevel={} alerts={} lasted {} s", Trace.id(call.callId()),
+                    call.mode(), call.transcript().size(), call.maxLevel(), call.alerts().size(),
+                    java.time.Duration.between(call.startedAt(), clock.instant()).toSeconds());
             try {
                 endedHook.onCallEnded(call);
             } catch (RuntimeException e) {

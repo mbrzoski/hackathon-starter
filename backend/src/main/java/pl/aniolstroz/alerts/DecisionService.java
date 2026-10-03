@@ -14,6 +14,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import pl.aniolstroz.config.Trace;
 import pl.aniolstroz.contracts.Actor;
 import pl.aniolstroz.contracts.Alert;
 import pl.aniolstroz.contracts.Component;
@@ -75,6 +76,8 @@ public class DecisionService {
 
         Decision decision = new Decision(alertId, command.actor(), command.decision(), clock.instant());
         decisions.save(decision, alert.mode(), command.ignoredStages());
+        Trace.flow("alerts | decision alert={} call={} {} by {} ignoredStages={}", Trace.id(alertId), Trace.id(alert.callId()),
+                decision.decision(), decision.actor(), command.ignoredStages());
         if (LABELS.contains(decision.decision())) {
             writeLabel(alert, decision);
         }

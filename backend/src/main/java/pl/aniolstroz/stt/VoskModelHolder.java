@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.vosk.LibVosk;
 import org.vosk.LogLevel;
 import org.vosk.Model;
+import pl.aniolstroz.config.Trace;
 
 /**
  * Loads the Vosk model once, on first use, and shares it between calls (a model is big and thread safe for creating
@@ -21,6 +22,13 @@ import org.vosk.Model;
 public class VoskModelHolder {
 
     private static final Logger log = LoggerFactory.getLogger(VoskModelHolder.class);
+    static {
+        // The native Vosk library answers in UTF-8, but JNA decodes native strings with the platform encoding unless told
+        // otherwise: on a Polish Windows (native.encoding=Cp1250) "dzień" arrives as "dzieĹ„", which breaks the keywords
+        // and the text sent to Claude. JNA reads this property once, when it is first used, so it is set before any Vosk call.
+        System.setProperty("jna.encoding", "UTF-8");
+    }
+
     static final String MISSING_MODEL = "Brak modelu rozpoznawania mowy";
     static final String NATIVE_FAILURE = "Nie udało się uruchomić rozpoznawania mowy";
 
@@ -40,21 +48,36 @@ public class VoskModelHolder {
                 return model;
             }
             if (!Files.isDirectory(modelPath)) {
+                Trace.flow("vosk | model directory {} does not exist", modelPath.toAbsolutePath());
                 throw new SttUnavailableException(MISSING_MODEL);
             }
             try {
-                LibVosk.setLogLevel(LogLevel.WARNINGS);
+                // The native library prints progress lines to stderr: wanted when diagnosing a run, noise otherwise.
+                LibVosk.setLogLevel(Trace.content() ? LogLevel.INFO : LogLevel.WARNINGS);
+                Trace.flow("vosk | loading the model from {} ({} MB on disk)", modelPath.toAbsolutePath(), sizeInMb(modelPath));
+                long began = System.nanoTime();
                 model = new Model(modelPath.toString());
                 log.info("Vosk model loaded");
+                Trace.flow("vosk | model loaded in {} ms, shared by all calls", (System.nanoTime() - began) / 1_000_000L);
                 return model;
             } catch (IOException e) {
+                Trace.flow("vosk | the model could not be read: {}", e.getClass().getName());
                 throw new SttUnavailableException(MISSING_MODEL, e);
             } catch (UnsatisfiedLinkError | NoClassDefFoundError | ExceptionInInitializerError e) {
                 // The native library of Vosk (or JNA) could not be loaded on this machine.
+                Trace.flow("vosk | the native library could not be loaded: {}", e.getClass().getName());
                 throw new SttUnavailableException(NATIVE_FAILURE, e);
             }
         } finally {
             lock.unlock();
+        }
+    }
+
+    private static long sizeInMb(Path dir) {
+        try (var files = Files.walk(dir)) {
+            return files.filter(Files::isRegularFile).mapToLong(f -> f.toFile().length()).sum() / (1024 * 1024);
+        } catch (IOException | RuntimeException e) {
+            return -1;
         }
     }
 

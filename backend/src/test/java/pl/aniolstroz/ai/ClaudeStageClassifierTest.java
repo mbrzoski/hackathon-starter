@@ -22,6 +22,7 @@ import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import pl.aniolstroz.config.LogCapture;
 import pl.aniolstroz.contracts.HitSource;
 import pl.aniolstroz.contracts.Mode;
 import pl.aniolstroz.contracts.Sensitivity;
@@ -125,6 +126,39 @@ class ClaudeStageClassifierTest {
             request = request.withRequestBody(pattern);
         }
         wiremock.verify(request);
+    }
+
+    @Test
+    void theRequestAndTheAnswerAreTracedAsNumbersWithoutTheWordsOfTheCall() {
+        respondOk(ANSWER);
+
+        try (LogCapture log = LogCapture.start(false)) {
+            classifier().classify(snapshot());
+
+            assertThat(log.all())
+                    .contains("claude | request call=call-1 range=s1-s3 model=claude-sonnet-5-5 effort=low maxTokens=1024 segments=3")
+                    .contains("claude | response call=call-1 range=s1-s3 stopReason=end_turn error=null latencyMs=40 inputTokens=2900 "
+                            + "cacheReadTokens=2400 cacheWriteTokens=10 outputTokens=120")
+                    .doesNotContain("policja").doesNotContain("gotówkę").doesNotContain("nikomu nie mów")
+                    .doesNotContain(API_KEY);
+        }
+    }
+
+    @Test
+    void withTheContentTraceOnTheFullRequestAndTheRawAnswerAreLoggedButNeverTheKey() {
+        respondOk(ANSWER);
+
+        try (LogCapture log = LogCapture.start(true)) {
+            classifier().classify(snapshot());
+
+            assertThat(log.all())
+                    .contains("[s1 B] Mówi policja, dzwonię w ważnej sprawie.")
+                    .contains("[s2 A] Nikomu nie mów o tej rozmowie.")
+                    .contains("[s3 unknown] Proszę wypłacić gotówkę.")
+                    .contains("Zwróć trafienia etapów dla wszystkich segmentów do s3")
+                    .contains("claude | response call=call-1 raw output = " + ANSWER)
+                    .doesNotContain(API_KEY);
+        }
     }
 
     @Test

@@ -29,6 +29,6 @@ class HeartbeatService {
     void beat() {
         var now = clock.instant();
         var status = new SystemStatus(Component.BACKEND, ComponentState.OK, "Backend działa.", now);
-        eventBus.publish(new SystemStatusEvent(properties.mode(), now, status));
+        eventBus.publish(new SystemStatusEvent(eventBus.modeOrDefault(properties.mode()), now, status));
     }
 }

@@ -7,6 +7,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pl.aniolstroz.config.Trace;
 import pl.aniolstroz.contracts.Component;
 import pl.aniolstroz.contracts.ComponentState;
 
@@ -84,6 +85,7 @@ public final class SttSupervisor {
 
     /** Stops recognition, delivers the last segments and waits (briefly) until downstream has handled them. */
     public void stop() {
+        Trace.flow("stt | stopping recognition");
         SttProvider current;
         lock.lock();
         try {
@@ -104,6 +106,7 @@ public final class SttSupervisor {
     /** Caller holds the lock. */
     private void launch() {
         int gen = ++generation;
+        Trace.flow("stt | starting a recognizer, generation {}", gen);
         SttProvider created = factory.create((state, message) ->
                 dispatcher.submit(() -> providerStatus(gen, state, message)));
         created.start(
@@ -117,6 +120,7 @@ public final class SttSupervisor {
                 error -> dispatcher.submit(() -> failed(gen)));
         provider = created;
         lastStartedAt = clock.instant();
+        Trace.flow("stt | recognizer generation {} running", gen);
     }
 
     private void providerStatus(int gen, ComponentState state, String message) {
@@ -144,12 +148,14 @@ public final class SttSupervisor {
             if (lastStartedAt != null && Duration.between(lastStartedAt, now).compareTo(HEALTHY) >= 0) {
                 attempts = 0;
             }
+            Trace.flow("stt | recognizer generation {} failed (restarts used so far: {})", gen, attempts);
             if (attempts >= MAX_ATTEMPTS) {
                 publish(ComponentState.DOWN, DOWN);
                 log.error("Speech recognition is down after {} restarts", MAX_ATTEMPTS);
             } else {
                 Duration delay = FIRST_DELAY.multipliedBy(1L << attempts);
                 attempts++;
+                Trace.flow("stt | restart {} of {} in {} ms", attempts, MAX_ATTEMPTS, delay.toMillis());
                 publish(ComponentState.DEGRADED, DEGRADED);
                 scheduler.schedule(delay, this::restart);
             }

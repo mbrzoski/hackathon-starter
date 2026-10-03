@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import org.springframework.core.io.ClassPathResource;
+import pl.aniolstroz.config.Trace;
 import pl.aniolstroz.contracts.HitSource;
 import pl.aniolstroz.contracts.SpeakerLabel;
 import pl.aniolstroz.contracts.StageHit;
@@ -100,6 +101,7 @@ public final class ClaudeStageClassifier implements StageClassifier {
     public ClassifierResult classify(CallSnapshot snapshot) {
         long start = clock.millis();
         MessageCreateParams params = buildParams(snapshot);
+        traceRequest(snapshot);
         try {
             Message message = client.messages().create(params);
             return fromMessage(snapshot, message, clock.millis() - start);
@@ -115,6 +117,23 @@ public final class ClaudeStageClassifier implements StageClassifier {
             return failure(snapshot, ClassifierError.INVALID_OUTPUT, start);
         } catch (AnthropicException e) {
             return failure(snapshot, ClassifierError.API_ERROR, start);
+        }
+    }
+
+    /**
+     * What goes to the API: sizes always; the text of the request (the transcript block and the instruction) only in the
+     * content trace. The rubric is a file of the repository, so only its size is traced. The API key is never part of
+     * what is traced (rule 8), and no settings are in the request at all (rule 5).
+     */
+    private void traceRequest(CallSnapshot snapshot) {
+        Trace.flow("claude | request call={} range={} model={} effort={} maxTokens={} segments={} transcriptChars={} rubricChars={} "
+                        + "cache=rubric+transcript", Trace.id(snapshot.callId()), snapshot.segmentRange(), model, EFFORT.asString(),
+                maxTokens, snapshot.segments().size(), transcriptBlock(snapshot).length(), rubric().length());
+        if (Trace.content()) {
+            Trace.content("claude | request call={} user message block 1 (cached) = {}", Trace.id(snapshot.callId()),
+                    Trace.oneLine(transcriptBlock(snapshot)));
+            Trace.content("claude | request call={} user message block 2 = {}", Trace.id(snapshot.callId()),
+                    Trace.oneLine(instruction(snapshot)));
         }
     }
 
@@ -232,6 +251,13 @@ public final class ClaudeStageClassifier implements StageClassifier {
 
     private ClassifierResult result(CallSnapshot snapshot, String rawOutput, List<StageHit> hits,
             ClassifierResult.Usage usage, long latencyMs, String stopReason, ClassifierError error) {
+        Trace.flow("claude | response call={} range={} stopReason={} error={} latencyMs={} inputTokens={} cacheReadTokens={} "
+                        + "cacheWriteTokens={} outputTokens={} outputChars={} hits={}", Trace.id(snapshot.callId()),
+                snapshot.segmentRange(), stopReason, error, latencyMs, usage.inputTokens(), usage.cacheReadInputTokens(),
+                usage.cacheCreationInputTokens(), usage.outputTokens(), rawOutput == null ? 0 : rawOutput.length(), hits.size());
+        if (Trace.content() && rawOutput != null) {
+            Trace.content("claude | response call={} raw output = {}", Trace.id(snapshot.callId()), Trace.oneLine(rawOutput));
+        }
         return new ClassifierResult(snapshot.segmentRange(), model, EFFORT.asString(), rawOutput, hits, usage,
                 latencyMs, stopReason, error);
     }

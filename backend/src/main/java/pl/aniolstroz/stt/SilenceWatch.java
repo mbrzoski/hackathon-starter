@@ -88,6 +88,16 @@ final class SilenceWatch {
         }
     }
 
+    /** The loudest sample of a frame, 0..32768 (16-bit little endian). A number about the audio for the trace. */
+    static int peak(byte[] pcm) {
+        int peak = 0;
+        for (int i = 0; i + 1 < pcm.length; i += 2) {
+            int sample = (short) ((pcm[i] & 0xFF) | (pcm[i + 1] << 8));
+            peak = Math.max(peak, Math.abs(sample));
+        }
+        return peak;
+    }
+
     /** 16-bit little endian samples: true if any is louder than the threshold. */
     static boolean hasSignal(byte[] pcm) {
         for (int i = 0; i + 1 < pcm.length; i += 2) {

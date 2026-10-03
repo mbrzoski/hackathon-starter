@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pl.aniolstroz.config.Trace;
 
 /**
  * The queue of one call (AI-02): at most one classifier call in flight. A segment that arrives meanwhile only sets the
@@ -46,6 +47,7 @@ public final class CallClassificationQueue {
         try {
             if (running) {
                 dirty = true;
+                Trace.flow("ai | a final segment arrived while a call to the model is in flight: one more call will follow");
                 return;
             }
             running = true;
@@ -66,6 +68,9 @@ public final class CallClassificationQueue {
                     lock.unlock();
                 }
                 Optional<CallSnapshot> snapshot = snapshots.get();
+                if (snapshot.isEmpty()) {
+                    Trace.flow("ai | the call is over, no classifier call is made");
+                }
                 if (snapshot.isPresent()) {
                     results.accept(classify(snapshot.get()));
                 }
