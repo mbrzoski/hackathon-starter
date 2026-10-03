@@ -68,4 +68,33 @@ describe('DecisionOutbox', () => {
     expect(calls.length).toBe(1);
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('Nie znaleziono zasobu.'));
   });
+
+  it('reports a rejected decision as unsaved until acknowledged (FF-11)', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    expect(outbox.unsaved()).toBe(false);
+    responses = [throwError(() => new HttpErrorResponse({ status: 404 }))];
+    outbox.send('a1', DecisionRequestDecisionEnum.hung_up);
+    expect(outbox.unsaved()).toBe(true);
+
+    outbox.acknowledge();
+    expect(outbox.unsaved()).toBe(false);
+  });
+
+  it('gives up after 12 attempts (about 4 minutes) and reports the decision as unsaved (FF-11)', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    responses = Array.from({ length: 20 }, () => throwError(() => new HttpErrorResponse({ status: 503 })));
+    outbox.send('a1', DecisionRequestDecisionEnum.hung_up);
+
+    vi.advanceTimersByTime(30 * 60_000);
+    expect(calls.length).toBe(12);
+    expect(outbox.unsaved()).toBe(true);
+  });
+
+  it('stays quiet while a retry is still pending', () => {
+    responses = [throwError(() => new HttpErrorResponse({ status: 0 }))];
+    outbox.send('a1', DecisionRequestDecisionEnum.hung_up);
+    expect(outbox.unsaved()).toBe(false);
+    vi.advanceTimersByTime(2000);
+    expect(outbox.unsaved()).toBe(false);
+  });
 });

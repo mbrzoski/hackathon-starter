@@ -20,3 +20,11 @@ main { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 1
 .start-status { display: flex; align-items: center; gap: 12px; padding: 10px 18px; border-radius: 14px; font-weight: 800; }
 .start-status.red { background: var(--alarm-deep); color: #fff; }
 .start-status.yellow { background: var(--highlight); color: var(--text); }
+// FF-11: text on --highlight is 14.6:1 (WEB-11).
+.unsaved { flex: none; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+  margin-bottom: 12px; padding: 12px 16px; border-radius: 16px; background: var(--highlight); color: var(--text);
+  border: 4px solid var(--warn); font-weight: 800; }
+.unsaved p { margin: 0; display: flex; align-items: center; gap: 12px; }
+.unsaved button { font: inherit; min-height: 64px; padding: 0 24px; border-radius: 14px; border: 0; background: var(--primary);
+  color: #fff; cursor: pointer; }
+.unsaved button:focus-visible { outline: 4px solid var(--primary); outline-offset: 3px; }

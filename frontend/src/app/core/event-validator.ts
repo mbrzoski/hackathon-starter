@@ -22,7 +22,10 @@ export function createEventValidator(contract: { $id: string }): EventValidator 
     if (validate(data)) {
       return true;
     }
-    console.warn('Rejected /ws/events message that does not match EventEnvelope', validate.errors, data);
+    // Only the type and the errors: the payload may hold a transcript (FF-09).
+    const type = (data as { type?: unknown } | null)?.type;
+    const label = typeof type === 'string' ? type : '?';
+    console.warn('Rejected /ws/events message that does not match EventEnvelope', label, validate.errors);
     return false;
   };
 }

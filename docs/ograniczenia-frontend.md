@@ -88,4 +88,4 @@ Dokument architektury zakłada jedną aplikację Angular z trasami `/senior`, `/
 
 | Data | ID | Zmiana | Kto zdecydował | Dlaczego |
 |---|---|---|---|---|
-| | | | | |
+| 2026-10-03 | FE-01 | Zamiast jednej aplikacji z trasami `/senior`, `/family`, `/setup`, `/audit` są trzy buildy z jednej bazy kodu (`fileReplacements` w `angular.json`): `senior` (`/senior`, telefon lub tablet seniora, port 4201), `listen` (`/listen`, nowa trasa: tablet z mikrofonem przy telefonie stacjonarnym, port 4202), `family` (`/family`, `/setup`, `/audit`, port 4203). `/listen` łączy się z `/ws/events` z rolą `senior`, `/audit` z rolą `audit`. Logika jest wspólna, więc FE-01 („jedna baza kodu”) dalej obowiązuje. | Zespół przy FE-01 (wpis z review FF-05, do potwierdzenia przez zespół) | Słuchanie rozmowy i ekran seniora to dwa różne urządzenia. Każdy bundle zawiera tylko swoje ekrany, więc tablet przy telefonie nie ma paneli rodziny ani audytu. |

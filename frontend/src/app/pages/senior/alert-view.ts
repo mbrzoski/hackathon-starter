@@ -24,10 +24,11 @@ const SOURCE_LABEL: Record<Alert['triggeredBy'], string> = {
       <div class="head">
         <p class="eyebrow"><app-icon name="warning" [size]="40" /> OSTRZEŻENIE</p>
         <p class="text">{{ alert().shortText }}</p>
+        <p class="advice">{{ alert().advice }}</p>
         <p class="source">{{ source() }}</p>
       </div>
       <div class="tools">
-        <app-voice-readout [text]="alert().shortText" [key]="alert().alertId" />
+        <app-voice-readout [text]="spoken()" [key]="alert().alertId" />
         @if (alert().stages.length) {
           <button type="button" class="why" [attr.aria-expanded]="showWhy()" (click)="showWhy.update((v) => !v)">
             {{ showWhy() ? 'Ukryj' : 'Dlaczego?' }}
@@ -51,4 +52,6 @@ export class AlertView {
 
   protected readonly showWhy = signal(false);
   protected readonly source = computed(() => SOURCE_LABEL[this.alert().triggeredBy]);
+  /** The backend template is read as shortText, then advice, in one utterance (FF-12). */
+  protected readonly spoken = computed(() => `${this.alert().shortText} ${this.alert().advice}`);
 }

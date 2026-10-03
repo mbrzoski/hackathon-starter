@@ -13,11 +13,13 @@ const { down, degraded } = SystemStatusStateEnum;
  * > protected. A component without a published status counts as working.
  *
  * `activeCall` is part of the signature for callers; the priority itself does not depend on it.
+ * `localPause` is the senior's "pause for this call": it counts as audio degraded, so failures still win (FF-13).
  */
 export function selectSeniorStatus(
   connection: ConnectionState,
   systemStatus: SystemStatusMap,
   activeCall: ActiveCall | null,
+  localPause = false,
 ): SeniorStatus {
   const state = (component: SystemStatusComponentEnum) => systemStatus[component]?.state;
 
@@ -25,7 +27,7 @@ export function selectSeniorStatus(
   if (state(SystemStatusComponentEnum.audio) === down || state(SystemStatusComponentEnum.stt) === down) {
     return 'not_hearing';
   }
-  if (state(SystemStatusComponentEnum.audio) === degraded) return 'paused';
+  if (localPause || state(SystemStatusComponentEnum.audio) === degraded) return 'paused';
   const ai = state(SystemStatusComponentEnum.ai);
   if (ai === degraded || ai === down) return 'basic';
   return 'protected';

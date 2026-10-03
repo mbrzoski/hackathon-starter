@@ -69,6 +69,13 @@ type View =
           <button type="button" class="decision" (click)="start()">Włącz ochronę</button>
         </section>
       } @else {
+        @if (outbox.unsaved()) {
+          <!-- FF-11: a decision that did not reach the backend is never silent. -->
+          <section class="unsaved" role="alert">
+            <p><app-icon name="warning" [size]="36" /> Nie udało się zapisać decyzji. Powiedz o niej bliskiej osobie.</p>
+            <button type="button" (click)="outbox.acknowledge()">Rozumiem</button>
+          </section>
+        }
         <app-status-panel
           [status]="status()"
           [canPause]="callInProgress()"
@@ -84,7 +91,7 @@ export class Senior {
   protected readonly settings = inject(SettingsStore);
   private readonly audio = inject(AudioService);
   private readonly voice = inject(VoiceService);
-  private readonly outbox = inject(DecisionOutbox);
+  protected readonly outbox = inject(DecisionOutbox);
   private readonly now = injectNow();
 
   private readonly started = signal(false);
@@ -94,7 +101,12 @@ export class Senior {
   private readonly closed = signal<ReadonlySet<string>>(new Set());
 
   protected readonly status = computed(() =>
-    selectSeniorStatus(this.events.connection(), this.events.systemStatus(), this.events.activeCall()),
+    selectSeniorStatus(
+      this.events.connection(),
+      this.events.systemStatus(),
+      this.events.activeCall(),
+      this.paused() && this.callInProgress(),
+    ),
   );
 
   protected readonly startStatus = computed(() => STATUS_VIEW[this.status()]);

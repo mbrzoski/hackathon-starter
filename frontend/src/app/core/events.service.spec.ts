@@ -114,6 +114,20 @@ describe('EventsService', () => {
     expect(service.mode()).toBeNull();
   });
 
+  it('never logs the content of a rejected message, only its type and the errors (FF-09)', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const s = lastSocket();
+    const secret = 'Proszę nikomu nie mówić o przelewie';
+
+    s.serverSend(`${secret} (not json)`);
+    s.serverSend({ ...event('transcript.segment', segment('s1', secret)), extra: true });
+
+    expect(warn).toHaveBeenCalledTimes(2);
+    const logged = JSON.stringify(warn.mock.calls);
+    expect(logged).not.toContain(secret);
+    expect(logged).toContain('transcript.segment');
+  });
+
   it('clears the previous call on call.started', () => {
     const s = lastSocket();
     s.serverSend(event('call.started', { callId: 'c1' }));
@@ -143,6 +157,38 @@ describe('EventsService', () => {
     expect(service.alerts()).toEqual([]);
     expect(service.decisions()).toEqual([]);
     expect(service.risk()).toBeNull();
+  });
+
+  it('keeps the call state when call.started repeats the current callId (reconnect snapshot)', () => {
+    const s = lastSocket();
+    s.serverSend(event('call.started', { callId: 'c1' }));
+    s.serverSend(event('transcript.segment', segment('s1', 'Proszę nikomu nie mówić')));
+    s.serverSend(
+      event('risk.update', { callId: 'c1', level: 'high', previousLevel: 'medium', stages: [], warningSigns: 2 }),
+    );
+    s.serverSend(
+      event('alert.created', {
+        alertId: 'a1',
+        callId: 'c1',
+        level: 'high',
+        stages: [],
+        templateId: 't1',
+        shortText: 'Ta rozmowa może być oszustwem.',
+        advice: 'Rozłącz się.',
+        triggeredBy: 'both',
+        createdAt: AT,
+        mode: 'SCRIPTED',
+      }),
+    );
+    s.serverSend(event('alert.decision', { alertId: 'a1', actor: 'senior', decision: 'hung_up', at: AT }));
+
+    s.serverSend(event('call.started', { callId: 'c1' }));
+
+    expect(service.activeCall()?.callId).toBe('c1');
+    expect(service.segments().map((x) => x.text)).toEqual(['Proszę nikomu nie mówić']);
+    expect(service.risk()?.level).toBe('high');
+    expect(service.alerts().map((a) => a.alertId)).toEqual(['a1']);
+    expect(service.decisions().map((d) => d.decision)).toEqual(['hung_up']);
   });
 
   it('reconnects with backoff capped at 10 s', () => {

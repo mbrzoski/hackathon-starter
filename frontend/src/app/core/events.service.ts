@@ -183,7 +183,8 @@ export class EventsService {
     try {
       data = JSON.parse(String(raw));
     } catch {
-      console.warn('Rejected /ws/events message that is not JSON', raw);
+      // Not the message itself: it may hold a transcript (FF-09).
+      console.warn('Rejected /ws/events message that is not JSON');
       return;
     }
     if (this.validator?.(data)) {
@@ -197,6 +198,10 @@ export class EventsService {
     switch (event.type as string) {
       case 'call.started': {
         const { payload } = event as CallStartedEvent;
+        // The reconnect snapshot repeats call.started for the ongoing call: keep its state (FF-02).
+        if (this._activeCall()?.callId === payload.callId) {
+          break;
+        }
         this._activeCall.set({ callId: payload.callId, startedAt: event.at, endedAt: null, hadAlert: null });
         this._segments.set([]);
         this._risk.set(null);

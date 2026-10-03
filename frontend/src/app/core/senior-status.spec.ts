@@ -64,4 +64,17 @@ describe('selectSeniorStatus', () => {
     expect(selectSeniorStatus('open', statusMap('ok', 'ok', 'degraded'), null)).toBe('basic');
     expect(selectSeniorStatus('open', {}, null)).toBe('protected');
   });
+
+  it('a local pause counts as audio degraded: below offline and not hearing, above basic and protected (FF-13)', () => {
+    for (const connection of CONNECTIONS) {
+      for (const audio of STATES) {
+        for (const stt of STATES) {
+          for (const ai of STATES) {
+            const want = expected(connection, audio === 'down' ? 'down' : 'degraded', stt, ai);
+            expect(selectSeniorStatus(connection, statusMap(audio, stt, ai), call, true)).toBe(want);
+          }
+        }
+      }
+    }
+  });
 });

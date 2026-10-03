@@ -57,7 +57,7 @@ class FakeSynth {
 describe('Senior', () => {
   let events: ReturnType<typeof fakeEvents>;
   let audio: { start: ReturnType<typeof vi.fn>; pause: ReturnType<typeof vi.fn>; resume: ReturnType<typeof vi.fn> };
-  let outbox: { send: ReturnType<typeof vi.fn> };
+  let outbox: { send: ReturnType<typeof vi.fn>; unsaved: ReturnType<typeof signal<boolean>>; acknowledge: () => void };
   let settings: SettingsStore;
   let synth: FakeSynth | null;
 
@@ -109,7 +109,8 @@ describe('Senior', () => {
     );
     events = fakeEvents();
     audio = { start: vi.fn(), pause: vi.fn(), resume: vi.fn() };
-    outbox = { send: vi.fn() };
+    const unsaved = signal(false);
+    outbox = { send: vi.fn(), unsaved, acknowledge: () => unsaved.set(false) };
     synth = new FakeSynth();
   });
 
@@ -163,6 +164,48 @@ describe('Senior', () => {
       await fixture.whenStable();
       expect(button(fixture, 'Wstrzymaj dla tej rozmowy')).toBeTruthy();
     });
+
+    it('a local pause shows "Ochrona wstrzymana" in yellow, not the green state (FF-13)', async () => {
+      const fixture = await started();
+      events.activeCall.set(CALL);
+      await fixture.whenStable();
+      expect($(fixture, '.panel.green')).toBeTruthy();
+
+      button(fixture, 'Wstrzymaj dla tej rozmowy').click();
+      await fixture.whenStable();
+      expect($(fixture, '.panel.yellow')).toBeTruthy();
+      expect(text(fixture)).toContain('Ochrona wstrzymana');
+      expect(text(fixture)).not.toContain('Anioł Stróż słucha.');
+
+      button(fixture, 'Wznów ochronę').click();
+      await fixture.whenStable();
+      expect($(fixture, '.panel.green')).toBeTruthy();
+    });
+
+    it('says when a decision could not be saved, until "Rozumiem" (FF-11)', async () => {
+      const fixture = await started();
+      expect(text(fixture)).not.toContain('Nie udało się zapisać decyzji.');
+
+      outbox.unsaved.set(true);
+      await fixture.whenStable();
+      expect($(fixture, '.unsaved[role="alert"]')).toBeTruthy();
+      expect(text(fixture)).toContain('Nie udało się zapisać decyzji.');
+
+      button(fixture, 'Rozumiem').click();
+      await fixture.whenStable();
+      expect($(fixture, '.unsaved')).toBeNull();
+    });
+
+    it('a failure still outranks the local pause (FE-06)', async () => {
+      const fixture = await started();
+      events.activeCall.set(CALL);
+      await fixture.whenStable();
+      button(fixture, 'Wstrzymaj dla tej rozmowy').click();
+      events.connection.set('closed');
+      await fixture.whenStable();
+      expect($(fixture, '.panel.red')).toBeTruthy();
+      expect(text(fixture)).toContain('Anioł Stróż jest offline');
+    });
   });
 
   describe('AlertView', () => {
@@ -178,6 +221,11 @@ describe('Senior', () => {
       expect($(fixture, '[aria-live="assertive"]')).toBeTruthy();
       expect(text(fixture)).toContain('Ta rozmowa może być oszustwem.');
       expect(text(fixture)).toContain('wykryte po słowach kluczowych');
+    });
+
+    it('shows the advice on the alert screen before any decision (FF-12)', async () => {
+      const fixture = await withAlert();
+      expect($(fixture, 'app-alert-view .advice')?.textContent).toContain('Odczekaj minutę, zanim do kogoś zadzwonisz.');
     });
 
     it('"Dlaczego?" shows the stage name, the quote and the time from the start of the call', async () => {
@@ -254,7 +302,10 @@ describe('Senior', () => {
     it('reads the alert aloud once with the Polish voice and again on "Powtórz"', async () => {
       const fixture = await withAlert();
       const said = synth!.spoken.filter((u) => u.text);
-      expect(said.map((u) => u.text)).toEqual(['Ta rozmowa może być oszustwem.']);
+      // shortText, then advice, as one utterance (backend template, FF-12).
+      expect(said.map((u) => u.text)).toEqual([
+        'Ta rozmowa może być oszustwem. Odczekaj minutę, zanim do kogoś zadzwonisz.',
+      ]);
       expect(said[0].voice?.lang).toBe('pl-PL');
 
       button(fixture, 'Powtórz').click();

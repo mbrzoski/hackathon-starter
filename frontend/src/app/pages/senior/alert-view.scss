@@ -7,6 +7,7 @@
 .head { display: grid; gap: 4px; }
 .eyebrow { margin: 0; display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.12em; }
 .text { margin: 0; font-size: clamp(30px, 5vmin, 56px); line-height: 1.15; font-weight: 800; }
+.advice { margin: 0; font-size: clamp(28px, 3.5vmin, 40px); line-height: 1.2; font-weight: 700; }
 .source { margin: 0; opacity: 0.95; }
 .tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .why { font: inherit; font-size: 28px; font-weight: 700; min-height: 64px; padding: 0 24px; border-radius: 14px;

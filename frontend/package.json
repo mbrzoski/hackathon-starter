@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "generate:api": "node scripts/generate-api.mjs",
-    "start": "npm run generate:api && (ng serve -c senior & ng serve -c listen & ng serve -c family & wait)",
+    "start": "npm run generate:api && node scripts/start-all.mjs",
     "start:senior": "npm run generate:api && ng serve -c senior",
     "start:listen": "npm run generate:api && ng serve -c listen",
     "start:family": "npm run generate:api && ng serve -c family",
