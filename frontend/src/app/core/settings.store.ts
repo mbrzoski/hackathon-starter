@@ -12,4 +12,6 @@ export interface TrustedContact {
 @Injectable({ providedIn: 'root' })
 export class SettingsStore {
   readonly firstContact = signal<TrustedContact | null>(null);
+  /** The senior as the family calls them ("Mama") and their number, for the family panel's call link. */
+  readonly senior = signal<TrustedContact | null>(null);
 }

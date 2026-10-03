@@ -1,16 +1,18 @@
 import { Component } from '@angular/core';
 import { Icon } from '../../shared/icon';
 import { ModeBadge } from '../../shared/mode-badge';
+import { SystemStatusBar } from '../../shared/system-status-bar';
 
 /** Placeholder: the route and its /ws/events role exist, the screen comes in its own task. */
 @Component({
   selector: 'app-setup',
-  imports: [Icon, ModeBadge],
+  imports: [Icon, ModeBadge, SystemStatusBar],
   template: `
     <header class="top">
       <div class="brand"><span class="logo"><app-icon name="shield" [size]="24" /></span><strong>Anioł Stróż</strong></div>
       <app-mode-badge />
     </header>
+    <app-system-status-bar />
     <main class="card">
       <h1>Ustawienia</h1>
       <p>Zgody, zaufane kontakty, czułość i czas przechowywania. Ekran powstanie w zadaniu ustawień (GET/PUT /api/settings).</p>

@@ -11,7 +11,8 @@ import { ModeBadge } from '../../shared/mode-badge';
 import { injectNow } from '../../shared/time';
 import { AlertView } from './alert-view';
 import { DecisionOutcome } from './decision-outcome';
-import { STATUS_VIEW, StatusPanel } from './status-panel';
+import { STATUS_VIEW } from '../../shared/status-view';
+import { StatusPanel } from './status-panel';
 
 const ALERTING_LEVELS: ReadonlySet<RiskLevel> = new Set([RiskLevel.medium, RiskLevel.high]);
 const ENDED_NOTICE_MS = 6000;

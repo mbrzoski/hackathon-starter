@@ -1,0 +1,40 @@
+<article class="card" [class.high]="alert().level === 'high'">
+  <header class="head">
+    <app-risk-level-chip [level]="alert().level" />
+    <span class="time">{{ time() }}</span>
+    <span class="tag">{{ alert().mode }}</span>
+    <span class="tag">{{ source() }}</span>
+  </header>
+
+  <h2>{{ alert().shortText }}</h2>
+
+  @if (seniorText(); as text) {
+    <p class="choice" role="status">{{ text }} · {{ clock(seniorDecision()!.at) }}</p>
+  }
+  @if (familyText(); as text) {
+    <p class="choice family">{{ text }} · {{ clock(familyDecision()!.at) }}</p>
+  }
+
+  <div class="cols">
+    <section>
+      <h3>Etapy</h3>
+      <app-stage-timeline
+        [alert]="alert()"
+        [segments]="segments()"
+        [ignored]="ignored()"
+        [canIgnore]="!familyDecision()"
+        (toggle)="toggle($event)" />
+    </section>
+    @if (segments().length) {
+      <section>
+        <h3>Fragment rozmowy</h3>
+        <app-transcript-excerpt [alert]="alert()" [segments]="segments()" />
+      </section>
+    }
+  </div>
+
+  <app-decision-bar [senior]="settings.senior()" [disabled]="!!familyDecision() || pending()" (decide)="decide($event)" />
+  @if (pending()) {
+    <p class="note" role="status">Zapisuję decyzję…</p>
+  }
+</article>
