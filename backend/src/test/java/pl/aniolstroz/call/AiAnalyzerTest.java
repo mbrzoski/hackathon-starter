@@ -61,6 +61,8 @@ class AiAnalyzerTest {
 
     private final List<EventEnvelope> events = new CopyOnWriteArrayList<>();
     private final BlockingQueue<ClassifierResult> audited = new LinkedBlockingQueue<>();
+    private final List<AiCallReport> reports = new CopyOnWriteArrayList<>();
+    private volatile boolean observerFailsOnce;
     private final List<CallSnapshot> snapshots = new CopyOnWriteArrayList<>();
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
     private Function<CallSnapshot, ClassifierResult> script = s -> ok(s, List.of());
@@ -82,7 +84,14 @@ class AiAnalyzerTest {
             snapshots.add(snapshot);
             return script.apply(snapshot);
         };
-        analyzer.set(new AiAnalyzer(calls, classifier, bus, CLOCK, executor, audited::add));
+        analyzer.set(new AiAnalyzer(calls, classifier, bus, CLOCK, executor, report -> {
+            reports.add(report);
+            audited.add(report.result());
+            if (observerFailsOnce) {
+                observerFailsOnce = false;
+                throw new IllegalStateException("audit down");
+            }
+        }));
         call = calls.start(Mode.SCRIPTED, "scenario-x");
     }
 
@@ -349,6 +358,89 @@ class AiAnalyzerTest {
 
         assertThat(call.hits()).extracting(StageHit::source).containsOnly(HitSource.KEYWORDS);
         assertThat(alerts()).singleElement().satisfies(a -> assertThat(a.triggeredBy()).isEqualTo(TriggeredBy.KEYWORDS));
+    }
+
+    @Test
+    void everyResultIsReportedWithTheCallsModeAndTheLevelBeforeAndAfter() throws Exception {
+        script = s -> ok(s, s.segments().size() == 1 ? List.of()
+                : List.of(llm(StageId.MONEY_REQUEST, "s2", "zabrać z konta wszystkie oszczędności", SpeakerRole.CALLER)));
+
+        say("Mówi policja.");
+        say(MONEY_TEXT);
+
+        assertThat(reports).hasSize(2);
+        AiCallReport first = reports.get(0);
+        assertThat(first.callId()).isEqualTo(call.callId());
+        assertThat(first.mode()).isEqualTo(Mode.SCRIPTED);
+        assertThat(first.levelBefore()).isEqualTo(RiskLevel.LOW);
+        assertThat(first.levelAfter()).isEqualTo(RiskLevel.LOW);
+        AiCallReport second = reports.get(1);
+        assertThat(second.levelBefore()).isEqualTo(RiskLevel.LOW);
+        assertThat(second.levelAfter()).isEqualTo(RiskLevel.HIGH);
+        assertThat(second.result().hits()).singleElement().satisfies(h -> assertThat(h.validated()).isTrue());
+    }
+
+    @Test
+    void theReportCarriesTheKeywordHitsOfTheSameSegmentsOnly() throws Exception {
+        script = s -> new ClassifierResult("s2-s2", "fake-model", "low", "{}", List.of(),
+                new ClassifierResult.Usage(1, 0, 1), 5, "end_turn", null);
+
+        say("Mówi policja.");
+        say("Nikomu nie mów o tym.");
+
+        assertThat(reports.get(1).keywordHits()).extracting(StageHit::stage).containsExactly(StageId.SECRECY_DEMAND);
+        assertThat(reports.get(1).keywordHits()).allSatisfy(h -> {
+            assertThat(h.source()).isEqualTo(HitSource.KEYWORDS);
+            assertThat(h.segId()).isEqualTo("s2");
+        });
+    }
+
+    @Test
+    void failedResultsAreReportedToo() throws Exception {
+        script = s -> failed(s, ClassifierError.TIMEOUT);
+
+        say(HARMLESS_TEXT);
+
+        assertThat(reports).singleElement()
+                .satisfies(r -> assertThat(r.result().error()).isEqualTo(ClassifierError.TIMEOUT));
+    }
+
+    @Test
+    void aResultThatArrivesAfterTheCallEndedIsStillReportedWithTheLastKnownLevel() throws Exception {
+        CountDownLatch started = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        script = s -> {
+            started.countDown();
+            try {
+                release.await(WAIT_SECONDS, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return ok(s, List.of());
+        };
+        calls.addSegment(new TranscriptSegment(call.callId(), "x", 0, 0, "Mówi policja.", true, SpeakerLabel.B, null));
+        assertThat(started.await(WAIT_SECONDS, TimeUnit.SECONDS)).isTrue();
+
+        calls.end();
+        release.countDown();
+        audited.poll(WAIT_SECONDS, TimeUnit.SECONDS);
+
+        assertThat(reports).singleElement().satisfies(r -> {
+            assertThat(r.callId()).isEqualTo(call.callId());
+            assertThat(r.mode()).isEqualTo(Mode.SCRIPTED);
+            assertThat(r.levelBefore()).isEqualTo(RiskLevel.LOW);
+            assertThat(r.levelAfter()).isEqualTo(RiskLevel.LOW);
+        });
+    }
+
+    @Test
+    void aFailingObserverDoesNotStopLaterClassifications() throws Exception {
+        observerFailsOnce = true;
+
+        say(HARMLESS_TEXT);
+        say(HARMLESS_TEXT);
+
+        assertThat(reports).hasSize(2);
     }
 
     @Test

@@ -9,6 +9,8 @@ spring:
   jackson: # CON-04: camelCase fields, enums by name (Jackson defaults)
     serialization:
       write-dates-as-timestamps: false
+    generator:
+      write-bigdecimal-as-plain: true # costs such as 0.000012 stay plain numbers (OBS-04)
     deserialization:
       fail-on-unknown-properties: true
 

@@ -286,6 +286,21 @@ class CallServiceRiskTest {
     }
 
     @Test
+    void theHighestLevelOfACallIsRememberedEvenWhenTheLevelDropsLater() {
+        reachHigh();
+
+        service.ignoreStages(call.callId(), Set.of(StageId.MONEY_REQUEST, StageId.SECRECY_DEMAND));
+
+        assertThat(call.level()).isEqualTo(RiskLevel.LOW);
+        assertThat(call.maxLevel()).isEqualTo(RiskLevel.HIGH);
+    }
+
+    @Test
+    void aNewCallStartsWithMaxLevelNone() {
+        assertThat(call.maxLevel()).isEqualTo(RiskLevel.NONE);
+    }
+
+    @Test
     void ignoringStagesCanDropTheLevelAllTheWayToLow() {
         reachHigh();
 

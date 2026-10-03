@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +17,8 @@ import pl.aniolstroz.ai.ClassifierResult;
 import pl.aniolstroz.ai.StageClassifier;
 import pl.aniolstroz.contracts.ComponentState;
 import pl.aniolstroz.contracts.EventEnvelope.SystemStatusEvent;
+import pl.aniolstroz.contracts.HitSource;
+import pl.aniolstroz.contracts.RiskLevel;
 import pl.aniolstroz.contracts.StageHit;
 import pl.aniolstroz.contracts.SystemStatus;
 import pl.aniolstroz.events.EventBus;
@@ -28,6 +29,10 @@ import pl.aniolstroz.risk.QuoteValidator;
  * keeps at most one classifier call in flight (AI-02). Each answer is checked by {@link QuoteValidator} (AI-08) and only
  * the valid hits reach the call, as source llm; invalid hits stay in the result for the audit. The AI package itself
  * knows nothing of risk or calls (BE-05): this class is the seam.
+ *
+ * <p>Every finished call, answered or failed, is reported to the {@link AiCallObserver} (the audit, OBS-03) with the
+ * risk level before and after and the keyword hits for the same segments. A result that arrives after the call ended
+ * is reported too, but its hits are dropped.
  *
  * <p>Failures are never silent (rule 7): after three failed calls in a row {@code system.status} for {@code ai} turns
  * degraded, and the first success restores ok (OBS-02). The keyword layer works regardless. Only numbers are logged
@@ -44,80 +49,124 @@ public class AiAnalyzer {
     private final EventBus eventBus;
     private final Clock clock;
     private final ExecutorService executor;
-    /** Receives every finished result. The audit (BE-07) will plug in here. */
-    private final Consumer<ClassifierResult> resultListener;
+    private final AiCallObserver observer;
 
     private final ReentrantLock lock = new ReentrantLock();
     private CallClassificationQueue queue;
-    private String queueCallId;
+    private CallState queueCall;
     private int consecutiveFailures;
     private boolean degraded;
 
     @Autowired
     public AiAnalyzer(CallService calls, StageClassifier classifier, EventBus eventBus, Clock clock,
-            @Qualifier("aiExecutor") ExecutorService executor) {
-        this(calls, classifier, eventBus, clock, executor, result -> { });
-    }
-
-    public AiAnalyzer(CallService calls, StageClassifier classifier, EventBus eventBus, Clock clock,
-            ExecutorService executor, Consumer<ClassifierResult> resultListener) {
+            @Qualifier("aiExecutor") ExecutorService executor, AiCallObserver observer) {
         this.calls = calls;
         this.classifier = classifier;
         this.eventBus = eventBus;
         this.clock = clock;
         this.executor = executor;
-        this.resultListener = resultListener;
+        this.observer = observer;
     }
 
     @EventListener
     public void onFinalSegment(FinalSegmentAdded event) {
-        queueFor(event.callId()).segmentAdded();
+        queueFor(event.callId()).ifPresent(CallClassificationQueue::segmentAdded);
     }
 
     /** One queue per call; a new call gets a fresh one, the old one finishes by itself. */
-    private CallClassificationQueue queueFor(String callId) {
+    private Optional<CallClassificationQueue> queueFor(String callId) {
         lock.lock();
         try {
-            if (queue == null || !callId.equals(queueCallId)) {
-                queueCallId = callId;
-                queue = new CallClassificationQueue(classifier, () -> snapshot(callId),
-                        result -> handle(callId, result), executor);
+            if (queue == null || queueCall == null || !callId.equals(queueCall.callId())) {
+                Optional<CallState> call = activeCall(callId);
+                if (call.isEmpty()) {
+                    return Optional.empty();
+                }
+                CallState state = call.get();
+                queueCall = state;
+                queue = new CallClassificationQueue(classifier, () -> snapshot(state),
+                        result -> handle(state, result), executor);
             }
-            return queue;
+            return Optional.of(queue);
         } finally {
             lock.unlock();
         }
     }
 
-    private Optional<CallSnapshot> snapshot(String callId) {
-        return activeCall(callId).map(call -> new CallSnapshot(call.callId(), call.mode(), call.scenarioId(),
-                call.transcript()));
+    private Optional<CallSnapshot> snapshot(CallState call) {
+        return activeCall(call.callId()).map(c -> new CallSnapshot(c.callId(), c.mode(), c.scenarioId(), c.transcript()));
     }
 
     private Optional<CallState> activeCall(String callId) {
         return calls.active().filter(call -> call.callId().equals(callId));
     }
 
-    private void handle(String callId, ClassifierResult result) {
+    private void handle(CallState call, ClassifierResult result) {
         ClassifierResult finished = result;
         int valid = 0;
+        RiskLevel before = call.level();
         try {
-            Optional<CallState> call = activeCall(callId);
-            if (call.isPresent()) {
+            if (activeCall(call.callId()).isPresent()) {
                 if (result.failed()) {
-                    recordFailure(call.get());
+                    recordFailure(call);
                 } else {
-                    List<StageHit> checked = QuoteValidator.validate(result.hits(), call.get().transcript());
+                    List<StageHit> checked = QuoteValidator.validate(result.hits(), call.transcript());
                     finished = result.withHits(checked);
                     List<StageHit> accepted = checked.stream().filter(StageHit::validated).toList();
                     valid = accepted.size();
-                    recordSuccess(call.get());
-                    addHits(callId, accepted);
+                    recordSuccess(call);
+                    addHits(call.callId(), accepted);
                 }
             }
-            logResult(callId, finished, valid);
+            logResult(call.callId(), finished, valid);
         } finally {
-            resultListener.accept(finished);
+            report(new AiCallReport(call.callId(), call.mode(), finished, before, call.level(),
+                    keywordHitsIn(call, finished.segmentRange())));
+        }
+    }
+
+    /** The observer must not break the queue: whatever it throws is only logged, by type. */
+    private void report(AiCallReport report) {
+        try {
+            observer.onAiCall(report);
+        } catch (RuntimeException e) {
+            log.error("AI call observer failed: {}", e.getClass().getName());
+        }
+    }
+
+    /** The keyword hits of the segments the model saw, for a side-by-side comparison in the audit. */
+    private static List<StageHit> keywordHitsIn(CallState call, String segmentRange) {
+        int[] range = parseRange(segmentRange);
+        if (range == null) {
+            return List.of();
+        }
+        return call.hits().stream()
+                .filter(hit -> hit.source() == HitSource.KEYWORDS)
+                .filter(hit -> {
+                    int n = segmentNumber(hit.segId());
+                    return n >= range[0] && n <= range[1];
+                })
+                .toList();
+    }
+
+    private static int[] parseRange(String range) {
+        if (range == null) {
+            return null;
+        }
+        String[] parts = range.split("-");
+        if (parts.length != 2) {
+            return null;
+        }
+        int from = segmentNumber(parts[0]);
+        int to = segmentNumber(parts[1]);
+        return from < 0 || to < 0 ? null : new int[] {from, to};
+    }
+
+    private static int segmentNumber(String segId) {
+        try {
+            return segId.startsWith("s") ? Integer.parseInt(segId.substring(1)) : -1;
+        } catch (NumberFormatException e) {
+            return -1;
         }
     }
 
