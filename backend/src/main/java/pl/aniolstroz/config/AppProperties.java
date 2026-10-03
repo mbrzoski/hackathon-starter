@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.validation.annotation.Validated;
@@ -17,10 +18,19 @@ import pl.aniolstroz.contracts.Mode;
 @ConfigurationProperties(prefix = "app")
 public record AppProperties(
         @NotNull @DefaultValue("SCRIPTED") Mode mode,
-        @Valid @NotNull @DefaultValue Claude claude) {
+        @Valid @NotNull @DefaultValue Claude claude,
+        @Valid @NotNull @DefaultValue Events events) {
 
     public record Claude(
             @NotBlank @DefaultValue("claude-sonnet-5-5") String model,
             @Positive @DefaultValue("2500") long timeoutMs) {
+    }
+
+    /** /ws/events settings. Empty {@code allowedOrigins} means same origin only (API-04). */
+    public record Events(
+            @NotNull @DefaultValue List<String> allowedOrigins,
+            @Positive @DefaultValue("5000") int sendTimeLimitMs,
+            @Positive @DefaultValue("262144") int bufferSizeLimitBytes,
+            @Positive @DefaultValue("10000") long heartbeatIntervalMs) {
     }
 }

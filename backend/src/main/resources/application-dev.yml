@@ -6,3 +6,9 @@ management:
   endpoint:
     health:
       show-details: always
+
+app:
+  events:
+    allowed-origins: # API-04: only localhost in dev
+      - http://localhost:4200
+      - http://127.0.0.1:4200

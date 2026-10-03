@@ -2,6 +2,8 @@ package pl.aniolstroz.contracts;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
 
 /**
@@ -24,24 +26,24 @@ public sealed interface EventEnvelope {
 
     Instant at();
 
-    record TranscriptSegmentEvent(Mode mode, Instant at, TranscriptSegment payload) implements EventEnvelope {
+    record TranscriptSegmentEvent(@NotNull Mode mode, @NotNull Instant at, @NotNull @Valid TranscriptSegment payload) implements EventEnvelope {
     }
 
-    record RiskUpdateEvent(Mode mode, Instant at, RiskUpdate payload) implements EventEnvelope {
+    record RiskUpdateEvent(@NotNull Mode mode, @NotNull Instant at, @NotNull @Valid RiskUpdate payload) implements EventEnvelope {
     }
 
-    record AlertCreatedEvent(Mode mode, Instant at, Alert payload) implements EventEnvelope {
+    record AlertCreatedEvent(@NotNull Mode mode, @NotNull Instant at, @NotNull @Valid Alert payload) implements EventEnvelope {
     }
 
-    record AlertDecisionEvent(Mode mode, Instant at, Decision payload) implements EventEnvelope {
+    record AlertDecisionEvent(@NotNull Mode mode, @NotNull Instant at, @NotNull @Valid Decision payload) implements EventEnvelope {
     }
 
-    record SystemStatusEvent(Mode mode, Instant at, SystemStatus payload) implements EventEnvelope {
+    record SystemStatusEvent(@NotNull Mode mode, @NotNull Instant at, @NotNull @Valid SystemStatus payload) implements EventEnvelope {
     }
 
-    record CallStartedEvent(Mode mode, Instant at, CallStarted payload) implements EventEnvelope {
+    record CallStartedEvent(@NotNull Mode mode, @NotNull Instant at, @NotNull @Valid CallStarted payload) implements EventEnvelope {
     }
 
-    record CallEndedEvent(Mode mode, Instant at, CallEnded payload) implements EventEnvelope {
+    record CallEndedEvent(@NotNull Mode mode, @NotNull Instant at, @NotNull @Valid CallEnded payload) implements EventEnvelope {
     }
 }
