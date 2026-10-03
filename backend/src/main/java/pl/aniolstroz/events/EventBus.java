@@ -178,6 +178,12 @@ public class EventBus {
         }
     }
 
+    /** The last published status of a component, if any. */
+    public java.util.Optional<SystemStatus> lastStatus(Component component) {
+        SystemStatusEvent event = statuses.get(component);
+        return java.util.Optional.ofNullable(event).map(SystemStatusEvent::payload);
+    }
+
     /** Single place for per-role filtering. For now every role sees every event. */
     private boolean visibleTo(ClientRole role, EventEnvelope event) {
         return true;

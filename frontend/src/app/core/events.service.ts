@@ -62,6 +62,11 @@ const ROUTE_ROLES: Record<string, EventsRole> = {
 
 const INITIAL_BACKOFF_MS = 1000;
 const MAX_BACKOFF_MS = 10_000;
+/**
+ * The backend sends system.status at least every 10 s. Nothing for this long means a half-open connection (Wi-Fi
+ * gone without a close): the screen goes offline and reconnects instead of showing "protected" (FF-04).
+ */
+export const SILENCE_LIMIT_MS = 25_000;
 
 /**
  * The only client of /ws/events. Every message is validated against EventEnvelope from the contract (FE-13)
@@ -118,6 +123,7 @@ export class EventsService {
   private role: EventsRole | null = null;
   private backoffMs = INITIAL_BACKOFF_MS;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private silenceTimer: ReturnType<typeof setTimeout> | null = null;
   /** startedAt of the backend this client last talked to. */
   private knownBackendStart: string | null = null;
 
@@ -147,6 +153,7 @@ export class EventsService {
   disconnect(): void {
     this.role = null;
     this.clearReconnect();
+    this.clearSilence();
     const socket = this.socket;
     this.socket = null;
     socket?.close();
@@ -166,13 +173,18 @@ export class EventsService {
     socket.onopen = () => {
       this.backoffMs = INITIAL_BACKOFF_MS;
       this._connection.set('open');
+      this.watchSilence(socket);
       void this.checkBackendRestart(this._activeCall()?.callId ?? null);
     };
-    socket.onmessage = (msg: MessageEvent) => this.receive(msg.data);
+    socket.onmessage = (msg: MessageEvent) => {
+      this.watchSilence(socket);
+      this.receive(msg.data);
+    };
     socket.onclose = () => {
       if (this.socket !== socket) {
         return;
       }
+      this.clearSilence();
       this.socket = null;
       this._connection.set('closed');
       this.scheduleReconnect();
@@ -200,6 +212,28 @@ export class EventsService {
         ? { ...call, endedAt: new Date().toISOString(), interrupted: true }
         : call,
     );
+  }
+
+  /** (Re)starts the silence watch of the open socket; it gives up on the socket when nothing arrives in time. */
+  private watchSilence(socket: WebSocket): void {
+    this.clearSilence();
+    this.silenceTimer = setTimeout(() => {
+      this.silenceTimer = null;
+      if (this.socket !== socket) {
+        return;
+      }
+      this.socket = null;
+      socket.close();
+      this._connection.set('closed');
+      this.scheduleReconnect();
+    }, SILENCE_LIMIT_MS);
+  }
+
+  private clearSilence(): void {
+    if (this.silenceTimer) {
+      clearTimeout(this.silenceTimer);
+      this.silenceTimer = null;
+    }
   }
 
   private scheduleReconnect(): void {

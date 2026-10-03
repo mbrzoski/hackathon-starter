@@ -21,6 +21,7 @@ import pl.aniolstroz.contracts.EventEnvelope.CallEndedEvent;
 import pl.aniolstroz.contracts.EventEnvelope.CallStartedEvent;
 import pl.aniolstroz.contracts.EventEnvelope.SystemStatusEvent;
 import pl.aniolstroz.contracts.Mode;
+import pl.aniolstroz.contracts.SystemStatus;
 
 /**
  * Rule 6: every screen shows the real mode. The heartbeat belongs to no call, so it must not announce the mode of the
@@ -84,5 +85,31 @@ class HeartbeatModeTest {
         bus.publish(new CallStartedEvent(Mode.REPLAY, NOW, new CallStarted("call-2")));
 
         assertThat(bus.modeOrDefault(Mode.MOCK)).isEqualTo(Mode.REPLAY);
+    }
+
+    private SystemStatus lastBackendStatus(Instant at) {
+        var beat = new HeartbeatService(bus, mockedProperties(), Clock.fixed(at, ZoneOffset.UTC));
+        beat.beat();
+        return ((SystemStatusEvent) published.get(published.size() - 1)).payload();
+    }
+
+    private static AppProperties mockedProperties() {
+        AppProperties properties = mock(AppProperties.class);
+        when(properties.events()).thenReturn(new AppProperties.Events(List.of(), 1000, 1000, 1000));
+        when(properties.mode()).thenReturn(Mode.SCRIPTED);
+        return properties;
+    }
+
+    @Test
+    void aReportedBackendFailureIsNotOverwrittenByTheNextBeat() {
+        bus.publish(new SystemStatusEvent(Mode.SCRIPTED, NOW, new SystemStatus(pl.aniolstroz.contracts.Component.BACKEND,
+                pl.aniolstroz.contracts.ComponentState.DEGRADED, "Nie udało się zapisać alertu.", NOW)));
+
+        SystemStatus soon = lastBackendStatus(NOW.plusSeconds(10));
+        assertThat(soon.state()).isEqualTo(pl.aniolstroz.contracts.ComponentState.DEGRADED);
+        assertThat(soon.message()).isEqualTo("Nie udało się zapisać alertu.");
+
+        SystemStatus later = lastBackendStatus(NOW.plus(HeartbeatService.FAILURE_HOLD).plusSeconds(1));
+        assertThat(later.state()).isEqualTo(pl.aniolstroz.contracts.ComponentState.OK);
     }
 }

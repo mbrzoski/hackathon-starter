@@ -338,6 +338,22 @@ describe('EventsService', () => {
     expect(sockets.length).toBe(8);
   });
 
+  it('goes offline and reconnects when nothing arrives for 25 s on an open socket (half-open, FF-04)', () => {
+    vi.useFakeTimers();
+    const before = sockets.length;
+    lastSocket().serverOpen(); // restarts the watch under fake timers
+    vi.advanceTimersByTime(20_000);
+    lastSocket().serverSend(event('system.status', { component: 'backend', state: 'ok', message: 'ok', at: AT }));
+    vi.advanceTimersByTime(20_000);
+    expect(service.connection()).toBe('open');
+
+    vi.advanceTimersByTime(5_001); // 25 s since the last message
+    expect(service.connection()).toBe('closed');
+    expect(sockets[sockets.length - 1].closed).toBe(true);
+    vi.advanceTimersByTime(1_000);
+    expect(sockets.length).toBe(before + 1);
+  });
+
   it('does not reconnect after an explicit disconnect', () => {
     vi.useFakeTimers();
     const count = sockets.length;
