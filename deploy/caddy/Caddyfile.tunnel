@@ -1,0 +1,15 @@
+# Variant (b), plan B: an HTTPS tunnel (Cloudflare Tunnel) terminates TLS and forwards plain HTTP to Caddy.
+# The tunnel (cloudflared) runs next to Caddy, so its X-Forwarded-Proto: https is trusted and passed on: the backend
+# then sees the public https origin and the WebSocket same-origin check passes.
+{
+	auto_https off
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
+
+import aniol.caddy
+
+:{$HTTP_PORT:80} {
+	import aniol
+}

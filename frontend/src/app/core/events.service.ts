@@ -19,7 +19,7 @@ import {
   TranscriptSegment,
   TranscriptSegmentEvent,
 } from '../api/model/models';
-import { CONTRACT_SCHEMAS_URL, EventValidator, createEventValidator } from './event-validator';
+import { createEventValidator } from './event-validator';
 
 export type EventsRole = 'senior' | 'family' | 'audit';
 export type ConnectionState = 'connecting' | 'open' | 'closed';
@@ -38,18 +38,6 @@ export interface ActiveCall {
 export const WEB_SOCKET_FACTORY = new InjectionToken<(url: string) => WebSocket>('WEB_SOCKET_FACTORY', {
   providedIn: 'root',
   factory: () => (url: string) => new WebSocket(url),
-});
-
-/** Loads the contract schemas copied by generate:api; replaced in tests. */
-export const CONTRACT_LOADER = new InjectionToken<() => Promise<{ $id: string }>>('CONTRACT_LOADER', {
-  providedIn: 'root',
-  factory: () => async () => {
-    const response = await fetch(CONTRACT_SCHEMAS_URL);
-    if (!response.ok) {
-      throw new Error(`Cannot load ${CONTRACT_SCHEMAS_URL} (${response.status})`);
-    }
-    return response.json();
-  },
 });
 
 /** Start time of the running backend (GET /api/status); a new value means it restarted. Replaced in tests. */
@@ -79,7 +67,6 @@ const MAX_BACKOFF_MS = 10_000;
 @Injectable({ providedIn: 'root' })
 export class EventsService {
   private readonly createSocket = inject(WEB_SOCKET_FACTORY);
-  private readonly loadContract = inject(CONTRACT_LOADER);
   private readonly backendStartedAt = inject(BACKEND_STARTED_AT);
   private readonly router = inject(Router);
 
@@ -102,7 +89,7 @@ export class EventsService {
   readonly decisions = this._decisions.asReadonly();
   readonly online = computed(() => this._connection() === 'open');
 
-  private validator: EventValidator | null = null;
+  private readonly validator = createEventValidator();
   private socket: WebSocket | null = null;
   private role: EventsRole | null = null;
   private backoffMs = INITIAL_BACKOFF_MS;
@@ -116,32 +103,21 @@ export class EventsService {
       .subscribe((e) => {
         const role = roleForUrl(e.urlAfterRedirects);
         if (role) {
-          void this.connect(role);
+          this.connect(role);
         }
       });
     inject(DestroyRef).onDestroy(() => this.disconnect());
   }
 
   /** Connects as the given role; a no-op if already connected (or connecting) with it. */
-  async connect(role: EventsRole): Promise<void> {
+  connect(role: EventsRole): void {
     if (this.role === role && this.socket) {
       return;
     }
     this.disconnect();
     this.role = role;
     this.backoffMs = INITIAL_BACKOFF_MS;
-    if (!this.validator) {
-      try {
-        this.validator = createEventValidator(await this.loadContract());
-      } catch (err) {
-        // Without the schema nothing can be validated, so nothing is accepted (FE-13).
-        console.error('Cannot build the /ws/events validator', err);
-        return;
-      }
-    }
-    if (this.role === role) {
-      this.open();
-    }
+    this.open();
   }
 
   disconnect(): void {
@@ -226,7 +202,7 @@ export class EventsService {
       console.warn('Rejected /ws/events message that is not JSON');
       return;
     }
-    if (this.validator?.(data)) {
+    if (this.validator(data)) {
       this.apply(data);
     }
   }

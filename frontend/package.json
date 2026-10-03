@@ -9,7 +9,9 @@
     "start:listen": "npm run generate:api && ng serve -c listen",
     "start:family": "npm run generate:api && ng serve -c family",
     "build": "npm run generate:api && ng build -c production,senior && ng build -c production,listen && ng build -c production,family",
-    "test": "npm run generate:api && ng test --watch=false"
+    "test": "npm run generate:api && ng test --watch=false",
+    "e2e": "node e2e/uc-01.mjs",
+    "e2e:demo": "node e2e/uc-01.mjs --base https://localhost"
   },
   "private": true,
   "packageManager": "npm@11.19.1",

@@ -1,9 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import contract from '../../../public/assets/contracts/openapi-schemas.json';
 import {
   BACKEND_STARTED_AT,
-  CONTRACT_LOADER,
   EventsService,
   WEB_SOCKET_FACTORY,
   eventsUrl,
@@ -68,7 +66,6 @@ describe('EventsService', () => {
             return s as unknown as WebSocket;
           },
         },
-        { provide: CONTRACT_LOADER, useValue: async () => contract },
         {
           provide: BACKEND_STARTED_AT,
           useValue: async () => {
@@ -79,7 +76,7 @@ describe('EventsService', () => {
       ],
     });
     service = TestBed.inject(EventsService);
-    await service.connect('family');
+    service.connect('family');
     lastSocket().serverOpen();
     await new Promise((r) => setTimeout(r, 0)); // first GET /api/status
   });

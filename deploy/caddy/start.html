@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Anioł Stróż · start</title>
+  <style>
+    body { margin: 0; font: 20px/1.45 system-ui, sans-serif; background: #f3f5f8; color: #15191f; }
+    main { max-width: 640px; margin: 0 auto; padding: 24px 16px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    ol { padding-left: 24px; }
+    li { margin: 0 0 16px; }
+    a.button { display: block; margin: 8px 0; padding: 16px; border-radius: 12px; background: #0b4aa2; color: #fff;
+      text-align: center; font-weight: 700; text-decoration: none; }
+    a.secondary { background: #fff; color: #0b4aa2; border: 2px solid #0b4aa2; }
+    small { color: #4d5663; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Anioł Stróż: demo</h1>
+    <p>Na każdym urządzeniu wystarczy to zrobić raz.</p>
+    <ol>
+      <li>
+        <strong>Pobierz certyfikat</strong>
+        <a class="button secondary" href="/ca.crt">Pobierz ca.crt</a>
+        <small>Android: Ustawienia → wyszukaj „Zainstaluj certyfikat” → Certyfikat CA → wybierz ca.crt.
+          iPhone: zainstaluj profil, potem Ogólne → To urządzenie → Ustawienia zaufania certyfikatów → włącz.</small>
+      </li>
+      <li>
+        <strong>Otwórz aplikację tego urządzenia</strong>
+        <a class="button" href="/go/senior">Senior (telefon seniora)</a>
+        <a class="button" href="/go/listen">Nasłuch (urządzenie przy telefonie)</a>
+        <a class="button" href="/go/family">Panel rodziny</a>
+      </li>
+    </ol>
+    <p><small>Jeśli przeglądarka ostrzega o certyfikacie, wróć do kroku 1.</small></p>
+  </main>
+</body>
+</html>
