@@ -29,9 +29,10 @@ const EXAMPLE_SCHEMA = `{
       <button type="button" (click)="sendChat()" [disabled]="!chatMessage.trim() || chat.loading()">Send</button>
       @if (chat.loading()) {
         <app-loading />
-      } @else if (chat.error(); as message) {
-        <app-error-banner [message]="message" />
-      } @else if (chat.data(); as r) {
+      } @else if (chat.error()) {
+        <app-error-banner [message]="chat.error()!" />
+      } @else if (chat.data()) {
+        @let r = chat.data()!;
         <pre>{{ r.text }}</pre>
         <small>{{ r.model }} · {{ r.usage.inputTokens }} in / {{ r.usage.outputTokens }} out</small>
       } @else {
@@ -44,9 +45,10 @@ const EXAMPLE_SCHEMA = `{
       <button type="button" (click)="sendToolChat()" [disabled]="!toolMessage.trim() || tool.loading()">Run</button>
       @if (tool.loading()) {
         <app-loading />
-      } @else if (tool.error(); as message) {
-        <app-error-banner [message]="message" />
-      } @else if (tool.data(); as r) {
+      } @else if (tool.error()) {
+        <app-error-banner [message]="tool.error()!" />
+      } @else if (tool.data()) {
+        @let r = tool.data()!;
         <pre>{{ r.text }}</pre>
         @for (step of r.steps; track $index) {
           <small>{{ step.error ? '✗' : '✓' }} {{ step.tool }} → {{ step.output }}</small><br />
@@ -70,10 +72,10 @@ const EXAMPLE_SCHEMA = `{
       </button>
       @if (structured.loading()) {
         <app-loading />
-      } @else if (structured.error(); as message) {
-        <app-error-banner [message]="message" />
-      } @else if (structured.data(); as r) {
-        <pre>{{ pretty(r.data) }}</pre>
+      } @else if (structured.error()) {
+        <app-error-banner [message]="structured.error()!" />
+      } @else if (structured.data()) {
+        <pre>{{ pretty(structured.data()!.data) }}</pre>
       } @else {
         <app-empty-state message="No output yet." />
       }

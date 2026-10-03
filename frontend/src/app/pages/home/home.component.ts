@@ -15,9 +15,10 @@ import { LoadingComponent } from '../../shared/loading.component';
     <h1>Dashboard</h1>
     @if (health.loading()) {
       <app-loading label="Checking backend…" />
-    } @else if (health.error(); as message) {
-      <app-error-banner [message]="message" [retryable]="true" (retry)="refresh()" />
-    } @else if (health.data(); as h) {
+    } @else if (health.error()) {
+      <app-error-banner [message]="health.error()!" [retryable]="true" (retry)="refresh()" />
+    } @else if (health.data()) {
+      @let h = health.data()!;
       <div class="grid">
         <app-card title="Backend">
           <p class="big" [class.ok]="h.status === 'UP'">{{ h.status }}</p>
