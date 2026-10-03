@@ -115,6 +115,25 @@ describe('EventsService', () => {
     expect(service.systemStatus().stt?.state).toBe('down');
   });
 
+  it('keeps the mode of the running call when a system status of another mode arrives (rule 6)', () => {
+    const s = lastSocket();
+    s.serverSend(event('call.started', { callId: 'c1' }, 'LIVE'));
+    s.serverSend(event('system.status', { component: 'backend', state: 'ok', message: 'Backend działa.', at: AT }, 'SCRIPTED'));
+    expect(service.mode()).toBe('LIVE');
+
+    s.serverSend(event('transcript.segment', segment('s1', 'Dzień dobry'), 'LIVE'));
+    s.serverSend(event('system.status', { component: 'backend', state: 'ok', message: 'Backend działa.', at: AT }, 'SCRIPTED'));
+    expect(service.mode()).toBe('LIVE');
+  });
+
+  it('takes the mode of a system status again when no call is running', () => {
+    const s = lastSocket();
+    s.serverSend(event('call.started', { callId: 'c1' }, 'LIVE'));
+    s.serverSend(event('call.ended', { callId: 'c1', hadAlert: false }, 'LIVE'));
+    s.serverSend(event('system.status', { component: 'backend', state: 'ok', message: 'Backend działa.', at: AT }, 'SCRIPTED'));
+    expect(service.mode()).toBe('SCRIPTED');
+  });
+
   it('rejects invalid messages with a console warning', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const s = lastSocket();

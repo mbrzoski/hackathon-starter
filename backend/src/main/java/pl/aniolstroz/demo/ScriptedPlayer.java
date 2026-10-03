@@ -9,6 +9,7 @@ import pl.aniolstroz.call.CallService;
 import pl.aniolstroz.call.CallState;
 import pl.aniolstroz.ai.StageClassifier;
 import pl.aniolstroz.call.NoActiveCallException;
+import pl.aniolstroz.config.Trace;
 import pl.aniolstroz.contracts.Mode;
 import pl.aniolstroz.contracts.Scenario;
 import pl.aniolstroz.contracts.TranscriptSegment;
@@ -53,6 +54,8 @@ public class ScriptedPlayer {
         try {
             // SCRIPTED promises a real AI; with canned answers the call must say MOCK.
             CallState call = calls.start(classifier.isMock() ? Mode.MOCK : Mode.SCRIPTED, scenarioId);
+            Trace.flow("demo | scenario {} starts, speed {}x, {} segments, call={}, ai={}", scenarioId, speed,
+                    scenario.segments().size(), Trace.id(call.callId()), classifier.isMock() ? "canned answers (MOCK)" : "real model");
             playback = Thread.ofVirtual().name("scripted-player-" + scenarioId)
                     .unstarted(() -> play(call, scenario, speed));
             playback.start();

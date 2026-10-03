@@ -69,6 +69,25 @@ The senior device connects to `/ws/audio` and sends JSON text frames `{"type":"s
 
 The audio path never fails silently: if no sound arrives for 10 s (no frames, or only flat ones, as from a muted microphone) `system.status` `audio` goes `down`, and it returns to `ok` when sound comes back (`app.stt.silence.timeout-ms`, `app.stt.silence.check-interval-ms`); a connection that drops without `stop` ends the call and also sets `audio` to `down`. A pause is not silence.
 
+### Following a run in the logs
+
+Every step of the process leaves one line in the backend log (`docker compose -f deploy/docker-compose.yml logs -f backend`), with the call id shortened to eight characters so that one call can be followed with `grep`:
+
+| Prefix | Step |
+|---|---|
+| `http` | every request that reaches the backend: method, path, status, time, client address, origin, user agent (tells a phone from a laptop). No bodies, cookies or authorization headers. |
+| `events-ws` | clients of `/ws/events` coming and going. |
+| `audio-ws` | the `/ws/audio` session: connection, each control message, refusals with the close code, every 5 s the frames, bytes and loudest sample received (a peak near 0 is a muted microphone), silence, end of the call. |
+| `vosk` | model loading (path, size, time), recognizer created, every 5 s how recognition keeps up (a real-time factor above 1 means it cannot), partial and final results (length, words, confidence), finals without words. |
+| `stt` | the supervisor: recognizer started, failed, restart 1 to 3. |
+| `call` | call started and ended, keyword hits per segment. |
+| `event` | every event published to the clients (`transcript.segment`, `risk.update`, `alert.created`, `system.status`, ...), with the number of clients it reached. |
+| `claude` | the request to the model (model, effort, token limit, sizes) and its answer (`stopReason`, tokens in, from cache, out, latency). |
+| `ai` | the queue of model calls, and for each hit whether the quote check accepted it. |
+| `alerts`, `retention`, `demo` | decisions, what was kept or discarded when a call ended (DAT-01), scenario start. |
+
+Each line starts with its prefix and a bar, for example `vosk | final: 12 chars ...`. These lines hold numbers and states, never the words of a call and never audio. To see the words as well (what Vosk heard, the full request to Claude and its raw answer, the quotes of the hits), switch the content trace on, **only for synthetic or role-played data**: set `TRACE_CONTENT_LEVEL=DEBUG` in `.env` for the demo stack, or `LOGGING_LEVEL_PL_ANIOLSTROZ_TRACE_CONTENT=DEBUG` when starting the backend by hand. The audio bytes, API keys and settings never reach the log at any level.
+
 ### Trying it without a microphone: `SendWavTool`
 
 Plays a WAV file (PCM, 16 kHz, mono, 16-bit; other formats are rejected with a message) into `/ws/audio` as `start`, frames of 3200 bytes every 100 ms, then `stop`. JDK only. The transcript shows up on `/ws/events` and in the UIs.

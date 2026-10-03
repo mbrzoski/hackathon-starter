@@ -14,6 +14,13 @@ import pl.aniolstroz.contracts.ComponentState;
 class VoskModelHolderTest {
 
     @Test
+    void nativeStringsAreDecodedAsUtf8WhateverThePlatformEncodingIs(@TempDir Path dir) {
+        new VoskModelHolder(dir); // loading the class is what sets the property, before JNA is first used
+
+        assertThat(System.getProperty("jna.encoding")).isEqualTo("UTF-8");
+    }
+
+    @Test
     void missingModelDirectoryGivesAPolishMessage(@TempDir Path dir) {
         var holder = new VoskModelHolder(dir.resolve("no-such-model"));
 

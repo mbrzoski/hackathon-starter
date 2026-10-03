@@ -17,7 +17,10 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 import pl.aniolstroz.config.AppProperties;
+import pl.aniolstroz.config.Trace;
+import pl.aniolstroz.contracts.Alert;
 import pl.aniolstroz.contracts.Component;
+import pl.aniolstroz.contracts.ComponentState;
 import pl.aniolstroz.contracts.EventEnvelope;
 import pl.aniolstroz.contracts.EventEnvelope.AlertCreatedEvent;
 import pl.aniolstroz.contracts.EventEnvelope.AlertDecisionEvent;
@@ -25,12 +28,18 @@ import pl.aniolstroz.contracts.EventEnvelope.CallEndedEvent;
 import pl.aniolstroz.contracts.EventEnvelope.CallStartedEvent;
 import pl.aniolstroz.contracts.EventEnvelope.RiskUpdateEvent;
 import pl.aniolstroz.contracts.EventEnvelope.SystemStatusEvent;
+import pl.aniolstroz.contracts.EventEnvelope.TranscriptSegmentEvent;
+import pl.aniolstroz.contracts.Mode;
+import pl.aniolstroz.contracts.StageHit;
+import pl.aniolstroz.contracts.SystemStatus;
+import pl.aniolstroz.contracts.TranscriptSegment;
 
 /**
  * Fan-out of events to /ws/events clients (CC-02) and the state snapshot sent on connect (API-03).
  * The snapshot holds the latest status of each component and, while a call is active, that call with its alerts,
  * last risk update and decisions. Nothing of a call stays in it after {@code call.ended}.
- * Event payloads are never logged: they can contain transcript text.
+ * Event payloads are not logged whole: they can contain transcript text. {@link #publish} traces every event as one line
+ * of numbers and states; the words are in the content trace only, which is off by default ({@link Trace}).
  */
 @Service
 public class EventBus {
@@ -72,13 +81,17 @@ public class EventBus {
                 }
             }
             subscribers.put(raw.getId(), subscriber);
+            Trace.flow("events-ws | client connected role={} session={} snapshot={} events; {} clients now", role,
+                    Trace.id(raw.getId()), snapshot().size(), subscribers.size());
         } finally {
             lock.unlock();
         }
     }
 
     void unregister(String sessionId) {
-        subscribers.remove(sessionId);
+        if (subscribers.remove(sessionId) != null) {
+            Trace.flow("events-ws | client left session={}; {} clients now", Trace.id(sessionId), subscribers.size());
+        }
     }
 
     public void publish(EventEnvelope event) {
@@ -89,10 +102,73 @@ public class EventBus {
         } finally {
             lock.unlock();
         }
+        int delivered = 0;
         for (Subscriber subscriber : List.copyOf(subscribers.values())) {
-            if (visibleTo(subscriber.role(), event)) {
-                send(subscriber, json);
+            if (visibleTo(subscriber.role(), event) && send(subscriber, json)) {
+                delivered++;
             }
+        }
+        trace(event, delivered);
+    }
+
+    /**
+     * One line per event: the step the process has reached. The words of a call are only in the content trace, which is
+     * off by default (see {@link Trace}). The heartbeat is not traced: it would drown everything else.
+     */
+    private static void trace(EventEnvelope event, int delivered) {
+        switch (event) {
+            case TranscriptSegmentEvent e -> {
+                TranscriptSegment s = e.payload();
+                Trace.flow("event | transcript.segment mode={} call={} seg={} final={} chars={} t={}-{}ms conf={} speaker={} "
+                                + "-> {} clients", e.mode(), Trace.id(s.callId()), s.segId(), s.isFinal(), s.text().length(),
+                        s.tStartMs(), s.tEndMs(), s.sttConfidence() == null ? "-" : String.format("%.2f", s.sttConfidence()),
+                        s.speaker(), delivered);
+                if (Trace.content()) {
+                    Trace.content("event | transcript.segment call={} seg={} final={} text=\"{}\"", Trace.id(s.callId()),
+                            s.segId(), s.isFinal(), Trace.oneLine(s.text()));
+                }
+            }
+            case SystemStatusEvent e -> {
+                SystemStatus s = e.payload();
+                if (s.component() == Component.BACKEND && s.state() == ComponentState.OK) {
+                    return;
+                }
+                Trace.flow("event | system.status mode={} {}={} \"{}\" -> {} clients", e.mode(), s.component(), s.state(),
+                        s.message(), delivered);
+            }
+            case RiskUpdateEvent e -> Trace.flow("event | risk.update mode={} call={} level={} (was {}) stages={} signs={} "
+                            + "-> {} clients", e.mode(), Trace.id(e.payload().callId()), e.payload().level(),
+                    e.payload().previousLevel(), e.payload().stages(), e.payload().warningSigns(), delivered);
+            case AlertCreatedEvent e -> {
+                Alert a = e.payload();
+                Trace.flow("event | alert.created mode={} call={} alert={} level={} template={} stages={} triggeredBy={} "
+                                + "-> {} clients", e.mode(), Trace.id(a.callId()), Trace.id(a.alertId()), a.level(),
+                        a.templateId(), a.stages().stream().map(StageHit::stage).toList(), a.triggeredBy(), delivered);
+                if (Trace.content()) {
+                    a.stages().forEach(h -> Trace.content("event | alert.created alert={} evidence {} in {} by {}: \"{}\"",
+                            Trace.id(a.alertId()), h.stage(), h.segId(), h.speakerRole(), Trace.oneLine(h.quote())));
+                }
+            }
+            case AlertDecisionEvent e -> Trace.flow("event | alert.decision mode={} alert={} decision={} actor={} -> {} clients",
+                    e.mode(), Trace.id(e.payload().alertId()), e.payload().decision(), e.payload().actor(), delivered);
+            case CallStartedEvent e -> Trace.flow("event | call.started mode={} call={} -> {} clients", e.mode(),
+                    Trace.id(e.payload().callId()), delivered);
+            case CallEndedEvent e -> Trace.flow("event | call.ended mode={} call={} hadAlert={} -> {} clients", e.mode(),
+                    Trace.id(e.payload().callId()), e.payload().hadAlert(), delivered);
+        }
+    }
+
+    /**
+     * The mode events that belong to no call must carry (the heartbeat, a failed cleanup): the mode of the call that
+     * is running, else {@code fallback}, the mode of the application. Without it a LIVE call would see SCRIPTED
+     * statuses between its own events and the screens could not tell what is really running (rule 6).
+     */
+    public Mode modeOrDefault(Mode fallback) {
+        lock.lock();
+        try {
+            return activeCall != null ? activeCall.mode() : fallback;
+        } finally {
+            lock.unlock();
         }
     }
 

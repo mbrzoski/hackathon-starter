@@ -15,6 +15,7 @@ import pl.aniolstroz.ai.CallClassificationQueue;
 import pl.aniolstroz.ai.CallSnapshot;
 import pl.aniolstroz.ai.ClassifierResult;
 import pl.aniolstroz.ai.StageClassifier;
+import pl.aniolstroz.config.Trace;
 import pl.aniolstroz.contracts.ComponentState;
 import pl.aniolstroz.contracts.EventEnvelope.SystemStatusEvent;
 import pl.aniolstroz.contracts.HitSource;
@@ -114,6 +115,14 @@ public class AiAnalyzer {
                     finished = result.withHits(checked);
                     List<StageHit> accepted = checked.stream().filter(StageHit::validated).toList();
                     valid = accepted.size();
+                    for (StageHit hit : checked) {
+                        Trace.flow("ai | call={} {} in {} by {}: {} (quote check)", Trace.id(call.callId()), hit.stage(), hit.segId(),
+                                hit.speakerRole(), hit.validated() ? "ACCEPTED" : "REJECTED, not in the transcript");
+                        if (Trace.content()) {
+                            Trace.content("ai | call={} {} in {} quote \"{}\" -> {}", Trace.id(call.callId()), hit.stage(),
+                                    hit.segId(), Trace.oneLine(hit.quote()), hit.validated() ? "accepted" : "rejected");
+                        }
+                    }
                     recordSuccess(call);
                     addHits(call.callId(), accepted);
                 }
@@ -212,6 +221,8 @@ public class AiAnalyzer {
 
     private static void logResult(String callId, ClassifierResult r, int valid, boolean late) {
         ClassifierResult.Usage usage = r.usage();
+        Trace.flow("ai | call={} range={} result: {} hits from the model, {} accepted after the quote check, answer is {}",
+                Trace.id(callId), r.segmentRange(), r.hits().size(), valid, late ? "late (the call had ended)" : "current");
         log.info("AI call finished: callId={} range={} model={} effort={} stopReason={} inputTokens={} "
                         + "cacheReadInputTokens={} outputTokens={} latencyMs={} hits={} valid={} late={} error={}",
                 callId, r.segmentRange(), r.model(), r.effort(), r.stopReason(), usage.inputTokens(),

@@ -10,6 +10,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
 import pl.aniolstroz.alerts.AlertStore;
 import pl.aniolstroz.alerts.TranscriptExcerpt;
+import pl.aniolstroz.config.Trace;
 import pl.aniolstroz.contracts.Alert;
 import pl.aniolstroz.contracts.ComponentState;
 import pl.aniolstroz.contracts.EventEnvelope.SystemStatusEvent;
@@ -44,6 +45,8 @@ public class RetainAlertedCallHook implements CallEndedHook {
     public void onCallEnded(CallState state) {
         List<Alert> alerts = state.alerts();
         if (alerts.isEmpty()) {
+            Trace.flow("retention | call={} had no alert: its transcript ({} segments) is discarded (DAT-01)", Trace.id(state.callId()),
+                    state.transcript().size());
             discard.onCallEnded(state);
             return;
         }
@@ -56,6 +59,8 @@ public class RetainAlertedCallHook implements CallEndedHook {
             stored &= save(state, alert, excerpt);
         }
         state.retainTranscript(transcript.stream().filter(s -> keptIds.contains(s.segId())).toList());
+        Trace.flow("retention | call={} had {} alert(s): {} of {} segments kept (cited segments and their context), stored={}",
+                Trace.id(state.callId()), alerts.size(), keptIds.size(), transcript.size(), stored);
         if (!stored) {
             reportStorageFailure(state);
         }

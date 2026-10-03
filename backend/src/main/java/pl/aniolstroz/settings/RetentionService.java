@@ -51,7 +51,7 @@ public class RetentionService {
             // Type only: messages may carry SQL with data.
             log.error("Retention cleanup failed: {}", e.getClass().getName());
             Instant now = clock.instant();
-            eventBus.publish(new SystemStatusEvent(properties.mode(), now, new SystemStatus(
+            eventBus.publish(new SystemStatusEvent(eventBus.modeOrDefault(properties.mode()), now, new SystemStatus(
                     Component.BACKEND, ComponentState.DEGRADED,
                     "Nie udało się usunąć starych danych zgodnie z retencją.", now)));
         }

@@ -13,6 +13,8 @@ services:
       APP_EVENTS_ALLOWED_ORIGINS: ${PUBLIC_ORIGIN:-}
       APP_DB_FILE: /data/aniol.db
       APP_LABELS_FILE: /data/labels.jsonl
+      # INFO = the log has no words of the calls; DEBUG = it has them (synthetic data only, see README).
+      LOGGING_LEVEL_PL_ANIOLSTROZ_TRACE_CONTENT: ${TRACE_CONTENT_LEVEL:-INFO}
     volumes:
       - backend-data:/data
     expose:
