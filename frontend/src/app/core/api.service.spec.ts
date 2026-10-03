@@ -22,11 +22,10 @@ describe('ApiService', () => {
     req.flush({ status: 'UP' });
   });
 
-  it('POSTs chat requests as JSON', () => {
-    api.chat({ message: 'hi' }).subscribe((r) => expect(r.text).toBe('hello'));
-    const req = http.expectOne('/api/llm/chat');
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ message: 'hi' });
-    req.flush({ text: 'hello' });
+  it('GETs the settings endpoint', () => {
+    api.settings().subscribe((s) => expect(s.emergencyNumber).toBe('112'));
+    const req = http.expectOne('/api/settings');
+    expect(req.request.method).toBe('GET');
+    req.flush({ emergencyNumber: '112' });
   });
 });

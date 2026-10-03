@@ -1,0 +1,15 @@
+{
+  "alertHeadline": "Ta rozmowa może być oszustwem",
+  "alertReason": "Rozmówca podaje się za policjanta i prosi o wypłatę pieniędzy.",
+  "steps": [
+    { "title": "Rozłącz się", "text": "Prawdziwa policja nie dzwoni w takich sprawach." },
+    { "title": "Nie przekazuj pieniędzy", "text": "Nie wypłacaj gotówki, nie podawaj kodów BLIK ani haseł." },
+    { "title": "Zadzwoń do bliskich", "text": "Ania już wie o tej rozmowie." }
+  ],
+  "message": {
+    "from": "Ania",
+    "text": "Mamo, rozłącz się. To nie jest policja. Zaraz do Ciebie zadzwonię.",
+    "receivedAt": "12:47",
+    "hasPhoto": true
+  }
+}

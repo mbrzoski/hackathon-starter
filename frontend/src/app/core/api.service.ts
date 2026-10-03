@@ -2,20 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, delay } from 'rxjs';
 import { environment } from '../../environments/environment';
-import {
-  ChatRequest,
-  ChatResponse,
-  Health,
-  StructuredRequest,
-  StructuredResponse,
-  ToolChatRequest,
-  ToolChatResult,
-  ToolDefinition,
-} from './models';
+import { Health } from './models';
+import { FamilyDashboard, ListenState, SeniorState, Settings } from './view-models';
 
 /**
  * Single place that talks to the Spring backend. With `environment.useMocks` every call is served from
- * `public/mock/<path-with-dashes>.json` (e.g. /llm/chat -> mock/llm-chat.json), so the UI can be built
+ * `public/mock/<path-with-dashes>.json` (e.g. /family/dashboard -> mock/family-dashboard.json), so the UI can be built
  * without a running backend.
  */
 @Injectable({ providedIn: 'root' })
@@ -26,20 +18,20 @@ export class ApiService {
     return this.get<Health>('/health');
   }
 
-  tools(): Observable<ToolDefinition[]> {
-    return this.get<ToolDefinition[]>('/llm/tools');
+  familyDashboard(): Observable<FamilyDashboard> {
+    return this.get<FamilyDashboard>('/family/dashboard');
   }
 
-  chat(request: ChatRequest): Observable<ChatResponse> {
-    return this.post<ChatResponse>('/llm/chat', request);
+  settings(): Observable<Settings> {
+    return this.get<Settings>('/settings');
   }
 
-  structured(request: StructuredRequest): Observable<StructuredResponse> {
-    return this.post<StructuredResponse>('/llm/structured', request);
+  seniorState(): Observable<SeniorState> {
+    return this.get<SeniorState>('/senior/state');
   }
 
-  toolChat(request: ToolChatRequest): Observable<ToolChatResult> {
-    return this.post<ToolChatResult>('/llm/tool-chat', request);
+  listenState(): Observable<ListenState> {
+    return this.get<ListenState>('/listen/state');
   }
 
   private get<T>(path: string): Observable<T> {
@@ -47,13 +39,6 @@ export class ApiService {
       return this.mock<T>(path);
     }
     return this.http.get<T>(`${environment.apiUrl}${path}`);
-  }
-
-  private post<T>(path: string, body: unknown): Observable<T> {
-    if (environment.useMocks) {
-      return this.mock<T>(path);
-    }
-    return this.http.post<T>(`${environment.apiUrl}${path}`, body);
   }
 
   private mock<T>(path: string): Observable<T> {

@@ -1,0 +1,172 @@
+{
+  "mode": "MOCK",
+  "connected": true,
+  "alert": {
+    "alertId": "a1",
+    "callId": "call-1",
+    "level": "high",
+    "stages": [
+      {
+        "stage": "AUTHORITY_CLAIM",
+        "segId": "s1",
+        "quote": "mówi komisarz Nowak z Komendy Stołecznej Policji",
+        "speakerRole": "caller",
+        "source": "llm",
+        "validated": true
+      },
+      {
+        "stage": "URGENT_THREAT",
+        "segId": "s3",
+        "quote": "którzy próbują ukraść pani oszczędności z banku",
+        "speakerRole": "caller",
+        "source": "llm",
+        "validated": true
+      },
+      {
+        "stage": "SECRECY_DEMAND",
+        "segId": "s5",
+        "quote": "Proszę nikomu o tym nie mówić, nawet rodzinie.",
+        "speakerRole": "caller",
+        "source": "keywords",
+        "validated": true
+      },
+      {
+        "stage": "MONEY_REQUEST",
+        "segId": "s6",
+        "quote": "Musi pani wypłacić gotówkę i przekazać ją naszemu funkcjonariuszowi.",
+        "speakerRole": "caller",
+        "source": "llm",
+        "validated": true
+      }
+    ],
+    "templateId": "police-scam-high",
+    "triggeredBy": "both",
+    "createdAt": "2026-10-03T12:46:00Z",
+    "mode": "MOCK"
+  },
+  "alertTitle": "Alarm: rozmowa przypomina legendę „na policjanta”",
+  "alertText": "Mama zobaczyła ostrzeżenie na telefonie o 12:46. Rozmowa nadal trwa.",
+  "alertTime": "12:46",
+  "call": {
+    "callerNumberMasked": "+48 22 ••• •• 17",
+    "isKnownContact": false,
+    "startedAt": "12:43",
+    "durationSeconds": 222
+  },
+  "level": "high",
+  "segments": [
+    {
+      "callId": "call-1",
+      "segId": "s1",
+      "tStartMs": 4000,
+      "tEndMs": 8000,
+      "text": "Dzień dobry, mówi komisarz Nowak z Komendy Stołecznej Policji.",
+      "isFinal": true,
+      "speaker": "A"
+    },
+    {
+      "callId": "call-1",
+      "segId": "s2",
+      "tStartMs": 12000,
+      "tEndMs": 16000,
+      "text": "Dzień dobry… Coś się stało?",
+      "isFinal": true,
+      "speaker": "B"
+    },
+    {
+      "callId": "call-1",
+      "segId": "s3",
+      "tStartMs": 18000,
+      "tEndMs": 22000,
+      "text": "Prowadzimy akcję przeciwko oszustom, którzy próbują ukraść pani oszczędności z banku.",
+      "isFinal": true,
+      "speaker": "A"
+    },
+    {
+      "callId": "call-1",
+      "segId": "s4",
+      "tStartMs": 31000,
+      "tEndMs": 35000,
+      "text": "O Boże. A co ja mam zrobić?",
+      "isFinal": true,
+      "speaker": "B"
+    },
+    {
+      "callId": "call-1",
+      "segId": "s5",
+      "tStartMs": 37000,
+      "tEndMs": 41000,
+      "text": "Proszę nikomu o tym nie mówić, nawet rodzinie. To tajna akcja.",
+      "isFinal": true,
+      "speaker": "A"
+    },
+    {
+      "callId": "call-1",
+      "segId": "s6",
+      "tStartMs": 52000,
+      "tEndMs": 56000,
+      "text": "Musi pani wypłacić gotówkę i przekazać ją naszemu funkcjonariuszowi.",
+      "isFinal": true,
+      "speaker": "A"
+    },
+    {
+      "callId": "call-1",
+      "segId": "s7",
+      "tStartMs": 65000,
+      "tEndMs": 69000,
+      "text": "Ile mam wypłacić…",
+      "isFinal": true,
+      "speaker": "B"
+    }
+  ],
+  "stages": [
+    {
+      "hit": {
+        "stage": "AUTHORITY_CLAIM",
+        "segId": "s1",
+        "quote": "mówi komisarz Nowak z Komendy Stołecznej Policji",
+        "speakerRole": "caller",
+        "source": "llm",
+        "validated": true
+      },
+      "tMs": 4000,
+      "detectedBy": "both"
+    },
+    {
+      "hit": {
+        "stage": "URGENT_THREAT",
+        "segId": "s3",
+        "quote": "którzy próbują ukraść pani oszczędności z banku",
+        "speakerRole": "caller",
+        "source": "llm",
+        "validated": true
+      },
+      "tMs": 18000,
+      "detectedBy": "llm"
+    },
+    {
+      "hit": {
+        "stage": "SECRECY_DEMAND",
+        "segId": "s5",
+        "quote": "Proszę nikomu o tym nie mówić, nawet rodzinie.",
+        "speakerRole": "caller",
+        "source": "keywords",
+        "validated": true
+      },
+      "tMs": 37000,
+      "detectedBy": "keywords"
+    },
+    {
+      "hit": {
+        "stage": "MONEY_REQUEST",
+        "segId": "s6",
+        "quote": "Musi pani wypłacić gotówkę i przekazać ją naszemu funkcjonariuszowi.",
+        "speakerRole": "caller",
+        "source": "llm",
+        "validated": true
+      },
+      "tMs": 52000,
+      "detectedBy": "both"
+    }
+  ]
+}

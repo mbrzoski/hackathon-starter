@@ -1,0 +1,7 @@
+{
+  "call": { "callerNumberMasked": "+48 22 ••• •• 17", "isKnownContact": false, "startedAt": "12:43", "durationSeconds": 65 },
+  "level": "high",
+  "alertTitle": "Możliwe oszustwo",
+  "alertReason": "Legenda „na policjanta”: rozmówca żąda wypłaty gotówki.",
+  "quote": "Musi pani wypłacić gotówkę i przekazać ją naszemu funkcjonariuszowi."
+}

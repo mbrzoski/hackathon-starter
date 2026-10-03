@@ -1,0 +1,5 @@
+{
+  "senior": { "name": "Krystyna", "displayName": "Mama · Krystyna", "phone": "+48601000111" },
+  "contacts": [{ "name": "Ania", "relation": "córka", "phone": "+48602000222" }],
+  "emergencyNumber": "112"
+}

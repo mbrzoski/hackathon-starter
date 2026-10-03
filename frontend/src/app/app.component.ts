@@ -1,24 +1,10 @@
 import { Component } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { environment } from '../environments/environment';
+import { RouterOutlet } from '@angular/router';
 
+// Each front (/listen, /senior, /family) renders its own header.
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
-  template: `
-    <header class="topbar">
-      <strong>Hackathon Starter</strong>
-      <nav>
-        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Dashboard</a>
-        <a routerLink="/playground" routerLinkActive="active">Playground</a>
-      </nav>
-      @if (mocks) {
-        <span class="badge">MOCK DATA</span>
-      }
-    </header>
-    <main><router-outlet /></main>
-  `,
+  imports: [RouterOutlet],
+  template: `<router-outlet />`,
 })
-export class AppComponent {
-  protected readonly mocks = environment.useMocks;
-}
+export class AppComponent {}

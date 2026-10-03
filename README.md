@@ -39,8 +39,8 @@ It contains **infrastructure only** - no task-specific entities, workflows, data
         ├── environments/       environment.ts (prod) · .development.ts · .mock.ts
         └── app/
             ├── core/           api.service.ts, models.ts, resource.ts (loading/error/data signals)
-            ├── shared/         loading, error-banner, empty-state, card
-            └── pages/          home (dashboard), playground (LLM demo), not-found
+            ├── shared/         icon, mode-badge, connection-status, risk-level-chip, loading, error-banner, empty-state, card
+            └── pages/          index, listen (Nasłuch), senior, family, not-found
 ```
 
 ## 2. Run instructions
@@ -153,3 +153,11 @@ cd frontend && npm run build        # type-checks templates and bundles
 - Secrets exist only as environment variables; `.env` is git-ignored, `.env.example` holds blanks; the API key is never logged or returned (`/api/health` only reports whether it is set).
 - Errors share one JSON shape and never leak stack traces or internals; every request gets an `X-Request-Id` for log correlation.
 - **Rules gate (verified for the general HackYeah 2026 rules, "Regulamin"):** the general rules require participants to be the authors of their contribution and not infringe third-party rights (section 6) and say nothing about AI-assisted development, code generation, external APIs, starter repositories or required repository format. Task-specific rules are announced at the event start (sections 4.6-4.7). **Therefore the following are still UNVERIFIED and must be checked against the selected competition's rules before relying on this starter:** whether AI-assisted coding and pre-existing starter code are allowed, whether Claude/external APIs are allowed, attribution/disclosure duties, submission format and deadline (the submission site is open 3 Oct 23:00 - 4 Oct 23:00, 2026). If any is restricted, drop the affected part (e.g. run with `LLM_PROVIDER=mock`) or ask the organizers.
+
+## Biblioteki
+
+Nowa biblioteka, model albo API trafia na tę listę (nazwa, licencja, cel).
+
+| Nazwa | Licencja | Cel |
+|---|---|---|
+| `@fontsource/public-sans` (Public Sans) | OFL-1.1 | Font interfejsu, serwowany z własnego origin (bez CDN) |
