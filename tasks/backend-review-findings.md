@@ -43,6 +43,56 @@ Uwagi:
 | TST-01, TST-02 testy bez prawdziwego API | ✅ | WireMock, `MockStageClassifier`; 428 testów zielone. |
 | TST-03 testy MockMvc z walidatorem kontraktu | ✅ | `AuditControllerTest` dla trzech endpointów audytu. |
 
+## 1b. Review BE-08 (tryb LIVE: odbiór audio i lokalne STT), stan `master` 2b7a83f
+
+Zakres: pakiet `stt` (`AudioWebSocketHandler`, `AudioWebSocketConfig`, `SttSupervisor`, `SegmentDispatcher`, `VoskSttProvider`, `VoskModelHolder`, `FakeSttProvider`, `SttConfig`), jego styk z `CallService`, `KeywordDetector`, `AppProperties`, `contracts/openapi.yaml`, README i testy. Oceniane względem `CLAUDE.md` i `docs/ograniczenia-backend-java.md`. `docs/plan/plan.md` nadal oznacza BE-08 jako „do zrobienia”, a kod już jest na `master`.
+Metoda: czytanie kodu. Nie uruchamiałem `./mvnw verify` (w tym środowisku nie ma `JAVA_HOME`), więc stan testów jest nieznany. Znacznik: ✅ spełnione, ⚠️ spełnione z lukami, ❌ niespełnione.
+
+### Zgodność z regułami
+
+| Reguła | Status | Uwagi |
+|---|---|---|
+| AUD-01 kontrakt audio, limit ramki 64 KB | ⚠️ | Format, `start`/`stop`/`pause`/`resume` i limit 64 KB w kontenerze (test `messagesOver64KbAreRefusedByTheContainer`, kod 1009) są. Rozmiar ramki nie jest sprawdzany (F-30). |
+| AUD-02 audio nie na dysk, nie do logów | ✅ | Ramki idą do kolejki (maks. 100 ramek, 10 s) i do `Recognizer`. Logi mają tylko nazwy klas wyjątków, `SttSegment.toString` ukrywa tekst. |
+| AUD-03 `SttProvider`, Vosk, model ze ścieżki, `FakeSttProvider` | ✅ | `VoskSttProvider`, `FakeSttProvider`, wybór przez `app.stt.provider`, model ładowany leniwie, backend startuje bez modelu. |
+| AUD-04 wątek platformowy, brak Claude w wątku STT | ✅ | `vosk-recognizer` to wątek platformowy, wyniki przez `SegmentDispatcher` na wątki wirtualne, przepełnienie kolejki daje `degraded`. |
+| AUD-05 audio nie opuszcza urządzenia, ujawnienia | ✅ | Vosk, JNA i model są w `README.md`. Testowe `awaitility` jest tylko tranzytywne. |
+| AUD-06 interim tylko do słów kluczowych i UI | ✅ | `AiAnalyzer` reaguje na `FinalSegmentAdded`. Ale patrz F-27. |
+| AUD-07 zgoda przed LIVE | ⚠️ | Zamknięcie 1008 jest i ma test, ale produkcyjny `PermissiveConsentChecker` zawsze zwraca `true` (F-32, odroczone do BE-09). |
+| BE-02, BE-03, BE-04 | ✅ | Wątki wirtualne w executorze, własny `BinaryWebSocketHandler`, jedna rozmowa (test: drugi `start` odrzucony). |
+| BE-05, TST-04 | ✅ | ArchUnit: `stt` nie zależy od `ai`/`risk`/`alerts`/`audit`/`demo`, `call` nie zależy od `stt`, brak `synchronized`. |
+| CC-01, CC-03 | ⚠️ | `ReentrantLock` wszędzie. Luka: pole `provider` w `SttSupervisor` nie jest `volatile` (F-29). |
+| CC-04 zadania okresowe | ❌ | Nie ma żadnego zadania pilnującego ciszy (F-25). |
+| OBS-01 awaria zawsze w `system.status` | ⚠️ | Brak modelu, błąd Vosk, przepełnienie i pauza publikują status. Zerwane połączenie i brak ramek nie (F-31, F-25). |
+| OBS-02 progi | ⚠️ | STT: 3 próby po 1, 2 i 4 s, potem `down`, powrót do `ok` po udanym restarcie ✅. Brak progu „10 s ciszy lub brak ramek → audio `down`” (F-25). |
+| OBS-05 logi bez treści | ✅ | W pakiecie `stt` logowane są tylko typy wyjątków. |
+| API-02, zasada 6: tryb na zdarzeniu | ✅ | `LiveStatusPublisher` i `calls.start(Mode.LIVE)`. |
+| CON-01, CON-02 kontrakt najpierw | ❌ | `/ws/audio` i `AudioControl` nie ma w `contracts/openapi.yaml` (F-24). |
+| CON-06 walidacja wejścia WebSocket | ⚠️ | Polecenia sprawdza ręcznie `commandOf` (lista czterech słów), bez walidatora schematu (F-24). |
+| TST-02 testy bez prawdziwego STT | ⚠️ | `VoskSttProviderSmokeTest` uruchamia prawdziwy Vosk, gdy jest model (F-34). |
+| Zasady 3, 4, 5, 8 z `CLAUDE.md` | ✅ | Brak rozłączania i dzwonienia, audio tylko w pamięci, do STT nie idą dane z ustawień, brak kluczy (Vosk ich nie potrzebuje). |
+
+### Findingi BE-08
+
+| ID | Waga | Zadanie | Reguła | Miejsce | Opis | Rekomendacja |
+|---|---|---|---|---|---|---|
+| F-24 | Średnia | BE-08 | CON-01, CON-02, CON-06 | `contracts/openapi.yaml`, `AudioWebSocketHandler.commandOf` | Kontrakt nie opisuje `/ws/audio`: nie ma schematu `AudioControl` ani rozszerzenia `x-websockets`. Polecenia (`start`, `stop`, `pause`, `resume`) i kody zamknięcia (1008, 1011) są zdefiniowane tylko w kodzie, a frontend (FE-05) nie ma z czego generować typów. | Dodać do kontraktu `AudioControl` (z `additionalProperties: false`) i `x-websockets` dla `/ws/audio` z kodami zamknięcia, potem rekord w `contracts/` i walidację wiadomości względem schematu. Zrobić przed FE-05. |
+| F-25 | Średnia | BE-08 (albo BE-10, do ustalenia) | OBS-01, OBS-02, CC-04, zasada 7 | `AudioWebSocketHandler` | Nikt nie sprawdza, czy ramki nadal przychodzą. Wyciszony mikrofon, zawieszona karta dźwiękowa albo klient, który przestał wysyłać bez zamykania gniazda, zostawiają `audio = OK`, „Ochrona działa”. Architektura (tabela błędów) i OBS-02 wymagają `down` po 10 s ciszy lub braku ramek. Nie ma też zadania `@Scheduled` z `Clock`. | Zapisywać czas ostatniej ramki (`Clock`), co kilka sekund sprawdzać próg 10 s z konfiguracji, publikować `audio = DOWN` i po powrocie ramek `OK`. Pauza użytkownika nie liczy się do ciszy. Test z fałszywym zegarem. Jeśli zespół uznaje to za BE-10, wpisać to do planu. |
+| F-26 | Średnia | BE-08 | DET-02, DET-03 | `KeywordDetector.detect` (`SpeakerRole.UNCLEAR`), `VoskSttProvider` (`SpeakerLabel.UNKNOWN`) | Vosk bez modelu mówców zawsze zwraca `UNKNOWN`, a słowa kluczowe zawsze `UNCLEAR`. `RiskEngine` wyklucza tylko `SENIOR` i `BACKGROUND`, więc w LIVE zdanie seniora „nie podam kodu BLIK” albo telewizor w tle liczy się jako `MONEY_REQUEST` i `PAYMENT_CHANNEL`. To dawny F-14, który miał wrócić przy BE-08. | Zdecydować i zapisać: w LIVE trafienia słów kluczowych z `UNCLEAR` albo wymagają potwierdzenia przez AI (rola z `StageHit`), albo ograniczenie trafia do „Odstępstw” i do opisu demo. Test scenariusza z zaprzeczeniem seniora. |
+| F-27 | Średnia | BE-08 | zasada 2 z `CLAUDE.md` (cytat musi być w transkrypcji), DET-03, AUD-06 | `CallService.addSegment`, `CallState.segmentIdFor`, `VoskSttProvider.emitFinal` | Otwarte wymaganie z sekcji 4: słowa kluczowe działają na interim (zgodnie z DET-03), a trafienie dostaje `segId` przyszłego finala i cytuje zdanie z interim. Vosk często zmienia tekst częściowy przy finale, a `emitFinal` pomija pusty wynik bez publikacji, więc numer `sN` dostaje potem inna wypowiedź. Alert może cytować zdanie, którego nie ma w transkrypcji (albo które stoi pod cudzym `segId`), a `TranscriptExcerpt` zachowa złe sąsiedztwo. Deduplikacja po (etap, `segId`, źródło) nie pozwala, żeby final poprawił cytat. | Zdecydować (to był warunek BE-08): albo trafienie z interim jest tymczasowe i po finale sprawdzane `QuoteValidator`-em względem tekstu finala (inaczej wycofywane), albo alert powstaje dopiero z finala. Test: interim z frazą, final bez niej. |
+| F-28 | Niska | BE-08 | AUD-01, kontrakt `TranscriptSegment` | `VoskSttProvider.fedBytes` | Czasy `tStartMs`/`tEndMs` liczone są od zera dla każdego nowego dostawcy. Po restarcie rozpoznawacza (OBS-02) czas w tej samej rozmowie cofa się. Odrzucone ramki przy przepełnieniu kolejki nie są wliczane, więc czas rozmija się z zegarem. | Przekazywać dostawcy przesunięcie (czas od startu rozmowy z `Clock`) albo liczyć czas po stronie `AudioWebSocketHandler`. Test restartu. |
+| F-29 | Niska | BE-08 | CC-01 | `SttSupervisor.provider`, `write()` | `write()` (wątek Tomcata) czyta `provider` bez blokady i bez `volatile`, a piszą go wątki wirtualne i `stt-retry` pod blokadą. Brak gwarancji widoczności zmiany po restarcie rozpoznawacza. | Zrobić pole `volatile`. |
+| F-30 | Niska | BE-08 | AUD-01 | `AudioWebSocketHandler.handleBinaryMessage` | Rozmiar ramki nie jest sprawdzany: puste, nieparzyste (rozjechane próbki 16-bit) i duże (do 64 KB) ramki idą do Vosk. | Odrzucać (zamknięcie 1008 z komunikatem po polsku) ramki o długości innej niż wielokrotność 2 bajtów, a opcjonalnie inne niż 3200 B. |
+| F-31 | Średnia | BE-08 | OBS-01, zasada 7 | `AudioWebSocketHandler.finish`, `afterConnectionClosed`, `handleTransportError` | Zerwanie gniazda (Wi-Fi tabletu, zamknięta karta) kończy rozmowę, ale nie publikuje `audio = DOWN`. Status zostaje „Ochrona działa” bez żadnego źródła dźwięku. Podobnie po końcu rozmowy przy `stt = DOWN` ten status zostaje do następnego startu. Bez `stop` od klienta backend nie odróżnia awarii od zwykłego końca. | Przy zamknięciu bez wcześniejszego `stop` publikować `audio = DOWN` z komunikatem po polsku (a przy `stop` przywracać stan „bezczynny”), przy końcu rozmowy czyścić `stt`. Test zerwania gniazda. |
+| F-32 | Średnia | BE-09 (odroczone) | AUD-07 | `settings/PermissiveConsentChecker` | Produkcyjny `ConsentChecker` zawsze zwraca `true`, więc każdy klient na tym originie może włączyć nasłuch LIVE bez zgody. Kod jest świadomym zaślepieniem („Replace it, do not extend it”), a test używa własnego stubu. | Zastąpić przy BE-09 (zgody z ustawień). Do tego czasu dopisać do README/„Odstępstw”, że LIVE nie wymaga zgody. |
+| F-33 | Niska | BE-08 | TST-01 | `VoskSttProvider` | Logika dostawcy (łączenie interim i final, czasy, średnia pewność, dławienie kolejki, `getFinalResult` przy `stop`) jest testowana tylko ciszą z prawdziwym modelem, więc bez modelu nie jest testowana wcale. | Wydzielić rozpoznawacz za małym interfejsem i przetestować logikę na atrapie (bez Vosk i bez modelu). |
+| F-34 | Niska | BE-08 | TST-02, `CLAUDE.md` („testy nie wołają prawdziwego STT”) | `VoskSttProviderSmokeTest` | Test wywołuje prawdziwy Vosk, gdy model leży na dysku (`@EnabledIf`), więc na maszynie z modelem `./mvnw verify` uruchamia natywne STT. | Oznaczyć jako test ręczny/integracyjny (`@Tag`, osobny profil) albo dopisać wyjątek do „Odstępstw”. |
+
+### Uwagi poza findingami
+
+- `docs/plan/plan.md` i `docs/milestone-*.md` nie wiedzą jeszcze o BE-08, a kod (`7251d63`, scalony `2b7a83f`) jest na `master`. Do uzupełnienia po poprawkach.
+- Kolejność poprawek (propozycja): F-27 i F-31 (uczciwość alertów i statusów), potem F-25, F-24 (przed FE-05), F-26 (decyzja), reszta przy okazji. F-32 przy BE-09.
+
 ## 2. Findingi odroczone (realne, ale z zadania zaplanowanego później)
 
 | ID | Waga | Zadanie docelowe | Reguła | Miejsce | Opis | Co zrobić |
