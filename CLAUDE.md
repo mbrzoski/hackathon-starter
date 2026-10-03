@@ -6,7 +6,7 @@ Projekt na HackYeah 2026. Urządzenie przy telefonie stacjonarnym seniora słuch
 
 - `docs/architecture.md`: architektura, przepływy i kontrakty.
 - `docs/ograniczenia-backend-java.md` i `docs/ograniczenia-frontend.md`: zasady „MUSI” / „NIE WOLNO” z identyfikatorami (np. AI-03, WEB-03). Odstępstwo zgłoś człowiekowi, nie wprowadzaj go sam.
-- `docs/plan/`: lista zadań w kolejności. Rób tylko zadanie, które dostałeś, i nie zaczynaj następnego.
+- `docs/plan/plan.md`: lista zadań w kolejności. Rób tylko zadanie, które dostałeś, i nie zaczynaj następnego.
 
 ## Struktura
 
