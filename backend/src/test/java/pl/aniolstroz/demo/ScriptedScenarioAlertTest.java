@@ -70,7 +70,7 @@ class ScriptedScenarioAlertTest {
         AlertStore store = new AlertStore(jdbc, mapper, new TransactionTemplate(new DataSourceTransactionManager(dataSource)));
         CallEndedHook hook = new RetainAlertedCallHook(store, bus, Clock.systemUTC());
         calls = CallServices.create(bus, Clock.systemUTC(), hook);
-        player = new ScriptedPlayer(new ScenarioRepository(mapper), calls, duration -> { });
+        player = new ScriptedPlayer(new ScenarioRepository(mapper), calls, duration -> { }, snapshot -> { throw new AssertionError("no AI in this test"); });
     }
 
     @AfterEach

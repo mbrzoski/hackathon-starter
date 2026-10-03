@@ -1,0 +1,61 @@
+{
+  "scenarioId": "02-fake-police-paraphrase",
+  "description": "Canned model answers for MOCK mode. Each step applies once the transcript has reached afterSegment; answers are cumulative, like the real model that returns all hits every time. Quotes must be verbatim (a test checks them against the scenario).",
+  "steps": [
+    {
+      "afterSegment": 3,
+      "stage_hits": [
+        {
+          "stage": "AUTHORITY_CLAIM",
+          "segment_id": "s3",
+          "quote": "jestem funkcjonariuszem komendy numer zero zero zero",
+          "speaker_role": "caller"
+        }
+      ]
+    },
+    {
+      "afterSegment": 5,
+      "stage_hits": [
+        {
+          "stage": "URGENT_THREAT",
+          "segment_id": "s5",
+          "quote": "Ktoś właśnie próbuje opróżnić pani oszczędności",
+          "speaker_role": "caller"
+        }
+      ]
+    },
+    {
+      "afterSegment": 9,
+      "stage_hits": [
+        {
+          "stage": "SECRECY_DEMAND",
+          "segment_id": "s9",
+          "quote": "ta rozmowa musi zostać tylko między nami",
+          "speaker_role": "caller"
+        }
+      ]
+    },
+    {
+      "afterSegment": 11,
+      "stage_hits": [
+        {
+          "stage": "MONEY_REQUEST",
+          "segment_id": "s11",
+          "quote": "Proszę dziś pójść do oddziału i zabrać z konta całą gotówkę, jaką pani ma.",
+          "speaker_role": "caller"
+        }
+      ]
+    },
+    {
+      "afterSegment": 13,
+      "stage_hits": [
+        {
+          "stage": "PAYMENT_CHANNEL",
+          "segment_id": "s13",
+          "quote": "po godzinie podjedzie nasz człowiek i je od pani odbierze",
+          "speaker_role": "caller"
+        }
+      ]
+    }
+  ]
+}

@@ -34,6 +34,13 @@ class ArchitectureTest {
             .that().resideInAPackage("..risk..")
             .should().dependOnClassesThat().resideInAnyPackage("..call..", "..alerts..");
 
+    /** The AI layer only returns evidence: it knows nothing of calls, alerts, demo scenarios or the event bus. */
+    @ArchTest
+    static final ArchRule aiDoesNotDependOnCallAlertsDemoOrEvents = noClasses()
+            .that().resideInAPackage("..ai..")
+            .should().dependOnClassesThat().resideInAnyPackage("..call..", "..alerts..", "..demo..", "..events..")
+            .allowEmptyShould(true);
+
     @ArchTest
     static final ArchRule alertsDoNotDependOnCall = noClasses()
             .that().resideInAPackage("..alerts..")

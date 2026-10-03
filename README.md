@@ -27,6 +27,9 @@ Configuration: copy `.env.example` to `.env` (never commit it). Secrets only com
 | networknt json-schema-validator | Apache 2.0 | Validates scenario files against `components/schemas` of `contracts/openapi.yaml` |
 | OpenAPI Generator (maven plugin, `spring` generator) | Apache 2.0 | Build-time generation of the `/api/demo/*` interface and request models from `contracts/openapi.yaml` |
 | openapi-request-validator-mockmvc (Atlassian) | Apache 2.0 | Tests: every MockMvc request and response is checked against `contracts/openapi.yaml` |
+| Claude Sonnet 5.5 (`claude-sonnet-5-5`) via the Claude API | Anthropic terms | Stage detection with verbatim quotes (evidence only; risk, texts and decisions stay in code) |
+| `com.anthropic:anthropic-java` 2.68.0 (with OkHttp) | MIT (OkHttp: Apache 2.0) | Official Java client for the Claude API |
+| WireMock (`wiremock-standalone`) | Apache 2.0 | Tests: stands in for the Anthropic API, no real calls |
 | Claude / Claude Code (Anthropic) | Anthropic terms | Concept, architecture notes and coding assistance (pre-event architecture document disclosed as such) |
 | Angular, Angular CLI, Angular Material, CDK | MIT | Frontend framework and UI components |
 | RxJS | Apache 2.0 | Router events in the frontend |

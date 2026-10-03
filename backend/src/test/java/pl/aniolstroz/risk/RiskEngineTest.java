@@ -198,6 +198,52 @@ class RiskEngineTest {
         assertThat(RiskEngine.computeLevel(hits, Sensitivity.STANDARD).triggeredBy()).isEqualTo(TriggeredBy.KEYWORDS);
     }
 
+    // triggeredBy names the sources of the hits that decided the level, not of every hit that counts.
+
+    @Test
+    void anUnrelatedKeywordHitDoesNotMakeAHighLevelBoth() {
+        List<StageHit> hits = List.of(
+                hit(MONEY_REQUEST, SpeakerRole.CALLER, HitSource.LLM, true),
+                hit(AUTHORITY_CLAIM, SpeakerRole.CALLER, HitSource.LLM, true),
+                hit(REMOTE_ACCESS, SpeakerRole.UNCLEAR, HitSource.KEYWORDS, true));
+
+        RiskAssessment result = RiskEngine.computeLevel(hits, Sensitivity.STANDARD);
+
+        assertThat(result.level()).isEqualTo(RiskLevel.HIGH);
+        assertThat(result.triggeredBy()).isEqualTo(TriggeredBy.LLM);
+    }
+
+    @Test
+    void bothSourcesInTheDecidingStagesGiveBoth() {
+        List<StageHit> hits = List.of(
+                hit(MONEY_REQUEST, SpeakerRole.UNCLEAR, HitSource.KEYWORDS, true),
+                hit(AUTHORITY_CLAIM, SpeakerRole.CALLER, HitSource.LLM, true));
+
+        assertThat(RiskEngine.computeLevel(hits, Sensitivity.STANDARD).triggeredBy()).isEqualTo(TriggeredBy.BOTH);
+    }
+
+    @Test
+    void forMediumEveryCountedStageDecides() {
+        List<StageHit> hits = List.of(
+                hit(REMOTE_ACCESS, SpeakerRole.UNCLEAR, HitSource.KEYWORDS, true),
+                hit(URGENT_THREAT, SpeakerRole.CALLER, HitSource.LLM, true));
+
+        RiskAssessment result = RiskEngine.computeLevel(hits, Sensitivity.STANDARD);
+
+        assertThat(result.level()).isEqualTo(RiskLevel.MEDIUM);
+        assertThat(result.triggeredBy()).isEqualTo(TriggeredBy.BOTH);
+    }
+
+    @Test
+    void aStageSeenByBothSourcesCountsBothEvenWhenOtherStagesAreLlmOnly() {
+        List<StageHit> hits = List.of(
+                hit(MONEY_REQUEST, SpeakerRole.CALLER, HitSource.LLM, true),
+                hit(MONEY_REQUEST, SpeakerRole.UNCLEAR, HitSource.KEYWORDS, true),
+                hit(SECRECY_DEMAND, SpeakerRole.CALLER, HitSource.LLM, true));
+
+        assertThat(RiskEngine.computeLevel(hits, Sensitivity.STANDARD).triggeredBy()).isEqualTo(TriggeredBy.BOTH);
+    }
+
     @Test
     void countedHitsKeepsOnlyValidatedHitsThatPassTheSpeakerRule() {
         StageHit counted = hit(AUTHORITY_CLAIM, SpeakerRole.SENIOR, HitSource.LLM, true);

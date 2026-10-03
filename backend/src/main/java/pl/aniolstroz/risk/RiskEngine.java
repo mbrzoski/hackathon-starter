@@ -37,7 +37,22 @@ public final class RiskEngine {
     public static RiskAssessment computeLevel(List<StageHit> hits, Sensitivity sensitivity) {
         List<StageHit> counted = countedHits(hits);
         Set<StageId> stages = stagesOf(counted);
-        return new RiskAssessment(levelFor(stages, sensitivity), triggeredBy(counted));
+        RiskLevel level = levelFor(stages, sensitivity);
+        return new RiskAssessment(level, triggeredBy(decidingHits(counted, stages, level, sensitivity)));
+    }
+
+    /**
+     * The hits that decided the level. For HIGH reached by a money stage plus a pressure stage these are the hits of
+     * those stages only: an unrelated extra stage (say a keyword hit on REMOTE_ACCESS) did not decide anything, so it
+     * must not turn "llm" into "both". In every other case each counted stage took part in the count.
+     */
+    private static List<StageHit> decidingHits(
+            List<StageHit> counted, Set<StageId> stages, RiskLevel level, Sensitivity sensitivity) {
+        boolean combination = stages.stream().anyMatch(MONEY::contains) && stages.stream().anyMatch(PRESSURE::contains);
+        if (level == RiskLevel.HIGH && combination && sensitivity != Sensitivity.CALM) {
+            return counted.stream().filter(h -> MONEY.contains(h.stage()) || PRESSURE.contains(h.stage())).toList();
+        }
+        return counted;
     }
 
     /**

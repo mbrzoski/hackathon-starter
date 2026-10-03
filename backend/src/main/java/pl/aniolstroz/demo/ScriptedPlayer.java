@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import pl.aniolstroz.call.CallService;
 import pl.aniolstroz.call.CallState;
+import pl.aniolstroz.ai.StageClassifier;
 import pl.aniolstroz.call.NoActiveCallException;
 import pl.aniolstroz.contracts.Mode;
 import pl.aniolstroz.contracts.Scenario;
@@ -25,14 +26,16 @@ public class ScriptedPlayer {
     private final ScenarioRepository scenarios;
     private final CallService calls;
     private final Sleeper sleeper;
+    private final StageClassifier classifier;
 
     private final ReentrantLock lock = new ReentrantLock();
     private Thread playback;
 
-    ScriptedPlayer(ScenarioRepository scenarios, CallService calls, Sleeper sleeper) {
+    ScriptedPlayer(ScenarioRepository scenarios, CallService calls, Sleeper sleeper, StageClassifier classifier) {
         this.scenarios = scenarios;
         this.calls = calls;
         this.sleeper = sleeper;
+        this.classifier = classifier;
     }
 
     /**
@@ -48,7 +51,8 @@ public class ScriptedPlayer {
         Scenario scenario = scenarios.find(scenarioId).orElseThrow(() -> new ScenarioNotFoundException(scenarioId));
         lock.lock();
         try {
-            CallState call = calls.start(Mode.SCRIPTED);
+            // SCRIPTED promises a real AI; with canned answers the call must say MOCK.
+            CallState call = calls.start(classifier.isMock() ? Mode.MOCK : Mode.SCRIPTED, scenarioId);
             playback = Thread.ofVirtual().name("scripted-player-" + scenarioId)
                     .unstarted(() -> play(call, scenario, speed));
             playback.start();

@@ -47,7 +47,8 @@ class DevEmitControllerTest {
     }
 
     @Nested
-    @SpringBootTest
+    // The prod profile refuses to start without ANTHROPIC_API_KEY; this test is about /api/dev, not the AI.
+    @SpringBootTest(properties = "app.mode=MOCK")
     @AutoConfigureMockMvc
     @ActiveProfiles("prod")
     class Prod {

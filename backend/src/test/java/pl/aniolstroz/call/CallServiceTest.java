@@ -206,6 +206,41 @@ class CallServiceTest {
     }
 
     @Test
+    void callRemembersTheScenarioItWasStartedFor() {
+        assertThat(service.start(Mode.SCRIPTED, "01-fake-police-classic").scenarioId()).isEqualTo("01-fake-police-classic");
+        service.end();
+
+        assertThat(service.start(Mode.LIVE).scenarioId()).isNull();
+    }
+
+    @Test
+    void finalSegmentsAnnounceThemselvesToTheAiLayerAndInterimOnesDoNot() {
+        List<Object> announced = new ArrayList<>();
+        service = CallServices.create(eventBus, clock, new DiscardTranscriptHook(),
+                () -> pl.aniolstroz.contracts.Sensitivity.STANDARD, announced::add);
+        CallState call = service.start(Mode.SCRIPTED);
+
+        service.addSegment(segment(call.callId(), "w trakcie", false));
+        service.addSegment(segment(call.callId(), "gotowe", true));
+
+        assertThat(announced).containsExactly(new FinalSegmentAdded(call.callId()));
+    }
+
+    @Test
+    void aFailingListenerDoesNotBreakTheCall() {
+        service = CallServices.create(eventBus, clock, new DiscardTranscriptHook(),
+                () -> pl.aniolstroz.contracts.Sensitivity.STANDARD, event -> {
+                    throw new IllegalStateException("listener down");
+                });
+        CallState call = service.start(Mode.SCRIPTED);
+
+        var numbered = service.addSegment(segment(call.callId(), "gotowe", true));
+
+        assertThat(numbered.segId()).isEqualTo("s1");
+        assertThat(call.transcript()).hasSize(1);
+    }
+
+    @Test
     void noSegmentsAfterTheCallEnded() {
         CallState call = service.start(Mode.SCRIPTED);
         service.end();

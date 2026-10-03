@@ -26,6 +26,7 @@ public final class CallState {
 
     private final String callId;
     private final Mode mode;
+    private final String scenarioId;
     private final Instant startedAt;
 
     private final ReentrantLock lock = new ReentrantLock();
@@ -38,9 +39,10 @@ public final class CallState {
     private RiskLevel level = RiskLevel.NONE;
     private boolean ended;
 
-    CallState(String callId, Mode mode, Instant startedAt) {
+    CallState(String callId, Mode mode, String scenarioId, Instant startedAt) {
         this.callId = callId;
         this.mode = mode;
+        this.scenarioId = scenarioId;
         this.startedAt = startedAt;
     }
 
@@ -50,6 +52,11 @@ public final class CallState {
 
     public Mode mode() {
         return mode;
+    }
+
+    /** The demo scenario this call plays, or null. */
+    public String scenarioId() {
+        return scenarioId;
     }
 
     public Instant startedAt() {

@@ -19,6 +19,8 @@
         <archunit.version>1.4.1</archunit.version>
         <networknt.version>2.0.1</networknt.version>
         <sqlite-jdbc.version>3.53.4.0</sqlite-jdbc.version>
+        <anthropic-java.version>2.68.0</anthropic-java.version>
+        <wiremock.version>3.13.2</wiremock.version>
         <openapi-generator.version>7.25.0</openapi-generator.version>
         <openapi-request-validator.version>3.0.0</openapi-request-validator.version>
     </properties>
@@ -53,6 +55,17 @@
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-yaml</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.anthropic</groupId>
+            <artifactId>anthropic-java</artifactId>
+            <version>${anthropic-java.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-standalone</artifactId>
+            <version>${wiremock.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.networknt</groupId>

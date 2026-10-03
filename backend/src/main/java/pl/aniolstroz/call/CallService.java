@@ -8,6 +8,7 @@ import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import pl.aniolstroz.alerts.AlertFactory;
 import pl.aniolstroz.alerts.LiveCallAccess;
@@ -51,6 +52,7 @@ public class CallService implements LiveCallAccess {
     private final KeywordDetector keywordDetector;
     private final SensitivitySource sensitivity;
     private final AlertFactory alertFactory;
+    private final ApplicationEventPublisher publisher;
 
     /**
      * Guards {@link #active}. Lock order is always slot lock, then call lock; code holding a call lock never
@@ -60,22 +62,29 @@ public class CallService implements LiveCallAccess {
     private CallState active;
 
     public CallService(EventBus eventBus, Clock clock, CallEndedHook endedHook, KeywordDetector keywordDetector,
-            SensitivitySource sensitivity, AlertFactory alertFactory) {
+            SensitivitySource sensitivity, AlertFactory alertFactory,
+            ApplicationEventPublisher publisher) {
         this.eventBus = eventBus;
         this.clock = clock;
         this.endedHook = endedHook;
         this.keywordDetector = keywordDetector;
         this.sensitivity = sensitivity;
         this.alertFactory = alertFactory;
+        this.publisher = publisher;
     }
 
     public CallState start(Mode mode) {
+        return start(mode, null);
+    }
+
+    /** @param scenarioId the demo scenario the call plays, or null; the mock AI answers by it */
+    public CallState start(Mode mode, String scenarioId) {
         slotLock.lock();
         try {
             if (active != null) {
                 throw new CallAlreadyActiveException();
             }
-            CallState call = new CallState(UUID.randomUUID().toString(), mode, clock.instant());
+            CallState call = new CallState(UUID.randomUUID().toString(), mode, scenarioId, clock.instant());
             active = call;
             eventBus.publish(new CallStartedEvent(mode, clock.instant(), new CallStarted(call.callId())));
             return call;
@@ -104,6 +113,9 @@ public class CallService implements LiveCallAccess {
             }
             eventBus.publish(new TranscriptSegmentEvent(call.mode(), clock.instant(), numbered));
             applyHits(call, keywordDetector.detect(numbered));
+            if (numbered.isFinal()) {
+                announce(call);
+            }
             return numbered;
         } finally {
             call.lock().unlock();
@@ -196,6 +208,15 @@ public class CallService implements LiveCallAccess {
             Alert alert = alertFactory.create(call.callId(), call.mode(), level, counted, assessment.triggeredBy());
             call.recordAlert(alert);
             eventBus.publish(new AlertCreatedEvent(call.mode(), clock.instant(), alert));
+        }
+    }
+
+    /** Tells the AI layer about a new final segment. A failing listener must not break the call. */
+    private void announce(CallState call) {
+        try {
+            publisher.publishEvent(new FinalSegmentAdded(call.callId()));
+        } catch (RuntimeException e) {
+            log.error("Listener of final segments failed: {}", e.getClass().getName());
         }
     }
 

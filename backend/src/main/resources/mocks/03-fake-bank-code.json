@@ -1,0 +1,50 @@
+{
+  "scenarioId": "03-fake-bank-code",
+  "description": "Canned model answers for MOCK mode. Each step applies once the transcript has reached afterSegment; answers are cumulative, like the real model that returns all hits every time. Quotes must be verbatim (a test checks them against the scenario).",
+  "steps": [
+    {
+      "afterSegment": 1,
+      "stage_hits": [
+        {
+          "stage": "AUTHORITY_CLAIM",
+          "segment_id": "s1",
+          "quote": "dział bezpieczeństwa Banku Przykładowego",
+          "speaker_role": "caller"
+        }
+      ]
+    },
+    {
+      "afterSegment": 7,
+      "stage_hits": [
+        {
+          "stage": "URGENT_THREAT",
+          "segment_id": "s7",
+          "quote": "Muszę ją zablokować w ciągu kilku minut, bo potem się nie cofnie.",
+          "speaker_role": "caller"
+        }
+      ]
+    },
+    {
+      "afterSegment": 9,
+      "stage_hits": [
+        {
+          "stage": "PAYMENT_CHANNEL",
+          "segment_id": "s9",
+          "quote": "Wygeneruje pan kod BLIK, sześć cyfr.",
+          "speaker_role": "caller"
+        }
+      ]
+    },
+    {
+      "afterSegment": 13,
+      "stage_hits": [
+        {
+          "stage": "PAYMENT_CHANNEL",
+          "segment_id": "s13",
+          "quote": "Proszę podać ten kod BLIK, inaczej pieniądze przepadną.",
+          "speaker_role": "caller"
+        }
+      ]
+    }
+  ]
+}

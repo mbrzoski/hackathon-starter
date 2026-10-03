@@ -1,0 +1,67 @@
+{
+  "scenarioId": "01-fake-police-classic",
+  "description": "Canned model answers for MOCK mode. Each step applies once the transcript has reached afterSegment; answers are cumulative, like the real model that returns all hits every time. Quotes must be verbatim (a test checks them against the scenario).",
+  "steps": [
+    {
+      "afterSegment": 3,
+      "stage_hits": [
+        {
+          "stage": "AUTHORITY_CLAIM",
+          "segment_id": "s3",
+          "quote": "Mówi podkomisarz Jan Fikcyjny, policja, komenda numer zero zero zero.",
+          "speaker_role": "caller"
+        }
+      ]
+    },
+    {
+      "afterSegment": 7,
+      "stage_hits": [
+        {
+          "stage": "URGENT_THREAT",
+          "segment_id": "s5",
+          "quote": "ktoś próbuje wyczyścić pani konto w banku",
+          "speaker_role": "caller"
+        },
+        {
+          "stage": "URGENT_THREAT",
+          "segment_id": "s7",
+          "quote": "to dzieje się teraz, w tej chwili",
+          "speaker_role": "caller"
+        }
+      ]
+    },
+    {
+      "afterSegment": 9,
+      "stage_hits": [
+        {
+          "stage": "SECRECY_DEMAND",
+          "segment_id": "s9",
+          "quote": "o tej rozmowie nikomu pani nie mówi",
+          "speaker_role": "caller"
+        }
+      ]
+    },
+    {
+      "afterSegment": 11,
+      "stage_hits": [
+        {
+          "stage": "MONEY_REQUEST",
+          "segment_id": "s11",
+          "quote": "Proszę iść do banku i wypłacić wszystko, co pani ma, w gotówce.",
+          "speaker_role": "caller"
+        }
+      ]
+    },
+    {
+      "afterSegment": 13,
+      "stage_hits": [
+        {
+          "stage": "PAYMENT_CHANNEL",
+          "segment_id": "s13",
+          "quote": "po odbiór przyjedzie nasz kurier, pan w cywilu",
+          "speaker_role": "caller"
+        }
+      ]
+    }
+  ]
+}

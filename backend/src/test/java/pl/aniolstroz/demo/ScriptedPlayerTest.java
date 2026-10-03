@@ -41,6 +41,9 @@ class ScriptedPlayerTest {
     private final List<Duration> sleeps = new CopyOnWriteArrayList<>();
     private CallService calls;
     private ScriptedPlayer player;
+    private pl.aniolstroz.ai.StageClassifier classifier = snapshot -> {
+        throw new AssertionError("the AI is not part of this test");
+    };
 
     @BeforeEach
     void setUp() {
@@ -74,7 +77,7 @@ class ScriptedPlayerTest {
     }
 
     private void playerWith(Sleeper sleeper, Scenario... scenarios) {
-        player = new ScriptedPlayer(new ScenarioRepository(List.of(scenarios)), calls, sleeper);
+        player = new ScriptedPlayer(new ScenarioRepository(List.of(scenarios)), calls, sleeper, classifier);
     }
 
     private List<TranscriptSegment> segments() {
@@ -127,6 +130,38 @@ class ScriptedPlayerTest {
 
         assertThat(segments()).extracting(TranscriptSegment::tEndMs).containsExactly(500L, 750L);
         assertThat(segments()).allSatisfy(s -> assertThat(s.tStartMs()).isLessThanOrEqualTo(s.tEndMs()));
+    }
+
+    @Test
+    void theCallStartedFromAScenarioIsLabelledWithThatScenario() throws Exception {
+        var sleeper = new BlockingSleeper();
+        playerWith(sleeper, scenario("abc", 100, 200));
+
+        player.start("abc", 1.0);
+        assertThat(sleeper.secondSleepEntered.await(WAIT_SECONDS, TimeUnit.SECONDS)).isTrue();
+
+        assertThat(calls.active().orElseThrow().scenarioId()).isEqualTo("abc");
+    }
+
+    @Test
+    void withAMockClassifierTheCallIsHonestlyLabelledMock() throws Exception {
+        classifier = new pl.aniolstroz.ai.MockStageClassifier(new com.fasterxml.jackson.databind.ObjectMapper());
+        playerWith(sleeps::add, scenario("abc", 100, 200));
+
+        player.start("abc", 1.0);
+        awaitCallEnded();
+
+        assertThat(events).isNotEmpty().allSatisfy(e -> assertThat(e.mode()).isEqualTo(Mode.MOCK));
+    }
+
+    @Test
+    void withTheRealClassifierTheCallIsLabelledScripted() throws Exception {
+        playerWith(sleeps::add, scenario("abc", 100, 200));
+
+        player.start("abc", 1.0);
+        awaitCallEnded();
+
+        assertThat(events).isNotEmpty().allSatisfy(e -> assertThat(e.mode()).isEqualTo(Mode.SCRIPTED));
     }
 
     @Test
