@@ -16,7 +16,11 @@
 
     <properties>
         <java.version>21</java.version>
-        <archunit.version>1.4.1</archunit.version>    </properties>
+        <archunit.version>1.4.1</archunit.version>
+        <networknt.version>2.0.1</networknt.version>
+        <openapi-generator.version>7.25.0</openapi-generator.version>
+        <openapi-request-validator.version>3.0.0</openapi-request-validator.version>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -37,6 +41,18 @@
         </dependency>
 
         <dependency>
+            <groupId>com.networknt</groupId>
+            <artifactId>json-schema-validator</artifactId>
+            <version>${networknt.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.atlassian.oai</groupId>
+            <artifactId>openapi-request-validator-mockmvc</artifactId>
+            <version>${openapi-request-validator.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
@@ -50,7 +66,60 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <!-- The scenario validator reads components/schemas from the one contract file. -->
+                <directory>${project.basedir}/../contracts</directory>
+                <includes>
+                    <include>openapi.yaml</include>
+                </includes>
+                <targetPath>contract</targetPath>
+            </resource>
+        </resources>
         <plugins>
+            <plugin>
+                <!-- CON-03: interfaces and request/response models for the paths in contracts/openapi.yaml. -->
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>${openapi-generator.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/../contracts/openapi.yaml</inputSpec>
+                            <generatorName>spring</generatorName>
+                            <output>${project.build.directory}/generated-sources/openapi</output>
+                            <apiPackage>pl.aniolstroz.contracts.api</apiPackage>
+                            <modelPackage>pl.aniolstroz.contracts.model</modelPackage>
+                            <generateSupportingFiles>false</generateSupportingFiles>
+                            <!-- Shared schemas stay as the hand-written records in pl.aniolstroz.contracts. -->
+                            <importMappings>
+                                <importMapping>Mode=pl.aniolstroz.contracts.Mode</importMapping>
+                                <importMapping>ProblemDetail=org.springframework.http.ProblemDetail</importMapping>
+                            </importMappings>
+                            <configOptions>
+                                <interfaceOnly>true</interfaceOnly>
+                                <useSpringBoot3>true</useSpringBoot3>
+                                <useJakartaEe>true</useJakartaEe>
+                                <openApiNullable>false</openApiNullable>
+                                <skipDefaultInterface>true</skipDefaultInterface>
+                                <useTags>true</useTags>
+                                <documentationProvider>none</documentationProvider>
+                                <annotationLibrary>none</annotationLibrary>
+                                <useBeanValidation>true</useBeanValidation>
+                            </configOptions>
+                            <globalProperties>
+                                <models>ReplayRequest,ScenarioSummary</models>
+                            </globalProperties>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

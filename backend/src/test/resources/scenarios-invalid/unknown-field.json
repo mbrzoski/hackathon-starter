@@ -1,0 +1,8 @@
+{
+  "scenarioId": "unknown-field",
+  "title": "Nieznane pole",
+  "description": "Pole spoza kontraktu.",
+  "mode": "SCRIPTED",
+  "pauseMs": 100,
+  "segments": [ { "speaker": "B", "text": "Dzień dobry.", "delayMs": 1000 } ]
+}

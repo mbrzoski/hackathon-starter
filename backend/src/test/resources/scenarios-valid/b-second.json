@@ -1,0 +1,7 @@
+{
+  "scenarioId": "b-second",
+  "title": "Drugi",
+  "description": "Opis drugi.",
+  "mode": "SCRIPTED",
+  "segments": [ { "speaker": "B", "text": "Dzień dobry.", "delayMs": 0 } ]
+}

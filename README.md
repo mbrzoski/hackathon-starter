@@ -21,6 +21,9 @@ Configuration: copy `.env.example` to `.env` (never commit it). Secrets only com
 | Spring Boot (web, websocket, validation, actuator, test) | Apache 2.0 | Backend framework |
 | ArchUnit | Apache 2.0 | Architecture tests |
 | Maven Wrapper | Apache 2.0 | Reproducible build |
+| networknt json-schema-validator | Apache 2.0 | Validates scenario files against `components/schemas` of `contracts/openapi.yaml` |
+| OpenAPI Generator (maven plugin, `spring` generator) | Apache 2.0 | Build-time generation of the `/api/demo/*` interface and request models from `contracts/openapi.yaml` |
+| openapi-request-validator-mockmvc (Atlassian) | Apache 2.0 | Tests: every MockMvc request and response is checked against `contracts/openapi.yaml` |
 | Claude / Claude Code (Anthropic) | Anthropic terms | Concept, architecture notes and coding assistance (pre-event architecture document disclosed as such) |
 | Angular, Angular CLI, Angular Material, CDK | MIT | Frontend framework and UI components |
 | RxJS | Apache 2.0 | Router events in the frontend |
