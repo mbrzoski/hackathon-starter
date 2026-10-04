@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- AND-04: pin the app to the screen (screen pinning) so the device next to the landline cannot be left by
+         accident. Set to false for a phone that is used for other things. -->
+    <bool name="kiosk">true</bool>
+</resources>

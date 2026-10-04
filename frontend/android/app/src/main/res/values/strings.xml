@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Anioł Stróż</string>
+    <string name="title_activity_main">Anioł Stróż</string>
+    <string name="package_name">pl.aniolstroz.app</string>
+    <string name="custom_url_scheme">pl.aniolstroz.app</string>
+</resources>

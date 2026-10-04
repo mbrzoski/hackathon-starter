@@ -2,6 +2,7 @@ import { DestroyRef, Injectable, Signal, inject, signal } from '@angular/core';
 // The conversion lives in public/ because the AudioWorklet loads it as a plain file; the types are in pcm-core.d.ts.
 import { frameRms } from '../../../public/pcm-core.js';
 import { AudioError, INSECURE_CONTEXT, NEEDS_TAP, closeError, microphoneError } from './audio-errors';
+import { backendLocation } from './backend-origin';
 import { WEB_SOCKET_FACTORY } from './events.service';
 
 export type AudioState = 'idle' | 'requesting' | 'listening' | 'paused' | 'error';
@@ -128,8 +129,9 @@ export class BrowserAudioService extends AudioService {
   }
 
   private openSocket(attempt: number): void {
-    const scheme = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const socket = this.createSocket(`${scheme}//${location.host}/ws/audio`);
+    const backend = backendLocation();
+    const scheme = backend.protocol === 'https:' ? 'wss:' : 'ws:';
+    const socket = this.createSocket(`${scheme}//${backend.host}/ws/audio`);
     socket.binaryType = 'arraybuffer';
     this.socket = socket;
     socket.onopen = () => {

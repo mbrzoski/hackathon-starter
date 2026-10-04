@@ -22,6 +22,7 @@ import {
   TranscriptSegment,
   TranscriptSegmentEvent,
 } from '../api/model/models';
+import { backendLocation } from './backend-origin';
 import { createEventValidator } from './event-validator';
 
 export type EventsRole = 'senior' | 'family' | 'audit';
@@ -338,7 +339,7 @@ export function roleForUrl(url: string): EventsRole | null {
 }
 
 /** Same origin as the page (WEB-02); wss: when the page is served over https: (WEB-03). */
-export function eventsUrl(role: EventsRole, loc: Pick<Location, 'protocol' | 'host'> = location): string {
+export function eventsUrl(role: EventsRole, loc: Pick<Location, 'protocol' | 'host'> = backendLocation()): string {
   const scheme = loc.protocol === 'https:' ? 'wss:' : 'ws:';
   return `${scheme}//${loc.host}/ws/events?role=${role}`;
 }

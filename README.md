@@ -120,6 +120,17 @@ java -cp target/test-classes pl.aniolstroz.tools.SendWavTool call.wav [ws://loca
 
 Convert any recording first, for example `ffmpeg -i in.mp3 -ar 16000 -ac 1 -c:a pcm_s16le call.wav`.
 
+## Android (Capacitor, AND-01)
+
+The same Angular app in an Android shell (`frontend/android/`, Capacitor 8). By default it packs the listening device (`/listen`): the tablet next to the landline, screen always on, pinned to the screen (kiosk), microphone permission asked at start. The backend address is baked in at build time and must be `https://` (no cleartext traffic):
+
+```bash
+cd frontend && npm run android -- https://192.168.1.50          # Nasłuch (kiosk)
+cd frontend && npm run android -- https://192.168.1.50 senior   # the senior's app
+```
+
+Needs the Android SDK (Android Studio or `ANDROID_HOME`, platform 36) and JDK 21; the APK lands in `frontend/android/app/build/outputs/apk/debug/`. The tablet must trust the demo CA (`http://<laptop>/ca.crt`, installed as a user certificate; the app trusts user certificates). The page runs at `https://localhost` inside the WebView, an origin the demo backend already allows. Android cannot listen to GSM calls on the same device: it protects the landline next to it (AND-06). Minimum Android 10.
+
 ## Disclosure list
 
 | Name | Licence | Purpose |
@@ -139,6 +150,7 @@ Convert any recording first, for example `ffmpeg -i in.mp3 -ar 16000 -ac 1 -c:a 
 | Vosk (`com.alphacephei:vosk` 0.3.38; 0.3.45 cannot load its own macOS library) | Apache 2.0 (confirmed in vosk-api `COPYING` and the POM) | Local, offline Polish speech-to-text in the backend (AUD-03); audio never leaves the device. The jar bundles the native libraries for Windows, Linux and macOS |
 | JNA (`net.java.dev.jna:jna` 5.17.0) | LGPL 2.1 or later, or Apache 2.0 (dual; `SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later`, confirmed in the JNA repository and POM; we use it under Apache 2.0) | Native access used by Vosk |
 | Vosk model `vosk-model-small-pl-0.22` | Apache 2.0 (confirmed on the Vosk models page) | Polish model for the recogniser (WER 11.6 to 18.4 on its test sets); downloaded by `scripts/download-vosk-model.*`, not part of the repository |
+| Capacitor (`@capacitor/core`, `@capacitor/android`, `@capacitor/cli` 8.5.2) | MIT | Android shell around the same Angular app (AND-01) |
 | axe-core | MPL 2.0 | Tests only: accessibility check of the screens (`frontend/e2e/a11y.mjs`), not shipped in the apps |
 | macOS speech synthesis (voice Zosia) | Apple macOS terms | Synthetic speech of the written scenarios for REPLAY recordings (`make recordings`); not people, not shipped |
 | Claude / Claude Code (Anthropic) | Anthropic terms | Concept, architecture notes and coding assistance (pre-event architecture document disclosed as such) |
