@@ -153,7 +153,7 @@ Needs the Android SDK (Android Studio or `ANDROID_HOME`, platform 36) and JDK 21
 | Capacitor (`@capacitor/core`, `@capacitor/android`, `@capacitor/cli` 8.5.2) | MIT | Android shell around the same Angular app (AND-01) |
 | axe-core | MPL 2.0 | Tests only: accessibility check of the screens (`frontend/e2e/a11y.mjs`), not shipped in the apps |
 | macOS speech synthesis (voice Zosia) | Apple macOS terms | Synthetic speech of the written scenarios for REPLAY recordings (`make recordings`); not people, not shipped |
-| Claude / Claude Code (Anthropic) | Anthropic terms | Concept, architecture notes and coding assistance (pre-event architecture document disclosed as such) |
+| Claude / Claude Code (Anthropic) | Anthropic terms | Concept, architecture notes and coding assistance (the concept and architecture were written on the day of the hackathon; only an empty git repository existed before it) |
 | Angular, Angular CLI, Angular Material, CDK | MIT | Frontend framework and UI components |
 | RxJS | Apache 2.0 | Router events in the frontend |
 | Vitest, jsdom | MIT | Frontend unit tests |

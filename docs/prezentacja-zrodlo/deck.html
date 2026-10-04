@@ -1,0 +1,398 @@
+﻿<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>Anioł Stróż – HackYeah 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800;900&display=swap">
+<style>
+@page { size: 1920px 1080px; margin: 0; }
+:root{
+  --navy:#0a2a5e; --navy-deep:#071d42; --primary:#0b4aa2; --text:#15191f; --bg:#f3f5f8; --surface:#fff;
+  --border:#d5dae1; --muted:#4d5663; --alarm:#b3141b; --alarm-deep:#a01218; --alarm-bg:#fbe9ea;
+  --safe:#1b7a3a; --safe-deep:#14612d; --safe-bg:#eef7f0; --warn:#9a5300; --warn-bg:#fff3dc; --highlight:#ffe8a3;
+  --blue-bg:#e6eefb;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#cfd5de}
+body{font-family:'Public Sans',system-ui,'Segoe UI',sans-serif;color:var(--text);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.slide{width:1920px;height:1080px;position:relative;overflow:hidden;background:var(--bg);page-break-after:always;break-after:page;padding:56px 88px 0}
+.slide:last-child{page-break-after:auto;break-after:auto}
+/* chrome */
+.brand{position:absolute;top:34px;left:88px;display:flex;align-items:center;gap:14px;font-weight:800;font-size:26px;color:var(--navy)}
+.brand svg{width:44px;height:44px}
+.pg{position:absolute;bottom:26px;right:88px;font-size:22px;font-weight:600;color:var(--muted)}
+.foot{position:absolute;bottom:26px;left:88px;font-size:22px;font-weight:600;color:var(--muted)}
+.kicker{font-size:24px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--primary)}
+h1{font-size:68px;line-height:1.08;font-weight:900;color:var(--navy);letter-spacing:-.02em}
+h2{font-size:58px;line-height:1.1;font-weight:900;color:var(--navy);letter-spacing:-.02em}
+.head{padding-top:64px}
+.head h2{margin-top:8px;max-width:1500px}
+.lead{font-size:30px;line-height:1.4;color:var(--muted);margin-top:14px;max-width:1500px}
+.card{background:var(--surface);border:2px solid var(--border);border-radius:22px}
+.chip{display:inline-flex;align-items:center;gap:10px;border-radius:999px;padding:8px 20px;font-weight:700;font-size:24px;border:2px solid var(--border);background:#fff}
+.shot{position:relative;border-radius:16px;overflow:hidden;border:2px solid var(--border);box-shadow:0 14px 40px rgba(10,42,94,.18);background:#fff}
+.shot img{display:block;width:100%;height:auto}
+.cap{position:absolute;left:14px;top:14px;background:var(--navy);color:#fff;font-weight:800;font-size:24px;padding:8px 18px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.cap.b{top:auto;left:auto;right:14px;bottom:14px}
+.shot.fix{height:470px}
+.shot.fix img{height:100%;object-fit:cover;object-position:top left}
+.cap.red{background:var(--alarm-deep)} .cap.green{background:var(--safe-deep)}
+/* stepper */
+.stepper{position:absolute;top:36px;right:88px;display:flex;gap:10px}
+.stepper span{font-size:22px;font-weight:700;padding:8px 20px;border-radius:999px;background:#fff;border:2px solid var(--border);color:var(--muted)}
+.stepper span.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.mode{display:inline-block;background:var(--warn-bg);color:#5a3500;border:2px solid #e6c46b;border-radius:999px;padding:4px 16px;font-size:22px;font-weight:800}
+.note{font-size:26px;line-height:1.4;color:var(--muted)}
+b,strong{font-weight:800}
+.ph{display:inline-block;background:var(--warn-bg);border:2px dashed #c98a1a;color:#6a4000;border-radius:10px;padding:2px 12px;font-weight:700}
+/* title slide */
+.s1{background:linear-gradient(135deg,var(--navy-deep),var(--navy) 60%,#0d3b80);color:#fff;padding:0}
+.s1 .brand{color:#fff;top:48px;left:100px}
+.s1 .left{position:absolute;left:100px;top:170px;width:1080px}
+.s1 h1{color:#fff;font-size:150px;line-height:1;letter-spacing:-.03em}
+.s1 .tag{font-size:42px;line-height:1.3;font-weight:600;margin-top:36px;color:#dbe6fa}
+.s1 .tag b{color:#fff}
+.s1 .evt{margin-top:40px;font-size:28px;font-weight:700;color:#ffe8a3}
+.s1 .team{position:absolute;left:100px;bottom:70px;width:1080px}
+.s1 .team .tn{font-size:36px;font-weight:800}
+.s1 .team .tm{font-size:26px;color:#c3d3f0;margin-top:6px}
+.s1 .links{display:flex;gap:16px;margin-top:22px;flex-wrap:wrap}
+.s1 .links div{background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.28);border-radius:14px;padding:10px 20px;font-size:24px;font-weight:600}
+.s1 .links small{display:block;font-size:19px;color:#a9bde0;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.s1 .phone{position:absolute;right:140px;top:70px;width:520px}
+.s1 .phone img{width:100%;display:block;border-radius:44px;box-shadow:0 30px 70px rgba(0,0,0,.5);border:3px solid rgba(255,255,255,.2)}
+.s1 .glow{position:absolute;right:20px;top:120px;width:760px;height:760px;border-radius:50%;background:radial-gradient(circle,rgba(179,20,27,.55),transparent 65%)}
+</style>
+</head>
+<body>
+
+<!-- ============ 1. TYTUŁ ============ -->
+<section class="slide s1">
+  <div class="brand"><svg viewBox="0 0 44 44"><rect width="44" height="44" rx="10" fill="#fff"/><path d="M22 8l12 4.5v9c0 8-5.4 12.6-12 14.5-6.6-1.9-12-6.5-12-14.5v-9z" fill="#0b4aa2"/><path d="M16.5 22l4 4 7.5-8" stroke="#fff" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Anioł Stróż</div>
+  <div class="glow"></div>
+  <div class="phone"><img src="img/senior-alert.png" alt=""></div>
+  <div class="left">
+    <h1>Anioł Stróż</h1>
+    <p class="tag">Ostrzega seniora <b>w trakcie rozmowy</b>.<br>Pokazuje dosłowne słowa oszusta.<br>Decyzję zawsze podejmuje człowiek.</p>
+    <p class="evt">HackYeah 2026 · Open Task „Artificial Intelligence”</p>
+  </div>
+  <div class="team">
+    <div class="tn">The Knights who say Git</div>
+    <div class="tm">Adrian · Michał · Dominik · Rafał — software developerzy</div>
+    <div class="links">
+      <div><small>Repozytorium</small><a href="https://github.com/mbrzoski/hackathon-starter" style="color:inherit;text-decoration:none">github.com/mbrzoski/hackathon-starter</a></div>
+      <div><small>Film z dema</small><a href="https://www.youtube.com/watch?v=k76JNJBX_gk" style="color:inherit;text-decoration:none">youtube.com/watch?v=k76JNJBX_gk</a></div>
+          </div>
+  </div>
+</section>
+
+<!-- ============ 2. PROBLEM ============ -->
+<section class="slide">
+  <div class="brand"><svg viewBox="0 0 44 44"><rect width="44" height="44" rx="10" fill="#0a2a5e"/><path d="M22 8l12 4.5v9c0 8-5.4 12.6-12 14.5-6.6-1.9-12-6.5-12-14.5v-9z" fill="#fff"/><path d="M16.5 22l4 4 7.5-8" stroke="#0a2a5e" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Anioł Stróż</div>
+  <div class="head">
+    <div class="kicker">Problem</div>
+    <h2>„Nie rozłączaj się. Nikomu nie mów.” Senior zostaje sam na linii z oszustem.</h2>
+  </div>
+
+  <div style="display:flex;gap:16px;margin-top:60px;align-items:stretch">
+    <div class="card" style="flex:1;padding:30px 20px;text-align:center"><div style="font-size:21px;font-weight:800;color:var(--alarm)">1</div><div style="font-size:31px;font-weight:800;margin-top:10px">Autorytet</div><div class="note" style="font-size:24px;margin-top:8px">„Dzwonię z policji”</div></div>
+    <div class="card" style="flex:1;padding:30px 20px;text-align:center"><div style="font-size:21px;font-weight:800;color:var(--alarm)">2</div><div style="font-size:31px;font-weight:800;margin-top:10px">Groźba</div><div class="note" style="font-size:24px;margin-top:8px">bliski w tarapatach</div></div>
+    <div class="card" style="flex:1;padding:30px 20px;text-align:center"><div style="font-size:21px;font-weight:800;color:var(--alarm)">3</div><div style="font-size:31px;font-weight:800;margin-top:10px">Tajemnica</div><div class="note" style="font-size:24px;margin-top:8px">„nikomu nie mów”</div></div>
+    <div class="card" style="flex:1;padding:30px 20px;text-align:center"><div style="font-size:21px;font-weight:800;color:var(--alarm)">4</div><div style="font-size:31px;font-weight:800;margin-top:10px">Izolacja</div><div class="note" style="font-size:24px;margin-top:8px">„nie odkładaj słuchawki”</div></div>
+    <div class="card" style="flex:1;padding:30px 20px;text-align:center"><div style="font-size:21px;font-weight:800;color:var(--alarm)">5</div><div style="font-size:31px;font-weight:800;margin-top:10px">Pieniądze</div><div class="note" style="font-size:24px;margin-top:8px">wypłata, kurier</div></div>
+    <div class="card" style="flex:1;padding:30px 20px;text-align:center;background:var(--alarm-bg);border-color:#e8b5b8"><div style="font-size:21px;font-weight:800;color:var(--alarm)">6</div><div style="font-size:31px;font-weight:800;margin-top:10px;color:var(--alarm-deep)">Kanał płatności</div><div class="note" style="font-size:24px;margin-top:8px;color:#6e1a1e">BLIK, „bezpieczne konto”</div></div>
+  </div>
+  <div style="height:8px;margin:18px 0 0;border-radius:4px;background:linear-gradient(90deg,#d5dae1,#b3141b)"></div>
+  <div class="note" style="margin-top:8px;font-size:24px;font-weight:600">Rozpoznawalne etapy — ale ofiara zwykle widzi je dopiero po fakcie.</div>
+
+  <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:28px;margin-top:40px">
+    <div class="card" style="padding:34px 40px">
+      <div style="font-size:30px;font-weight:800;color:var(--navy)">Dlaczego obecne zabezpieczenia nie wystarczają</div>
+      <ul style="margin-top:14px;padding-left:30px;font-size:27px;line-height:1.5">
+        <li>Blokady numerów, opóźnienia przelewów i kampanie informacyjne działają <b>przed lub po</b> rozmowie, nie w jej trakcie.</li>
+        <li>Same słowa kluczowe dają fałszywe alarmy i nie łapią omówień.</li>
+      </ul>
+    </div>
+    <div class="card" style="padding:34px 40px;background:var(--navy);border-color:var(--navy);color:#fff">
+      <div style="font-size:30px;font-weight:800">Senior często ma tylko telefon stacjonarny</div>
+      <p style="margin-top:14px;font-size:27px;line-height:1.5;color:#dbe6fa">Nie zainstaluje aplikacji na smartfonie. Ochrona musi stać obok jego telefonu, a nie w nim.</p>
+    </div>
+  </div>
+  <div class="pg">2 / 10</div>
+</section>
+
+<!-- ============ 3. ROZWIĄZANIE ============ -->
+<section class="slide">
+  <div class="brand"><svg viewBox="0 0 44 44"><rect width="44" height="44" rx="10" fill="#0a2a5e"/><path d="M22 8l12 4.5v9c0 8-5.4 12.6-12 14.5-6.6-1.9-12-6.5-12-14.5v-9z" fill="#fff"/><path d="M16.5 22l4 4 7.5-8" stroke="#0a2a5e" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Anioł Stróż</div>
+  <div class="head">
+    <div class="kicker">Pomysł i rozwiązanie</div>
+    <h2>Urządzenie obok telefonu słucha rozmowy i ostrzega, zanim senior zapłaci.</h2>
+  </div>
+
+  <div style="display:flex;align-items:stretch;gap:0;margin-top:60px">
+    <div class="card" style="flex:1;padding:44px 28px">
+      <div style="font-size:21px;font-weight:800;color:var(--primary);letter-spacing:.08em">1 · TELEFON SENIORA</div>
+      <div style="font-size:32px;font-weight:800;margin-top:8px">Rozmowa na głośniku</div>
+      <p class="note" style="margin-top:10px;font-size:24px">Bez instalacji u seniora.</p>
+    </div>
+    <div style="width:56px;display:flex;align-items:center;justify-content:center;font-size:46px;color:var(--primary);font-weight:800">→</div>
+    <div class="card" style="flex:1;padding:44px 28px">
+      <div style="font-size:21px;font-weight:800;color:var(--primary);letter-spacing:.08em">2 · NASŁUCH</div>
+      <div style="font-size:32px;font-weight:800;margin-top:8px">Osobne urządzenie</div>
+      <p class="note" style="margin-top:10px;font-size:24px">Mikrofon przy głośniku. Dźwięk zostaje lokalnie.</p>
+    </div>
+    <div style="width:56px;display:flex;align-items:center;justify-content:center;font-size:46px;color:var(--primary);font-weight:800">→</div>
+    <div class="card" style="flex:1;padding:44px 28px">
+      <div style="font-size:21px;font-weight:800;color:var(--primary);letter-spacing:.08em">3 · MÓZG</div>
+      <div style="font-size:32px;font-weight:800;margin-top:8px">Etapy oszustwa + dowód</div>
+      <p class="note" style="margin-top:10px;font-size:24px">AI znajduje cytat, kod liczy ryzyko.</p>
+    </div>
+    <div style="width:56px;display:flex;align-items:center;justify-content:center;font-size:46px;color:var(--alarm);font-weight:800">→</div>
+    <div class="card" style="flex:1;padding:44px 28px;background:var(--alarm-bg);border-color:#e8b5b8">
+      <div style="font-size:21px;font-weight:800;color:var(--alarm);letter-spacing:.08em">4 · ALERT</div>
+      <div style="font-size:32px;font-weight:800;margin-top:8px;color:var(--alarm-deep)">Senior i rodzina</div>
+      <p class="note" style="margin-top:10px;font-size:24px;color:#6e1a1e">Ten sam alert, w tej samej chwili.</p>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:44px">
+    <div class="card" style="padding:40px 36px"><div style="font-size:28px;font-weight:800;color:var(--navy)">Dowód, nie werdykt</div><p class="note" style="margin-top:8px">Alert pokazuje <b>dosłowne słowa</b> oszusta, więc senior i rodzina sami oceniają sytuację.</p></div>
+    <div class="card" style="padding:40px 36px"><div style="font-size:28px;font-weight:800;color:var(--navy)">Trzy proste decyzje</div><p class="note" style="margin-top:8px">„Rozłączam się”, „Zadzwoń do bliskiej osoby”, „Zadzwoń na 112”. Duże przyciski, głos, mało tekstu.</p></div>
+    <div class="card" style="padding:40px 36px;background:var(--safe-bg);border-color:#b9dcc4"><div style="font-size:28px;font-weight:800;color:var(--safe-deep)">Człowiek decyduje</div><p class="note" style="margin-top:8px;color:#1f4a2c">System <b>nigdy nie rozłącza, nie dzwoni i nie blokuje numerów</b>.</p></div>
+  </div>
+  <div class="pg">3 / 10</div>
+</section>
+
+<!-- ============ 4. FLOW 1: KONFIGURACJA ============ -->
+<section class="slide">
+  <div class="brand"><svg viewBox="0 0 44 44"><rect width="44" height="44" rx="10" fill="#0a2a5e"/><path d="M22 8l12 4.5v9c0 8-5.4 12.6-12 14.5-6.6-1.9-12-6.5-12-14.5v-9z" fill="#fff"/><path d="M16.5 22l4 4 7.5-8" stroke="#0a2a5e" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Anioł Stróż</div>
+  <div class="stepper"><span class="on">1 Konfiguracja</span><span>2 Rozmowa</span><span>3 Alert</span><span>4 Po rozmowie</span></div>
+  <div class="head" style="padding-top:78px">
+    <div class="kicker">Demo flow · krok 1</div>
+    <h2 style="font-size:54px">Rodzina konfiguruje w pięciu krokach. Bez zgód mikrofon się nie włączy.</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:36px;margin-top:36px">
+    <div>
+      <div class="shot fix"><img src="img/setup-zgody.png" alt=""></div>
+      <p class="note" style="margin-top:16px"><b>1 · Zgody.</b> Zgoda seniora i rodziny jest wymagana. Opisujemy wprost, co robi system i czego nie robi.</p>
+    </div>
+    <div>
+      <div class="shot fix"><img src="img/setup-kontakty.png" alt=""></div>
+      <p class="note" style="margin-top:16px"><b>2 · Zaufane kontakty.</b> Do nich senior może zadzwonić po ostrzeżeniu.</p>
+    </div>
+  </div>
+  <div style="display:flex;gap:14px;margin-top:26px;align-items:center;flex-wrap:wrap">
+    <span class="chip" style="background:var(--navy);color:#fff;border-color:var(--navy)">1 Zgody</span>
+    <span class="chip">2 Zaufane kontakty</span>
+    <span class="chip">3 Czułość</span>
+    <span class="chip">4 Przechowywanie</span>
+    <span class="chip">5 Podsumowanie</span>
+    
+  </div>
+  <div class="pg">4 / 10</div>
+</section>
+
+<!-- ============ 5. FLOW 2: ROZMOWA ============ -->
+<section class="slide">
+  <div class="brand"><svg viewBox="0 0 44 44"><rect width="44" height="44" rx="10" fill="#0a2a5e"/><path d="M22 8l12 4.5v9c0 8-5.4 12.6-12 14.5-6.6-1.9-12-6.5-12-14.5v-9z" fill="#fff"/><path d="M16.5 22l4 4 7.5-8" stroke="#0a2a5e" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Anioł Stróż</div>
+  <div class="stepper"><span>1 Konfiguracja</span><span class="on">2 Rozmowa</span><span>3 Alert</span><span>4 Po rozmowie</span></div>
+  <div class="head" style="padding-top:78px">
+    <div class="kicker">Demo flow · krok 2</div>
+    <h2 style="font-size:54px">Ktoś dzwoni. Senior widzi, że ochrona słucha, ale nic nie jest nagrywane.</h2>
+  </div>
+  <div style="display:flex;gap:30px;margin-top:34px;align-items:flex-start">
+    <div class="shot" style="width:372px;flex:none"><img src="img/senior-idle.png" alt=""><span class="cap green">Czuwanie</span></div>
+    <div class="shot" style="width:372px;flex:none"><img src="img/senior-call.png" alt=""><span class="cap">Trwa połączenie</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:24px">
+      <div class="shot"><img src="img/listen-live.png" alt=""><span class="cap">Nasłuch: „Słucham rozmowy”</span></div>
+      <div class="card" style="padding:22px 28px">
+        <p style="font-size:26px;line-height:1.4"><b>Połączenie uruchamia nasłuch.</b> Dźwięk zamienia się w tekst na miejscu (Vosk, offline) i trafia do analizy tylko jako tekst.</p>
+      </div>
+    </div>
+  </div>
+  <div class="pg">5 / 10</div>
+</section>
+
+<!-- ============ 6. FLOW 3: ALERT ============ -->
+<section class="slide">
+  <div class="brand"><svg viewBox="0 0 44 44"><rect width="44" height="44" rx="10" fill="#0a2a5e"/><path d="M22 8l12 4.5v9c0 8-5.4 12.6-12 14.5-6.6-1.9-12-6.5-12-14.5v-9z" fill="#fff"/><path d="M16.5 22l4 4 7.5-8" stroke="#0a2a5e" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Anioł Stróż</div>
+  <div class="stepper"><span>1 Konfiguracja</span><span>2 Rozmowa</span><span class="on">3 Alert</span><span>4 Po rozmowie</span></div>
+  <div class="head" style="padding-top:78px">
+    <div class="kicker">Demo flow · krok 3</div>
+    <h2 style="font-size:54px">Padają znane etapy oszustwa. Alert trafia w jednej chwili w trzy miejsca.</h2>
+  </div>
+  <div style="display:flex;gap:26px;margin-top:30px;align-items:flex-start">
+    <div class="shot" style="width:379px;flex:none"><img src="img/senior-alert.png" alt=""><span class="cap red">Senior: 3 decyzje</span></div>
+    <div class="shot" style="width:790px;flex:none"><img src="img/family-alert2.png" alt=""><span class="cap red b">Rodzina: poziom, etapy, cytaty</span></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:22px">
+      <div class="shot"><img src="img/listen-alert.png" alt=""><span class="cap red b">Nasłuch: alarm</span></div>
+      <div class="card" style="padding:24px 26px"><div style="font-size:28px;font-weight:800;color:var(--navy)">Poziom słowami, nie procentami</div><p class="note" style="font-size:24px;margin-top:8px">Poziom ryzyka liczy deterministyczny kod. Każdy etap ma <b>dosłowny cytat</b>.</p></div>
+    </div>
+  </div>
+  <div class="pg">6 / 10</div>
+</section>
+
+<!-- ============ 7. FLOW 4: PO ROZMOWIE ============ -->
+<section class="slide">
+  <div class="brand"><svg viewBox="0 0 44 44"><rect width="44" height="44" rx="10" fill="#0a2a5e"/><path d="M22 8l12 4.5v9c0 8-5.4 12.6-12 14.5-6.6-1.9-12-6.5-12-14.5v-9z" fill="#fff"/><path d="M16.5 22l4 4 7.5-8" stroke="#0a2a5e" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Anioł Stróż</div>
+  <div class="stepper"><span>1 Konfiguracja</span><span>2 Rozmowa</span><span>3 Alert</span><span class="on">4 Po rozmowie</span></div>
+  <div class="head" style="padding-top:78px">
+    <div class="kicker">Demo flow · krok 4</div>
+    <h2 style="font-size:54px">Rodzina widzi decyzję seniora, rozmowę z podświetlonymi cytatami i audyt.</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:36px;margin-top:32px">
+    <div class="shot"><img src="img/family-report.png" alt=""><span class="cap b">Raport: „Mama wybrała: rozłączam się”</span></div>
+    <div class="shot"><img src="img/audit.png" alt=""><span class="cap b">Audyt: każde wywołanie AI jest zapisane</span></div>
+  </div>
+  <div style="display:flex;gap:16px;margin-top:28px;flex-wrap:wrap">
+    <span class="chip">Potwierdzam oszustwo / Fałszywy alarm</span>
+    <span class="chip">„Nie licz tego etapu”</span>
+    <span class="chip">Usuń dane tego połączenia</span>
+    <span class="chip">Każdy ekran ma znaczek trybu</span>
+  </div>
+  <div class="pg">7 / 10</div>
+</section>
+
+<!-- ============ 8. ROLA AI ============ -->
+<section class="slide">
+  <div class="brand"><svg viewBox="0 0 44 44"><rect width="44" height="44" rx="10" fill="#0a2a5e"/><path d="M22 8l12 4.5v9c0 8-5.4 12.6-12 14.5-6.6-1.9-12-6.5-12-14.5v-9z" fill="#fff"/><path d="M16.5 22l4 4 7.5-8" stroke="#0a2a5e" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Anioł Stróż</div>
+  <div class="head">
+    <div class="kicker">Rola AI</div>
+    <h2>AI znajduje dowody. Kod liczy ryzyko. Człowiek decyduje.</h2>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:40px">
+    <div class="card" style="padding:30px 36px;border-color:#a9c3ea;background:var(--blue-bg)">
+      <div style="font-size:32px;font-weight:900;color:var(--primary)">AI robi</div>
+      <ul style="margin-top:12px;padding-left:30px;font-size:27px;line-height:1.5">
+        <li><b>Vosk</b> zamienia polską mowę w tekst, lokalnie i offline.</li>
+        <li><b>Claude</b> zwraca tylko: etap + <b>dosłowny cytat</b> + rolę mówiącego.</li>
+        <li>Rozumie omówienia, których nie złapią słowa kluczowe.</li>
+      </ul>
+    </div>
+    <div class="card" style="padding:30px 36px">
+      <div style="font-size:32px;font-weight:900;color:var(--navy)">AI nie robi</div>
+      <ul style="margin-top:12px;padding-left:30px;font-size:27px;line-height:1.5">
+        <li>Nie liczy ryzyka i nie pisze tekstów alertów.</li>
+        <li>Nie decyduje o powiadomieniach.</li>
+        <li>Nie rozłącza, nie dzwoni, nie blokuje numerów.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:26px;padding:24px 32px">
+    <div style="font-size:24px;font-weight:800;color:var(--muted);letter-spacing:.08em">8 ROZPOZNAWANYCH ETAPÓW</div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:14px">
+      <span class="chip">Autorytet</span><span class="chip">Groźba / presja</span><span class="chip">Tajemnica</span><span class="chip">Izolacja</span>
+      <span class="chip">Prośba o pieniądze</span><span class="chip">Kanał płatności</span><span class="chip">Zdalny dostęp</span><span class="chip">Dane osobowe</span>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:26px">
+    <div class="card" style="padding:24px 32px;background:var(--safe-bg);border-color:#b9dcc4"><div style="font-size:27px;font-weight:800;color:var(--safe-deep)">QuoteValidator</div><p class="note" style="font-size:24px;margin-top:6px;color:#1f4a2c">Cytat, którego nie ma w transkrypcji, nie wpływa na ryzyko. AI nie może „zmyślić” dowodu.</p></div>
+    <div class="card" style="padding:24px 32px;background:var(--warn-bg);border-color:#e6c46b"><div style="font-size:27px;font-weight:800;color:var(--warn)">Uczciwy stan awarii</div><p class="note" style="font-size:24px;margin-top:6px;color:#5a3500">Gdy AI zawodzi: „Podstawowa ochrona (bez AI)” i dalej działają słowa kluczowe. Nigdy cichy zielony.</p></div>
+  </div>
+  <div class="foot" style="max-width:1560px;bottom:34px;line-height:1.35">Używamy Claude API (Sonnet 5.5): tekst rozmowy trafia do modelu, a odpowiedź ma ustalony format (structured output).</div>
+  <div class="pg">8 / 10</div>
+</section>
+
+<!-- ============ 9. ARCHITEKTURA ============ -->
+<section class="slide">
+  <div class="brand"><svg viewBox="0 0 44 44"><rect width="44" height="44" rx="10" fill="#0a2a5e"/><path d="M22 8l12 4.5v9c0 8-5.4 12.6-12 14.5-6.6-1.9-12-6.5-12-14.5v-9z" fill="#fff"/><path d="M16.5 22l4 4 7.5-8" stroke="#0a2a5e" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Anioł Stróż</div>
+  <div class="head">
+    <div class="kicker">Technologia i architektura</div>
+    <h2>Dźwięk zostaje na miejscu. Do chmury trafia tylko tekst.</h2>
+  </div>
+
+  <div style="position:relative;display:flex;gap:26px;margin-top:54px;align-items:stretch">
+    <!-- local zone -->
+    <div style="flex:1.65;border:3px dashed var(--safe);border-radius:26px;background:rgba(27,122,58,.05);padding:56px 26px 26px;position:relative">
+      <div style="position:absolute;top:-18px;left:28px;background:var(--safe-deep);color:#fff;font-weight:800;font-size:23px;padding:6px 20px;border-radius:999px">LOKALNIE: dźwięk nigdy nie opuszcza urządzenia</div>
+      <div style="display:flex;gap:20px;align-items:stretch">
+        <div class="card" style="width:230px;padding:22px 20px"><div style="font-size:26px;font-weight:800;color:var(--navy)">Nasłuch</div><p class="note" style="font-size:22px;margin-top:8px">Mikrofon, PCM 16 kHz, WebSocket</p></div>
+        <div style="display:flex;align-items:center;font-size:40px;color:var(--primary);font-weight:800">→</div>
+        <div class="card" style="flex:1;padding:22px 24px;background:var(--navy);border-color:var(--navy);color:#fff">
+          <div style="font-size:26px;font-weight:800">Backend: Java 21 + Spring Boot 3</div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px;font-size:23px;font-weight:600">
+            <div style="background:rgba(255,255,255,.14);border-radius:10px;padding:8px 14px">Vosk STT (offline)</div>
+            <div style="background:rgba(255,255,255,.14);border-radius:10px;padding:8px 14px">Słowa kluczowe (działają bez internetu)</div>
+            <div style="background:rgba(255,255,255,.14);border-radius:10px;padding:8px 14px">QuoteValidator · silnik ryzyka · szablony alertów</div>
+            <div style="background:rgba(255,255,255,.14);border-radius:10px;padding:8px 14px">Log audytu</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- cloud -->
+    <div style="flex:.62;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px">
+      <div style="font-size:21px;font-weight:800;color:var(--primary);text-align:center">tylko tekst</div>
+      <div style="font-size:44px;color:var(--primary);font-weight:800;line-height:1">⇄</div>
+      <div class="card" style="padding:20px 20px;background:var(--blue-bg);border-color:#a9c3ea;text-align:center;width:100%"><div style="font-size:21px;font-weight:800;color:var(--primary);letter-spacing:.06em">CHMURA</div><div style="font-size:26px;font-weight:800;margin-top:4px">Claude Sonnet 5.5</div><p class="note" style="font-size:20px;margin-top:4px">etap + cytat</p></div>
+    </div>
+    <!-- screens -->
+    <div style="flex:.5;display:flex;flex-direction:column;gap:12px;justify-content:center">
+      <div style="font-size:21px;font-weight:800;color:var(--muted);letter-spacing:.08em">TRZY EKRANY</div>
+      <div class="card" style="padding:14px 18px;font-size:25px;font-weight:800">/senior</div>
+      <div class="card" style="padding:14px 18px;font-size:25px;font-weight:800">/family</div>
+      <div class="card" style="padding:14px 18px;font-size:25px;font-weight:800">/listen</div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:26px;margin-top:34px;align-items:center;font-size:24px;font-weight:700;color:var(--muted)">
+    <span style="display:flex;align-items:center;gap:10px"><i style="width:22px;height:22px;border-radius:6px;background:var(--navy);display:inline-block"></i>deterministyczny kod</span>
+    <span style="display:flex;align-items:center;gap:10px"><i style="width:22px;height:22px;border-radius:6px;background:var(--blue-bg);border:2px solid #a9c3ea;display:inline-block"></i>AI</span>
+  </div>
+
+  <div class="card" style="margin-top:26px;padding:28px 32px">
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+      <span style="font-size:22px;font-weight:800;color:var(--muted);letter-spacing:.08em;margin-right:6px">STOS</span>
+      <span class="chip">Java 21</span><span class="chip">Spring Boot 3</span><span class="chip">Angular + Material</span><span class="chip">Vosk (pl)</span><span class="chip">Claude API</span><span class="chip">OpenAPI jako jedno źródło kontraktu</span><span class="chip">ArchUnit</span>
+    </div>
+    <p class="note" style="font-size:23px;margin-top:12px">Trzy aplikacje z jednej bazy kodu Angular. Klucze API tylko w zmiennych środowiskowych.</p>
+  </div>
+  <div class="pg">9 / 10</div>
+</section>
+
+<!-- ============ 10. WPŁYW I ROZWÓJ ============ -->
+<section class="slide">
+  <div class="brand"><svg viewBox="0 0 44 44"><rect width="44" height="44" rx="10" fill="#0a2a5e"/><path d="M22 8l12 4.5v9c0 8-5.4 12.6-12 14.5-6.6-1.9-12-6.5-12-14.5v-9z" fill="#fff"/><path d="M16.5 22l4 4 7.5-8" stroke="#0a2a5e" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Anioł Stróż</div>
+  <div class="head">
+    <div class="kicker">Wpływ i rozwój</div>
+    <h2>Dziś działający MVP. Jutro ochrona, która nie wymaga niczego od seniora.</h2>
+  </div>
+
+  <div style="display:grid;grid-template-columns:.8fr 1.6fr;gap:26px;margin-top:48px">
+    <div class="card" style="padding:28px 30px;background:var(--safe-bg);border-color:#b9dcc4">
+      <div style="font-size:30px;font-weight:900;color:var(--safe-deep)">MVP już działa</div>
+      <ul style="margin-top:12px;padding-left:28px;font-size:25px;line-height:1.5;color:#1f3a28">
+        <li>Trzy ekrany: senior, rodzina, Nasłuch</li>
+        <li>Lokalne STT i analiza przez Claude</li>
+        <li>Walidacja cytatów, audyt, tryby LIVE / SCRIPTED</li>
+        <li>Kreator zgód i ustawień</li>
+      </ul>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="card" style="padding:30px 30px"><div style="font-size:21px;font-weight:800;color:var(--primary);letter-spacing:.08em">PLAN</div><div style="font-size:27px;font-weight:800;color:var(--navy);margin-top:4px">Aplikacja na Androida dla seniora</div><p class="note" style="font-size:24px;margin-top:8px">Tryb kiosku, push i SMS do rodziny.</p></div>
+      <div class="card" style="padding:30px 30px"><div style="font-size:21px;font-weight:800;color:var(--primary);letter-spacing:.08em">PLAN</div><div style="font-size:27px;font-weight:800;color:var(--navy);margin-top:4px">Urządzenie Bluetooth na MagSafe</div><p class="note" style="font-size:24px;margin-top:8px">Małe urządzenie przy telefonie, bez osobnego tabletu.</p></div>
+      <div class="card" style="padding:30px 30px"><div style="font-size:21px;font-weight:800;color:var(--primary);letter-spacing:.08em">PLAN</div><div style="font-size:27px;font-weight:800;color:var(--navy);margin-top:4px">Połączenie jako wyzwalacz</div><p class="note" style="font-size:24px;margin-top:8px">Przychodzące połączenie samo uruchamia nasłuch.</p></div>
+      <div class="card" style="padding:30px 30px"><div style="font-size:21px;font-weight:800;color:var(--primary);letter-spacing:.08em">PLAN</div><div style="font-size:27px;font-weight:800;color:var(--navy);margin-top:4px">Dostrajanie agenta</div><p class="note" style="font-size:24px;margin-top:8px">Decyzje rodziny jako etykiety do oceny, nowe scenariusze, rubryka.</p></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:22px;padding:18px 28px;display:flex;gap:30px;align-items:center;flex-wrap:wrap;font-size:24px">
+    <span><b>Dalej:</b> adapter linii telefonicznej, ocena RODO przetwarzania mowy, pilotaż z rodzinami, współpraca z bankami i operatorami. <b>AI:</b> w kolejnych etapach można rozwinąć jej funkcje, dodać narzędzia (np. RAG ze znanymi scenariuszami oszustw) i testować wsparcie decyzji, nadal z człowiekiem w pętli.</span>
+  </div>
+
+  <div style="position:absolute;left:88px;right:88px;bottom:62px;display:flex;justify-content:space-between;align-items:flex-end;gap:40px">
+    <div style="font-size:21px;line-height:1.45;color:var(--muted);max-width:1130px">
+      <b style="color:var(--text)">Ujawnienia:</b> Claude Sonnet 5.5 (Claude API), Vosk + model vosk-model-small-pl-0.22, Spring Boot, Angular. Narzędzia AI w pracy: Claude, Claude Code. Dane: syntetyczne scenariusze i nagrania zespołu. Koncepcja i architektura powstały w dniu hackathonu z pomocą Claude; przed hackathonem istniało tylko puste repozytorium git. Pełna lista w README.
+    </div>
+    <div style="text-align:right;font-size:22px;line-height:1.45;font-weight:600;white-space:nowrap">
+      <b style="color:var(--navy);font-size:25px">The Knights who say Git</b><br><a href="https://github.com/mbrzoski/hackathon-starter" style="color:inherit;text-decoration:none">github.com/mbrzoski/hackathon-starter</a><br>Film z dema: <a href="https://www.youtube.com/watch?v=k76JNJBX_gk" style="color:inherit;text-decoration:none">youtube.com/watch?v=k76JNJBX_gk</a>
+    </div>
+  </div>
+  <div class="pg" style="bottom:20px">10 / 10</div>
+</section>
+
+</body>
+</html>
+

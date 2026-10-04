@@ -1,0 +1,15 @@
+.git
+.env
+.env.*
+**/node_modules
+**/target
+**/dist
+**/.angular
+backend/models
+backend/data
+backend/recordings/*.wav
+*.db
+data
+docs
+frontend/android
+deploy/site

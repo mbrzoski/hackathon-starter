@@ -1,0 +1,2 @@
+{"alertId":"f20719c6-5efc-4128-bb52-6cd7855a7076","callId":"c54f5c03-2777-4f08-9351-a120152c1717","mode":"LIVE","stages":["AUTHORITY_CLAIM","MONEY_REQUEST"],"decision":"confirmed_scam","actor":"family","at":"2026-10-03T21:33:55.861531600Z"}
+{"alertId":"9a8ed49d-5b91-46ef-99c6-363300b1189a","callId":"8b244f26-a6f0-48f1-8679-ac058f4336b4","mode":"LIVE","stages":["AUTHORITY_CLAIM","MONEY_REQUEST"],"decision":"false_alarm","actor":"family","at":"2026-10-03T22:00:28.585264800Z"}

@@ -1,0 +1,46 @@
+# Heroku container deploy (heroku.yml): one image with the Spring Boot backend, the three Angular apps served by Caddy
+# and the Vosk model. Heroku terminates TLS and routes to $PORT. Secrets come from config vars at run time (rule 8).
+
+# 1) Frontend: generate:api needs Java (openapi-generator), the build needs Node.
+FROM node:22-bookworm AS web
+RUN apt-get update && apt-get install -y --no-install-recommends default-jre-headless && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+COPY contracts contracts
+COPY frontend frontend
+WORKDIR /src/frontend
+RUN npm ci --no-audit --no-fund && npm run build
+# Same layout as deploy/run-demo.sh: one folder, index.html renamed per app.
+RUN mkdir /site && for app in senior listen family; do \
+      cp -R dist/$app/browser/. /site/ && mv /site/index.html /site/index-$app.html; \
+    done
+
+# 2) Backend jar.
+FROM eclipse-temurin:21-jdk AS api
+WORKDIR /src
+COPY backend backend
+WORKDIR /src/backend
+RUN ./mvnw -q -B -DskipTests package
+
+# 3) Runtime.
+FROM eclipse-temurin:21-jre
+RUN apt-get update && apt-get install -y --no-install-recommends curl unzip ca-certificates && rm -rf /var/lib/apt/lists/*
+COPY --from=caddy:2 /usr/bin/caddy /usr/bin/caddy
+WORKDIR /app
+# Vosk model (Apache 2.0) from the same address as scripts/download-vosk-model.sh; default path models/vosk-model-small-pl-0.22.
+RUN mkdir models && curl -fsSL -o /tmp/m.zip https://alphacephei.com/vosk/models/vosk-model-small-pl-0.22.zip \
+    && unzip -q /tmp/m.zip -d models && rm /tmp/m.zip && test -d models/vosk-model-small-pl-0.22
+COPY --from=api /src/backend/target/backend-*.jar app.jar
+COPY --from=web /site /srv/site
+COPY deploy/caddy /etc/caddy
+COPY deploy/heroku-start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+# Heroku runs the container as a non-root user; the filesystem is ephemeral (SQLite lives in /tmp and is lost on restart).
+ENV SPRING_PROFILES_ACTIVE=prod \
+    APP_DB_FILE=/tmp/aniol.db \
+    APP_LABELS_FILE=/tmp/labels.jsonl \
+    SITE_ROOT=/srv/site \
+    BACKEND=localhost:8080 \
+    HOME=/tmp \
+    XDG_DATA_HOME=/tmp \
+    XDG_CONFIG_HOME=/tmp
+CMD ["/app/start.sh"]
