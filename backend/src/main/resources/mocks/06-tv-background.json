@@ -1,0 +1,107 @@
+{
+  "scenarioId" : "06-tv-background",
+  "description" : "Recorded answers of the real model (2026-10-04, EvalRunner --write-mocks), only quotes that QuoteValidator accepted. Used in MOCK mode.",
+  "steps" : [ {
+    "afterSegment" : 3,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s3",
+      "speaker_role" : "background",
+      "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+    }, {
+      "stage" : "MONEY_REQUEST",
+      "segment_id" : "s3",
+      "speaker_role" : "background",
+      "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+    }, {
+      "stage" : "PAYMENT_CHANNEL",
+      "segment_id" : "s3",
+      "speaker_role" : "background",
+      "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+    } ]
+  }, {
+    "afterSegment" : 5,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s3",
+      "speaker_role" : "background",
+      "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+    }, {
+      "stage" : "MONEY_REQUEST",
+      "segment_id" : "s3",
+      "speaker_role" : "background",
+      "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+    }, {
+      "stage" : "PAYMENT_CHANNEL",
+      "segment_id" : "s3",
+      "speaker_role" : "background",
+      "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+    }, {
+      "stage" : "SECRECY_DEMAND",
+      "segment_id" : "s5",
+      "speaker_role" : "background",
+      "quote" : "Przestępcy każą zachować rozmowę w tajemnicy i nikomu o niej nie mówić."
+    } ]
+  }, {
+    "afterSegment" : 8,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s3",
+      "speaker_role" : "background",
+      "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+    }, {
+      "stage" : "MONEY_REQUEST",
+      "segment_id" : "s3",
+      "speaker_role" : "background",
+      "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+    }, {
+      "stage" : "PAYMENT_CHANNEL",
+      "segment_id" : "s3",
+      "speaker_role" : "background",
+      "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+    }, {
+      "stage" : "SECRECY_DEMAND",
+      "segment_id" : "s5",
+      "speaker_role" : "background",
+      "quote" : "Przestępcy każą zachować rozmowę w tajemnicy i nikomu o niej nie mówić."
+    }, {
+      "stage" : "PAYMENT_CHANNEL",
+      "segment_id" : "s8",
+      "speaker_role" : "background",
+      "quote" : "Nigdy nie podawaj kodu BLIK obcej osobie."
+    } ]
+  }, {
+    "afterSegment" : 14,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s3",
+      "speaker_role" : "background",
+      "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+    }, {
+      "stage" : "MONEY_REQUEST",
+      "segment_id" : "s3",
+      "speaker_role" : "background",
+      "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+    }, {
+      "stage" : "PAYMENT_CHANNEL",
+      "segment_id" : "s3",
+      "speaker_role" : "background",
+      "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+    }, {
+      "stage" : "SECRECY_DEMAND",
+      "segment_id" : "s5",
+      "speaker_role" : "background",
+      "quote" : "Przestępcy każą zachować rozmowę w tajemnicy i nikomu o niej nie mówić."
+    }, {
+      "stage" : "PAYMENT_CHANNEL",
+      "segment_id" : "s8",
+      "speaker_role" : "background",
+      "quote" : "Nigdy nie podawaj kodu BLIK obcej osobie."
+    }, {
+      "stage" : "MONEY_REQUEST",
+      "segment_id" : "s8",
+      "speaker_role" : "background",
+      "quote" : "Prawdziwy policjant nie żąda pieniędzy przez telefon."
+    } ]
+  } ]
+}

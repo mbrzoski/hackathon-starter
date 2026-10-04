@@ -1,0 +1,176 @@
+{
+  "scenarioId" : "12-callback-trap",
+  "description" : "Recorded answers of the real model (2026-10-04, EvalRunner --write-mocks), only quotes that QuoteValidator accepted. Used in MOCK mode.",
+  "steps" : [ {
+    "afterSegment" : 1,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "Dzień dobry, mówi inspektor Piotr Fikcyjny z centrali policji."
+    } ]
+  }, {
+    "afterSegment" : 3,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "Dzień dobry, mówi inspektor Piotr Fikcyjny z centrali policji."
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "Pani konto jest zagrożone"
+    } ]
+  }, {
+    "afterSegment" : 5,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "Dzień dobry, mówi inspektor Piotr Fikcyjny z centrali policji."
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "Pani konto jest zagrożone"
+    }, {
+      "stage" : "ISOLATION",
+      "segment_id" : "s5",
+      "speaker_role" : "caller",
+      "quote" : "Proszę zadzwonić pod numer sto dwanaście."
+    } ]
+  }, {
+    "afterSegment" : 7,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "Dzień dobry, mówi inspektor Piotr Fikcyjny z centrali policji."
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "Pani konto jest zagrożone"
+    }, {
+      "stage" : "ISOLATION",
+      "segment_id" : "s5",
+      "speaker_role" : "caller",
+      "quote" : "Proszę zadzwonić pod numer sto dwanaście."
+    }, {
+      "stage" : "ISOLATION",
+      "segment_id" : "s7",
+      "speaker_role" : "caller",
+      "quote" : "Ja zostanę na linii."
+    } ]
+  }, {
+    "afterSegment" : 9,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "Dzień dobry, mówi inspektor Piotr Fikcyjny z centrali policji."
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "Pani konto jest zagrożone"
+    }, {
+      "stage" : "ISOLATION",
+      "segment_id" : "s5",
+      "speaker_role" : "caller",
+      "quote" : "Proszę zadzwonić pod numer sto dwanaście."
+    }, {
+      "stage" : "ISOLATION",
+      "segment_id" : "s7",
+      "speaker_role" : "caller",
+      "quote" : "Ja zostanę na linii."
+    }, {
+      "stage" : "ISOLATION",
+      "segment_id" : "s9",
+      "speaker_role" : "caller",
+      "quote" : "To nieistotne, proszę po prostu trzymać słuchawkę i słuchać moich poleceń."
+    } ]
+  }, {
+    "afterSegment" : 11,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "Dzień dobry, mówi inspektor Piotr Fikcyjny z centrali policji."
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "Pani konto jest zagrożone"
+    }, {
+      "stage" : "ISOLATION",
+      "segment_id" : "s5",
+      "speaker_role" : "caller",
+      "quote" : "Proszę zadzwonić pod numer sto dwanaście."
+    }, {
+      "stage" : "ISOLATION",
+      "segment_id" : "s7",
+      "speaker_role" : "caller",
+      "quote" : "Ja zostanę na linii."
+    }, {
+      "stage" : "ISOLATION",
+      "segment_id" : "s9",
+      "speaker_role" : "caller",
+      "quote" : "To nieistotne, proszę po prostu trzymać słuchawkę i słuchać moich poleceń."
+    }, {
+      "stage" : "ISOLATION",
+      "segment_id" : "s11",
+      "speaker_role" : "caller",
+      "quote" : "Pani wnuczka się myli."
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s11",
+      "speaker_role" : "caller",
+      "quote" : "Jeśli pani się rozłączy, oszuści zablokują pani konto na zawsze."
+    } ]
+  }, {
+    "afterSegment" : 13,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "Dzień dobry, mówi inspektor Piotr Fikcyjny z centrali policji."
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "Pani konto jest zagrożone"
+    }, {
+      "stage" : "ISOLATION",
+      "segment_id" : "s5",
+      "speaker_role" : "caller",
+      "quote" : "Proszę zadzwonić pod numer sto dwanaście."
+    }, {
+      "stage" : "ISOLATION",
+      "segment_id" : "s7",
+      "speaker_role" : "caller",
+      "quote" : "Ja zostanę na linii."
+    }, {
+      "stage" : "ISOLATION",
+      "segment_id" : "s9",
+      "speaker_role" : "caller",
+      "quote" : "To nieistotne, proszę po prostu trzymać słuchawkę i słuchać moich poleceń."
+    }, {
+      "stage" : "ISOLATION",
+      "segment_id" : "s11",
+      "speaker_role" : "caller",
+      "quote" : "Pani wnuczka się myli."
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s11",
+      "speaker_role" : "caller",
+      "quote" : "Jeśli pani się rozłączy, oszuści zablokują pani konto na zawsze."
+    }, {
+      "stage" : "ISOLATION",
+      "segment_id" : "s13",
+      "speaker_role" : "caller",
+      "quote" : "Teraz proszę czekać na moje dalsze instrukcje i z nikim innym nie rozmawiać."
+    } ]
+  } ]
+}

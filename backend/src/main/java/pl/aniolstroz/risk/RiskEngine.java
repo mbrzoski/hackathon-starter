@@ -16,8 +16,9 @@ import pl.aniolstroz.contracts.TriggeredBy;
  *
  * <p>Rules (architecture section 5), counting distinct stages among the hits that count:
  * <ul>
- *   <li>HIGH: a MONEY_REQUEST or PAYMENT_CHANNEL stage together with one of AUTHORITY_CLAIM, URGENT_THREAT,
- *       SECRECY_DEMAND, ISOLATION.</li>
+ *   <li>HIGH: a MONEY_REQUEST, PAYMENT_CHANNEL or REMOTE_ACCESS stage (access to the money: remote control of the
+ *       computer reaches the bank account) together with one of AUTHORITY_CLAIM, URGENT_THREAT, SECRECY_DEMAND,
+ *       ISOLATION.</li>
  *   <li>MEDIUM: two different stages that are not HIGH.</li>
  *   <li>LOW: one stage.</li>
  *   <li>CALM: MEDIUM needs two stages and HIGH needs three (a HIGH combination of only two stages is MEDIUM).</li>
@@ -28,7 +29,8 @@ import pl.aniolstroz.contracts.TriggeredBy;
  */
 public final class RiskEngine {
 
-    private static final Set<StageId> MONEY = EnumSet.of(StageId.MONEY_REQUEST, StageId.PAYMENT_CHANNEL);
+    private static final Set<StageId> MONEY = EnumSet.of(StageId.MONEY_REQUEST, StageId.PAYMENT_CHANNEL,
+            StageId.REMOTE_ACCESS);
     private static final Set<StageId> PRESSURE = EnumSet.of(
             StageId.AUTHORITY_CLAIM, StageId.URGENT_THREAT, StageId.SECRECY_DEMAND, StageId.ISOLATION);
 
@@ -57,8 +59,9 @@ public final class RiskEngine {
     }
 
     /**
-     * The hits that count: validated ones only (AI-08), and no MONEY_REQUEST or PAYMENT_CHANNEL said by the senior
-     * or heard in the background (DET-02).
+     * The hits that count: validated ones only (AI-08), and nothing said by the senior or heard in the background
+     * (DET-02, tightened after the evaluation: a TV programme about scams or the senior retelling a scam must not
+     * raise an alert through any stage, not only through money).
      */
     public static List<StageHit> countedHits(List<StageHit> hits) {
         return hits.stream().filter(RiskEngine::counts).toList();
@@ -74,8 +77,7 @@ public final class RiskEngine {
         if (!hit.validated()) {
             return false;
         }
-        boolean notFromCaller = hit.speakerRole() == SpeakerRole.SENIOR || hit.speakerRole() == SpeakerRole.BACKGROUND;
-        return !(notFromCaller && MONEY.contains(hit.stage()));
+        return hit.speakerRole() != SpeakerRole.SENIOR && hit.speakerRole() != SpeakerRole.BACKGROUND;
     }
 
     private static RiskLevel levelFor(Set<StageId> stages, Sensitivity sensitivity) {

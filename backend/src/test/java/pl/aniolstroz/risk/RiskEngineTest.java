@@ -63,8 +63,9 @@ class RiskEngineTest {
                         Sensitivity.STANDARD, RiskLevel.LOW),
                 Arguments.of("authority + threat", hits(AUTHORITY_CLAIM, URGENT_THREAT), Sensitivity.STANDARD,
                         RiskLevel.MEDIUM),
-                Arguments.of("authority + remote access", hits(AUTHORITY_CLAIM, REMOTE_ACCESS),
-                        Sensitivity.STANDARD, RiskLevel.MEDIUM),
+                Arguments.of("authority + remote access (access to the money)", hits(AUTHORITY_CLAIM, REMOTE_ACCESS),
+                        Sensitivity.STANDARD, RiskLevel.HIGH),
+                Arguments.of("remote access alone", hits(REMOTE_ACCESS), Sensitivity.STANDARD, RiskLevel.LOW),
                 Arguments.of("money + payment channel, no pressure", hits(MONEY_REQUEST, PAYMENT_CHANNEL),
                         Sensitivity.STANDARD, RiskLevel.MEDIUM),
                 Arguments.of("money + personal data, no pressure", hits(MONEY_REQUEST, PERSONAL_DATA_REQUEST),
@@ -125,7 +126,7 @@ class RiskEngineTest {
 
     static Stream<Arguments> excludedBySpeaker() {
         return Stream.of(SpeakerRole.SENIOR, SpeakerRole.BACKGROUND)
-                .flatMap(role -> Stream.of(MONEY_REQUEST, PAYMENT_CHANNEL).map(stage -> Arguments.of(role, stage)));
+                .flatMap(role -> Stream.of(StageId.values()).map(stage -> Arguments.of(role, stage)));
     }
 
     @Test
@@ -138,12 +139,13 @@ class RiskEngineTest {
     }
 
     @Test
-    void otherStagesFromSeniorAndBackgroundStillCount() {
+    void noStageFromSeniorOrBackgroundCounts() {
+        // Evaluation, scenarios 06 and 07: a TV programme about scams or the senior retelling one gave a false alert.
         List<StageHit> hits = List.of(
                 hit(AUTHORITY_CLAIM, SpeakerRole.SENIOR, HitSource.LLM, true),
                 hit(SECRECY_DEMAND, SpeakerRole.BACKGROUND, HitSource.LLM, true));
 
-        assertThat(RiskEngine.computeLevel(hits, Sensitivity.STANDARD).level()).isEqualTo(RiskLevel.MEDIUM);
+        assertThat(RiskEngine.computeLevel(hits, Sensitivity.STANDARD).level()).isEqualTo(RiskLevel.NONE);
     }
 
     @Test
@@ -212,7 +214,7 @@ class RiskEngineTest {
         List<StageHit> hits = List.of(
                 hit(MONEY_REQUEST, SpeakerRole.CALLER, HitSource.LLM, true),
                 hit(AUTHORITY_CLAIM, SpeakerRole.CALLER, HitSource.LLM, true),
-                hit(REMOTE_ACCESS, SpeakerRole.UNCLEAR, HitSource.KEYWORDS, true));
+                hit(PERSONAL_DATA_REQUEST, SpeakerRole.UNCLEAR, HitSource.KEYWORDS, true));
 
         RiskAssessment result = RiskEngine.computeLevel(hits, Sensitivity.STANDARD);
 
@@ -232,7 +234,7 @@ class RiskEngineTest {
     @Test
     void forMediumEveryCountedStageDecides() {
         List<StageHit> hits = List.of(
-                hit(REMOTE_ACCESS, SpeakerRole.UNCLEAR, HitSource.KEYWORDS, true),
+                hit(PERSONAL_DATA_REQUEST, SpeakerRole.UNCLEAR, HitSource.KEYWORDS, true),
                 hit(URGENT_THREAT, SpeakerRole.CALLER, HitSource.LLM, true));
 
         RiskAssessment result = RiskEngine.computeLevel(hits, Sensitivity.STANDARD);
@@ -253,8 +255,9 @@ class RiskEngineTest {
 
     @Test
     void countedHitsKeepsOnlyValidatedHitsThatPassTheSpeakerRule() {
-        StageHit counted = hit(AUTHORITY_CLAIM, SpeakerRole.SENIOR, HitSource.LLM, true);
+        StageHit counted = hit(AUTHORITY_CLAIM, SpeakerRole.UNCLEAR, HitSource.LLM, true);
         List<StageHit> hits = List.of(counted,
+                hit(AUTHORITY_CLAIM, SpeakerRole.SENIOR, HitSource.LLM, true),
                 hit(MONEY_REQUEST, SpeakerRole.SENIOR, HitSource.LLM, true),
                 hit(SECRECY_DEMAND, SpeakerRole.CALLER, HitSource.LLM, false));
 

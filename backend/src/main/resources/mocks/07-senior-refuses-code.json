@@ -1,0 +1,87 @@
+{
+  "scenarioId" : "07-senior-refuses-code",
+  "description" : "Recorded answers of the real model (2026-10-04, EvalRunner --write-mocks), only quotes that QuoteValidator accepted. Used in MOCK mode.",
+  "steps" : [ {
+    "afterSegment" : 4,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s4",
+      "speaker_role" : "senior",
+      "quote" : "Jakiś pan z banku dzwonił i chciał ode mnie kod."
+    }, {
+      "stage" : "REMOTE_ACCESS",
+      "segment_id" : "s4",
+      "speaker_role" : "senior",
+      "quote" : "Jakiś pan z banku dzwonił i chciał ode mnie kod. Ten, co się w telefonie wyświetla."
+    } ]
+  }, {
+    "afterSegment" : 6,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s4",
+      "speaker_role" : "senior",
+      "quote" : "Jakiś pan z banku dzwonił i chciał ode mnie kod."
+    }, {
+      "stage" : "REMOTE_ACCESS",
+      "segment_id" : "s4",
+      "speaker_role" : "senior",
+      "quote" : "Jakiś pan z banku dzwonił i chciał ode mnie kod. Ten, co się w telefonie wyświetla."
+    }, {
+      "stage" : "PAYMENT_CHANNEL",
+      "segment_id" : "s6",
+      "speaker_role" : "senior",
+      "quote" : "Powiedziałam, że ja żadnego kodu BLIK nie podam, bo ty mi tak kazałaś."
+    } ]
+  }, {
+    "afterSegment" : 8,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s4",
+      "speaker_role" : "senior",
+      "quote" : "Jakiś pan z banku dzwonił i chciał ode mnie kod."
+    }, {
+      "stage" : "REMOTE_ACCESS",
+      "segment_id" : "s4",
+      "speaker_role" : "senior",
+      "quote" : "Jakiś pan z banku dzwonił i chciał ode mnie kod. Ten, co się w telefonie wyświetla."
+    }, {
+      "stage" : "PAYMENT_CHANNEL",
+      "segment_id" : "s6",
+      "speaker_role" : "senior",
+      "quote" : "Powiedziałam, że ja żadnego kodu BLIK nie podam, bo ty mi tak kazałaś."
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s8",
+      "speaker_role" : "senior",
+      "quote" : "Dalej gadał, że to pilne, ale ja się rozłączyłam."
+    } ]
+  }, {
+    "afterSegment" : 9,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s4",
+      "speaker_role" : "senior",
+      "quote" : "Jakiś pan z banku dzwonił i chciał ode mnie kod."
+    }, {
+      "stage" : "REMOTE_ACCESS",
+      "segment_id" : "s4",
+      "speaker_role" : "senior",
+      "quote" : "Jakiś pan z banku dzwonił i chciał ode mnie kod. Ten, co się w telefonie wyświetla."
+    }, {
+      "stage" : "PAYMENT_CHANNEL",
+      "segment_id" : "s6",
+      "speaker_role" : "senior",
+      "quote" : "Powiedziałam, że ja żadnego kodu BLIK nie podam, bo ty mi tak kazałaś."
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s8",
+      "speaker_role" : "senior",
+      "quote" : "Dalej gadał, że to pilne, ale ja się rozłączyłam."
+    }, {
+      "stage" : "PERSONAL_DATA_REQUEST",
+      "segment_id" : "s4",
+      "speaker_role" : "senior",
+      "quote" : "Jakiś pan z banku dzwonił i chciał ode mnie kod."
+    } ]
+  } ]
+}

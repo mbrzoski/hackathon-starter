@@ -1,0 +1,3041 @@
+{
+  "results" : [ {
+    "scenarioId" : "01-fake-police-classic",
+    "title" : "Klasyczny fałszywy policjant",
+    "expected" : {
+      "maxLevel" : "high",
+      "mustHitStages" : [ "AUTHORITY_CLAIM", "URGENT_THREAT", "SECRECY_DEMAND", "MONEY_REQUEST", "PAYMENT_CHANNEL" ],
+      "mustNotHitStages" : [ ]
+    },
+    "outcomes" : {
+      "KEYWORDS" : {
+        "level" : "high",
+        "firstAlertSegment" : 10,
+        "stages" : [ "AUTHORITY_CLAIM", "ISOLATION", "MONEY_REQUEST", "PAYMENT_CHANNEL" ],
+        "levelOk" : true,
+        "mustHitOk" : false,
+        "mustNotHitOk" : true,
+        "missed" : [ "URGENT_THREAT", "SECRECY_DEMAND" ],
+        "wronglyHit" : [ ]
+      },
+      "AI" : {
+        "level" : "high",
+        "firstAlertSegment" : 5,
+        "stages" : [ "AUTHORITY_CLAIM", "URGENT_THREAT", "SECRECY_DEMAND", "ISOLATION", "MONEY_REQUEST", "PAYMENT_CHANNEL" ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      },
+      "BOTH" : {
+        "level" : "high",
+        "firstAlertSegment" : 5,
+        "stages" : [ "AUTHORITY_CLAIM", "URGENT_THREAT", "SECRECY_DEMAND", "ISOLATION", "MONEY_REQUEST", "PAYMENT_CHANNEL" ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      }
+    },
+    "ai" : {
+      "validatedHits" : [ {
+        "stage" : "AUTHORITY_CLAIM",
+        "segId" : "s3",
+        "quote" : "Mówi podkomisarz Jan Fikcyjny, policja, komenda numer zero zero zero.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "URGENT_THREAT",
+        "segId" : "s5",
+        "quote" : "Ale wykryliśmy, że ktoś próbuje wyczyścić pani konto w banku.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "URGENT_THREAT",
+        "segId" : "s7",
+        "quote" : "Muszę działać szybko, proszę słuchać.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "SECRECY_DEMAND",
+        "segId" : "s9",
+        "quote" : "o tej rozmowie nikomu pani nie mówi.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "MONEY_REQUEST",
+        "segId" : "s11",
+        "quote" : "Proszę iść do banku i wypłacić wszystko, co pani ma, w gotówce.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "PAYMENT_CHANNEL",
+        "segId" : "s13",
+        "quote" : "Gotówkę włoży pani do koperty, a po odbiór przyjedzie nasz kurier, pan w cywilu.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "ISOLATION",
+        "segId" : "s9",
+        "quote" : "Ani córce, ani sąsiadce, ani w banku.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "SECRECY_DEMAND",
+        "segId" : "s15",
+        "quote" : "Proszę o nic nie pytać pracowników banku, powiedzieć, że to remont mieszkania.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "PAYMENT_CHANNEL",
+        "segId" : "s15",
+        "quote" : "Poda hasło „Anioł”.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      } ],
+      "rejectedQuotes" : 0,
+      "calls" : 16,
+      "failures" : 0,
+      "latenciesMs" : [ 2898, 1591, 2042, 1727, 1987, 1924, 2869, 2463, 2865, 3148, 3209, 3608, 3321, 3588, 3586, 4086 ],
+      "inputTokens" : 1104,
+      "cacheReadTokens" : 67729,
+      "cacheWriteTokens" : 0,
+      "outputTokens" : 5227,
+      "mockSteps" : [ {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Mówi podkomisarz Jan Fikcyjny, policja, komenda numer zero zero zero."
+        } ],
+        "afterSegment" : 3
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Mówi podkomisarz Jan Fikcyjny, policja, komenda numer zero zero zero."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Ale wykryliśmy, że ktoś próbuje wyczyścić pani konto w banku."
+        } ],
+        "afterSegment" : 5
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Mówi podkomisarz Jan Fikcyjny, policja, komenda numer zero zero zero."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Ale wykryliśmy, że ktoś próbuje wyczyścić pani konto w banku."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Muszę działać szybko, proszę słuchać."
+        } ],
+        "afterSegment" : 7
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Mówi podkomisarz Jan Fikcyjny, policja, komenda numer zero zero zero."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Ale wykryliśmy, że ktoś próbuje wyczyścić pani konto w banku."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Muszę działać szybko, proszę słuchać."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "o tej rozmowie nikomu pani nie mówi."
+        } ],
+        "afterSegment" : 9
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Mówi podkomisarz Jan Fikcyjny, policja, komenda numer zero zero zero."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Ale wykryliśmy, że ktoś próbuje wyczyścić pani konto w banku."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Muszę działać szybko, proszę słuchać."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "o tej rozmowie nikomu pani nie mówi."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "Proszę iść do banku i wypłacić wszystko, co pani ma, w gotówce."
+        } ],
+        "afterSegment" : 11
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Mówi podkomisarz Jan Fikcyjny, policja, komenda numer zero zero zero."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Ale wykryliśmy, że ktoś próbuje wyczyścić pani konto w banku."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Muszę działać szybko, proszę słuchać."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "o tej rozmowie nikomu pani nie mówi."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "Proszę iść do banku i wypłacić wszystko, co pani ma, w gotówce."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s13",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Gotówkę włoży pani do koperty, a po odbiór przyjedzie nasz kurier, pan w cywilu."
+        } ],
+        "afterSegment" : 13
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Mówi podkomisarz Jan Fikcyjny, policja, komenda numer zero zero zero."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Ale wykryliśmy, że ktoś próbuje wyczyścić pani konto w banku."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Muszę działać szybko, proszę słuchać."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "o tej rozmowie nikomu pani nie mówi."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "Proszę iść do banku i wypłacić wszystko, co pani ma, w gotówce."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s13",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Gotówkę włoży pani do koperty, a po odbiór przyjedzie nasz kurier, pan w cywilu."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "ISOLATION",
+          "quote" : "Ani córce, ani sąsiadce, ani w banku."
+        } ],
+        "afterSegment" : 14
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Mówi podkomisarz Jan Fikcyjny, policja, komenda numer zero zero zero."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Ale wykryliśmy, że ktoś próbuje wyczyścić pani konto w banku."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Muszę działać szybko, proszę słuchać."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "o tej rozmowie nikomu pani nie mówi."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "Proszę iść do banku i wypłacić wszystko, co pani ma, w gotówce."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s13",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Gotówkę włoży pani do koperty, a po odbiór przyjedzie nasz kurier, pan w cywilu."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "ISOLATION",
+          "quote" : "Ani córce, ani sąsiadce, ani w banku."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s15",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "Proszę o nic nie pytać pracowników banku, powiedzieć, że to remont mieszkania."
+        } ],
+        "afterSegment" : 15
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Mówi podkomisarz Jan Fikcyjny, policja, komenda numer zero zero zero."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Ale wykryliśmy, że ktoś próbuje wyczyścić pani konto w banku."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Muszę działać szybko, proszę słuchać."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "o tej rozmowie nikomu pani nie mówi."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "Proszę iść do banku i wypłacić wszystko, co pani ma, w gotówce."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s13",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Gotówkę włoży pani do koperty, a po odbiór przyjedzie nasz kurier, pan w cywilu."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "ISOLATION",
+          "quote" : "Ani córce, ani sąsiadce, ani w banku."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s15",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "Proszę o nic nie pytać pracowników banku, powiedzieć, że to remont mieszkania."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s15",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Poda hasło „Anioł”."
+        } ],
+        "afterSegment" : 16
+      } ]
+    }
+  }, {
+    "scenarioId" : "02-fake-police-paraphrase",
+    "title" : "Ten sam scenariusz, bez słów kluczowych",
+    "expected" : {
+      "maxLevel" : "high",
+      "mustHitStages" : [ "AUTHORITY_CLAIM", "URGENT_THREAT", "SECRECY_DEMAND", "MONEY_REQUEST", "PAYMENT_CHANNEL" ],
+      "mustNotHitStages" : [ ]
+    },
+    "outcomes" : {
+      "KEYWORDS" : {
+        "level" : "low",
+        "firstAlertSegment" : null,
+        "stages" : [ "MONEY_REQUEST" ],
+        "levelOk" : false,
+        "mustHitOk" : false,
+        "mustNotHitOk" : true,
+        "missed" : [ "AUTHORITY_CLAIM", "URGENT_THREAT", "SECRECY_DEMAND", "PAYMENT_CHANNEL" ],
+        "wronglyHit" : [ ]
+      },
+      "AI" : {
+        "level" : "high",
+        "firstAlertSegment" : 5,
+        "stages" : [ "AUTHORITY_CLAIM", "URGENT_THREAT", "SECRECY_DEMAND", "ISOLATION", "MONEY_REQUEST", "PAYMENT_CHANNEL" ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      },
+      "BOTH" : {
+        "level" : "high",
+        "firstAlertSegment" : 5,
+        "stages" : [ "AUTHORITY_CLAIM", "URGENT_THREAT", "SECRECY_DEMAND", "ISOLATION", "MONEY_REQUEST", "PAYMENT_CHANNEL" ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      }
+    },
+    "ai" : {
+      "validatedHits" : [ {
+        "stage" : "AUTHORITY_CLAIM",
+        "segId" : "s3",
+        "quote" : "Nazywam się Jan Fikcyjny, jestem funkcjonariuszem komendy numer zero zero zero, wydział do walki z przestępczością.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "URGENT_THREAT",
+        "segId" : "s5",
+        "quote" : "Ktoś właśnie próbuje opróżnić pani oszczędności.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "URGENT_THREAT",
+        "segId" : "s7",
+        "quote" : "Jeśli pani nie zareaguje, do jutra nic pani nie zostanie.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "SECRECY_DEMAND",
+        "segId" : "s9",
+        "quote" : "Dlatego ta rozmowa musi zostać tylko między nami.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "SECRECY_DEMAND",
+        "segId" : "s5",
+        "quote" : "Ludzie z banku są w to zamieszani.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "MONEY_REQUEST",
+        "segId" : "s11",
+        "quote" : "Proszę dziś pójść do oddziału i zabrać z konta całą gotówkę, jaką pani ma.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "PAYMENT_CHANNEL",
+        "segId" : "s13",
+        "quote" : "Pieniądze w kopercie, a po godzinie podjedzie nasz człowiek i je od pani odbierze.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "SECRECY_DEMAND",
+        "segId" : "s15",
+        "quote" : "W banku proszę mówić, że to na remont, i niczego więcej.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "ISOLATION",
+        "segId" : "s9",
+        "quote" : "Córka, sąsiadka, pani z banku, nikt nie może wiedzieć.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      } ],
+      "rejectedQuotes" : 0,
+      "calls" : 16,
+      "failures" : 0,
+      "latenciesMs" : [ 2906, 1595, 2040, 1752, 2341, 2105, 2709, 2860, 3305, 3193, 4065, 3357, 5017, 3581, 4095, 4097 ],
+      "inputTokens" : 1104,
+      "cacheReadTokens" : 67482,
+      "cacheWriteTokens" : 0,
+      "outputTokens" : 5666,
+      "mockSteps" : [ {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Nazywam się Jan Fikcyjny, jestem funkcjonariuszem komendy numer zero zero zero, wydział do walki z przestępczością."
+        } ],
+        "afterSegment" : 3
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Nazywam się Jan Fikcyjny, jestem funkcjonariuszem komendy numer zero zero zero, wydział do walki z przestępczością."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Ktoś właśnie próbuje opróżnić pani oszczędności."
+        } ],
+        "afterSegment" : 5
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Nazywam się Jan Fikcyjny, jestem funkcjonariuszem komendy numer zero zero zero, wydział do walki z przestępczością."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Ktoś właśnie próbuje opróżnić pani oszczędności."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Jeśli pani nie zareaguje, do jutra nic pani nie zostanie."
+        } ],
+        "afterSegment" : 7
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Nazywam się Jan Fikcyjny, jestem funkcjonariuszem komendy numer zero zero zero, wydział do walki z przestępczością."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Ktoś właśnie próbuje opróżnić pani oszczędności."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Jeśli pani nie zareaguje, do jutra nic pani nie zostanie."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "Dlatego ta rozmowa musi zostać tylko między nami."
+        } ],
+        "afterSegment" : 9
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Nazywam się Jan Fikcyjny, jestem funkcjonariuszem komendy numer zero zero zero, wydział do walki z przestępczością."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Ktoś właśnie próbuje opróżnić pani oszczędności."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Jeśli pani nie zareaguje, do jutra nic pani nie zostanie."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "Dlatego ta rozmowa musi zostać tylko między nami."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "Ludzie z banku są w to zamieszani."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "Proszę dziś pójść do oddziału i zabrać z konta całą gotówkę, jaką pani ma."
+        } ],
+        "afterSegment" : 11
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Nazywam się Jan Fikcyjny, jestem funkcjonariuszem komendy numer zero zero zero, wydział do walki z przestępczością."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Ktoś właśnie próbuje opróżnić pani oszczędności."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Jeśli pani nie zareaguje, do jutra nic pani nie zostanie."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "Dlatego ta rozmowa musi zostać tylko między nami."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "Ludzie z banku są w to zamieszani."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "Proszę dziś pójść do oddziału i zabrać z konta całą gotówkę, jaką pani ma."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s13",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Pieniądze w kopercie, a po godzinie podjedzie nasz człowiek i je od pani odbierze."
+        } ],
+        "afterSegment" : 13
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Nazywam się Jan Fikcyjny, jestem funkcjonariuszem komendy numer zero zero zero, wydział do walki z przestępczością."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Ktoś właśnie próbuje opróżnić pani oszczędności."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Jeśli pani nie zareaguje, do jutra nic pani nie zostanie."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "Dlatego ta rozmowa musi zostać tylko między nami."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "Ludzie z banku są w to zamieszani."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "Proszę dziś pójść do oddziału i zabrać z konta całą gotówkę, jaką pani ma."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s13",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Pieniądze w kopercie, a po godzinie podjedzie nasz człowiek i je od pani odbierze."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s15",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "W banku proszę mówić, że to na remont, i niczego więcej."
+        } ],
+        "afterSegment" : 15
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Nazywam się Jan Fikcyjny, jestem funkcjonariuszem komendy numer zero zero zero, wydział do walki z przestępczością."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Ktoś właśnie próbuje opróżnić pani oszczędności."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Jeśli pani nie zareaguje, do jutra nic pani nie zostanie."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "Dlatego ta rozmowa musi zostać tylko między nami."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "Ludzie z banku są w to zamieszani."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "Proszę dziś pójść do oddziału i zabrać z konta całą gotówkę, jaką pani ma."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s13",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Pieniądze w kopercie, a po godzinie podjedzie nasz człowiek i je od pani odbierze."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s15",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "W banku proszę mówić, że to na remont, i niczego więcej."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "ISOLATION",
+          "quote" : "Córka, sąsiadka, pani z banku, nikt nie może wiedzieć."
+        } ],
+        "afterSegment" : 16
+      } ]
+    }
+  }, {
+    "scenarioId" : "03-fake-bank-code",
+    "title" : "Fałszywy bank i kod autoryzacyjny",
+    "expected" : {
+      "maxLevel" : "high",
+      "mustHitStages" : [ "AUTHORITY_CLAIM", "URGENT_THREAT", "PAYMENT_CHANNEL" ],
+      "mustNotHitStages" : [ ]
+    },
+    "outcomes" : {
+      "KEYWORDS" : {
+        "level" : "high",
+        "firstAlertSegment" : 9,
+        "stages" : [ "AUTHORITY_CLAIM", "MONEY_REQUEST", "PAYMENT_CHANNEL" ],
+        "levelOk" : true,
+        "mustHitOk" : false,
+        "mustNotHitOk" : true,
+        "missed" : [ "URGENT_THREAT" ],
+        "wronglyHit" : [ ]
+      },
+      "AI" : {
+        "level" : "high",
+        "firstAlertSegment" : 3,
+        "stages" : [ "AUTHORITY_CLAIM", "URGENT_THREAT", "PAYMENT_CHANNEL", "REMOTE_ACCESS", "PERSONAL_DATA_REQUEST" ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      },
+      "BOTH" : {
+        "level" : "high",
+        "firstAlertSegment" : 3,
+        "stages" : [ "AUTHORITY_CLAIM", "URGENT_THREAT", "MONEY_REQUEST", "PAYMENT_CHANNEL", "REMOTE_ACCESS", "PERSONAL_DATA_REQUEST" ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      }
+    },
+    "ai" : {
+      "validatedHits" : [ {
+        "stage" : "AUTHORITY_CLAIM",
+        "segId" : "s1",
+        "quote" : "Dzień dobry, dział bezpieczeństwa Banku Przykładowego.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "AUTHORITY_CLAIM",
+        "segId" : "s3",
+        "quote" : "Bank Przykładowy, dział przeciwdziałania oszustwom.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "URGENT_THREAT",
+        "segId" : "s3",
+        "quote" : "Na pana koncie zarejestrowaliśmy podejrzaną operację.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "URGENT_THREAT",
+        "segId" : "s5",
+        "quote" : "Ktoś zlecił płatność na kwotę dziewięć tysięcy złotych na obce konto.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "URGENT_THREAT",
+        "segId" : "s7",
+        "quote" : "Muszę ją zablokować w ciągu kilku minut, bo potem się nie cofnie.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "PAYMENT_CHANNEL",
+        "segId" : "s9",
+        "quote" : "Wygeneruje pan kod BLIK, sześć cyfr.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "REMOTE_ACCESS",
+        "segId" : "s9",
+        "quote" : "Proszę otworzyć aplikację bankową.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "PAYMENT_CHANNEL",
+        "segId" : "s11",
+        "quote" : "Proszę mi go podać, ja go wpiszę w systemie i operacja zostanie wycofana.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "PERSONAL_DATA_REQUEST",
+        "segId" : "s11",
+        "quote" : "Proszę mi go podać, ja go wpiszę w systemie i operacja zostanie wycofana.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "URGENT_THREAT",
+        "segId" : "s13",
+        "quote" : "Rozumiem obawy, ale zostały dwie minuty.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "PAYMENT_CHANNEL",
+        "segId" : "s13",
+        "quote" : "Proszę podać ten kod BLIK, inaczej pieniądze przepadną.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "REMOTE_ACCESS",
+        "segId" : "s11",
+        "quote" : "Proszę mi go podać, ja go wpiszę w systemie i operacja zostanie wycofana.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      } ],
+      "rejectedQuotes" : 0,
+      "calls" : 14,
+      "failures" : 0,
+      "latenciesMs" : [ 3236, 1688, 2246, 2436, 2540, 2908, 2533, 2836, 3213, 3302, 3475, 3898, 3962, 3579 ],
+      "inputTokens" : 966,
+      "cacheReadTokens" : 58452,
+      "cacheWriteTokens" : 0,
+      "outputTokens" : 5000,
+      "mockSteps" : [ {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Dzień dobry, dział bezpieczeństwa Banku Przykładowego."
+        } ],
+        "afterSegment" : 1
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Dzień dobry, dział bezpieczeństwa Banku Przykładowego."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Bank Przykładowy, dział przeciwdziałania oszustwom."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Na pana koncie zarejestrowaliśmy podejrzaną operację."
+        } ],
+        "afterSegment" : 3
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Dzień dobry, dział bezpieczeństwa Banku Przykładowego."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Bank Przykładowy, dział przeciwdziałania oszustwom."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Na pana koncie zarejestrowaliśmy podejrzaną operację."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Ktoś zlecił płatność na kwotę dziewięć tysięcy złotych na obce konto."
+        } ],
+        "afterSegment" : 5
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Dzień dobry, dział bezpieczeństwa Banku Przykładowego."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Bank Przykładowy, dział przeciwdziałania oszustwom."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Na pana koncie zarejestrowaliśmy podejrzaną operację."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Ktoś zlecił płatność na kwotę dziewięć tysięcy złotych na obce konto."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Muszę ją zablokować w ciągu kilku minut, bo potem się nie cofnie."
+        } ],
+        "afterSegment" : 7
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Dzień dobry, dział bezpieczeństwa Banku Przykładowego."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Bank Przykładowy, dział przeciwdziałania oszustwom."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Na pana koncie zarejestrowaliśmy podejrzaną operację."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Ktoś zlecił płatność na kwotę dziewięć tysięcy złotych na obce konto."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Muszę ją zablokować w ciągu kilku minut, bo potem się nie cofnie."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Wygeneruje pan kod BLIK, sześć cyfr."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Proszę otworzyć aplikację bankową."
+        } ],
+        "afterSegment" : 9
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Dzień dobry, dział bezpieczeństwa Banku Przykładowego."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Bank Przykładowy, dział przeciwdziałania oszustwom."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Na pana koncie zarejestrowaliśmy podejrzaną operację."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Ktoś zlecił płatność na kwotę dziewięć tysięcy złotych na obce konto."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Muszę ją zablokować w ciągu kilku minut, bo potem się nie cofnie."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Wygeneruje pan kod BLIK, sześć cyfr."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Proszę otworzyć aplikację bankową."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Proszę mi go podać, ja go wpiszę w systemie i operacja zostanie wycofana."
+        } ],
+        "afterSegment" : 11
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Dzień dobry, dział bezpieczeństwa Banku Przykładowego."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Bank Przykładowy, dział przeciwdziałania oszustwom."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Na pana koncie zarejestrowaliśmy podejrzaną operację."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Ktoś zlecił płatność na kwotę dziewięć tysięcy złotych na obce konto."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Muszę ją zablokować w ciągu kilku minut, bo potem się nie cofnie."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Wygeneruje pan kod BLIK, sześć cyfr."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Proszę otworzyć aplikację bankową."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Proszę mi go podać, ja go wpiszę w systemie i operacja zostanie wycofana."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "PERSONAL_DATA_REQUEST",
+          "quote" : "Proszę mi go podać, ja go wpiszę w systemie i operacja zostanie wycofana."
+        } ],
+        "afterSegment" : 12
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Dzień dobry, dział bezpieczeństwa Banku Przykładowego."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Bank Przykładowy, dział przeciwdziałania oszustwom."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Na pana koncie zarejestrowaliśmy podejrzaną operację."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Ktoś zlecił płatność na kwotę dziewięć tysięcy złotych na obce konto."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Muszę ją zablokować w ciągu kilku minut, bo potem się nie cofnie."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Wygeneruje pan kod BLIK, sześć cyfr."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Proszę otworzyć aplikację bankową."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Proszę mi go podać, ja go wpiszę w systemie i operacja zostanie wycofana."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "PERSONAL_DATA_REQUEST",
+          "quote" : "Proszę mi go podać, ja go wpiszę w systemie i operacja zostanie wycofana."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s13",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Rozumiem obawy, ale zostały dwie minuty."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s13",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Proszę podać ten kod BLIK, inaczej pieniądze przepadną."
+        } ],
+        "afterSegment" : 13
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Dzień dobry, dział bezpieczeństwa Banku Przykładowego."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Bank Przykładowy, dział przeciwdziałania oszustwom."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Na pana koncie zarejestrowaliśmy podejrzaną operację."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Ktoś zlecił płatność na kwotę dziewięć tysięcy złotych na obce konto."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Muszę ją zablokować w ciągu kilku minut, bo potem się nie cofnie."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Wygeneruje pan kod BLIK, sześć cyfr."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Proszę otworzyć aplikację bankową."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Proszę mi go podać, ja go wpiszę w systemie i operacja zostanie wycofana."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "PERSONAL_DATA_REQUEST",
+          "quote" : "Proszę mi go podać, ja go wpiszę w systemie i operacja zostanie wycofana."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s13",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Rozumiem obawy, ale zostały dwie minuty."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s13",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Proszę podać ten kod BLIK, inaczej pieniądze przepadną."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Proszę mi go podać, ja go wpiszę w systemie i operacja zostanie wycofana."
+        } ],
+        "afterSegment" : 14
+      } ]
+    }
+  }, {
+    "scenarioId" : "04-real-grandson",
+    "title" : "Prawdziwy wnuk prosi o 200 zł na bilet",
+    "expected" : {
+      "maxLevel" : "low",
+      "mustHitStages" : [ ],
+      "mustNotHitStages" : [ "AUTHORITY_CLAIM", "URGENT_THREAT", "SECRECY_DEMAND", "ISOLATION" ]
+    },
+    "outcomes" : {
+      "KEYWORDS" : {
+        "level" : "none",
+        "firstAlertSegment" : null,
+        "stages" : [ ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      },
+      "AI" : {
+        "level" : "low",
+        "firstAlertSegment" : null,
+        "stages" : [ "MONEY_REQUEST" ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      },
+      "BOTH" : {
+        "level" : "low",
+        "firstAlertSegment" : null,
+        "stages" : [ "MONEY_REQUEST" ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      }
+    },
+    "ai" : {
+      "validatedHits" : [ {
+        "stage" : "MONEY_REQUEST",
+        "segId" : "s5",
+        "quote" : "Po prostu bilet na pociąg kosztuje dwieście złotych i mi trochę brakuje do wypłaty.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      } ],
+      "rejectedQuotes" : 0,
+      "calls" : 13,
+      "failures" : 0,
+      "latenciesMs" : [ 2898, 1593, 1470, 1338, 1753, 2036, 1842, 1787, 1748, 1829, 1980, 1754, 1710 ],
+      "inputTokens" : 897,
+      "cacheReadTokens" : 53809,
+      "cacheWriteTokens" : 0,
+      "outputTokens" : 912,
+      "mockSteps" : [ {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "Po prostu bilet na pociąg kosztuje dwieście złotych i mi trochę brakuje do wypłaty."
+        } ],
+        "afterSegment" : 5
+      } ]
+    }
+  }, {
+    "scenarioId" : "05-real-police-bike",
+    "title" : "Prawdziwy funkcjonariusz w sprawie roweru",
+    "expected" : {
+      "maxLevel" : "low",
+      "mustHitStages" : [ "AUTHORITY_CLAIM" ],
+      "mustNotHitStages" : [ "URGENT_THREAT", "SECRECY_DEMAND", "MONEY_REQUEST", "PAYMENT_CHANNEL", "REMOTE_ACCESS" ]
+    },
+    "outcomes" : {
+      "KEYWORDS" : {
+        "level" : "low",
+        "firstAlertSegment" : null,
+        "stages" : [ "PERSONAL_DATA_REQUEST" ],
+        "levelOk" : true,
+        "mustHitOk" : false,
+        "mustNotHitOk" : true,
+        "missed" : [ "AUTHORITY_CLAIM" ],
+        "wronglyHit" : [ ]
+      },
+      "AI" : {
+        "level" : "low",
+        "firstAlertSegment" : null,
+        "stages" : [ "AUTHORITY_CLAIM" ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      },
+      "BOTH" : {
+        "level" : "medium",
+        "firstAlertSegment" : 5,
+        "stages" : [ "AUTHORITY_CLAIM", "PERSONAL_DATA_REQUEST" ],
+        "levelOk" : false,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      }
+    },
+    "ai" : {
+      "validatedHits" : [ {
+        "stage" : "AUTHORITY_CLAIM",
+        "segId" : "s1",
+        "quote" : "mówi sierżant Marek Przykładowy z komisariatu numer zero zero zero",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      } ],
+      "rejectedQuotes" : 0,
+      "calls" : 14,
+      "failures" : 0,
+      "latenciesMs" : [ 3200, 1717, 1763, 1790, 1727, 1937, 2039, 1708, 1638, 1805, 2048, 1771, 1641, 1972 ],
+      "inputTokens" : 966,
+      "cacheReadTokens" : 58556,
+      "cacheWriteTokens" : 0,
+      "outputTokens" : 1335,
+      "mockSteps" : [ {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "mówi sierżant Marek Przykładowy z komisariatu numer zero zero zero"
+        } ],
+        "afterSegment" : 1
+      } ]
+    }
+  }, {
+    "scenarioId" : "06-tv-background",
+    "title" : "Telewizor o oszustwach w tle",
+    "expected" : {
+      "maxLevel" : "low",
+      "mustHitStages" : [ ],
+      "mustNotHitStages" : [ "AUTHORITY_CLAIM", "URGENT_THREAT", "SECRECY_DEMAND", "MONEY_REQUEST", "PAYMENT_CHANNEL" ]
+    },
+    "outcomes" : {
+      "KEYWORDS" : {
+        "level" : "high",
+        "firstAlertSegment" : 3,
+        "stages" : [ "AUTHORITY_CLAIM", "SECRECY_DEMAND", "MONEY_REQUEST", "PAYMENT_CHANNEL" ],
+        "levelOk" : false,
+        "mustHitOk" : true,
+        "mustNotHitOk" : false,
+        "missed" : [ ],
+        "wronglyHit" : [ "AUTHORITY_CLAIM", "SECRECY_DEMAND", "MONEY_REQUEST", "PAYMENT_CHANNEL" ]
+      },
+      "AI" : {
+        "level" : "none",
+        "firstAlertSegment" : null,
+        "stages" : [ ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      },
+      "BOTH" : {
+        "level" : "high",
+        "firstAlertSegment" : 3,
+        "stages" : [ "AUTHORITY_CLAIM", "SECRECY_DEMAND", "MONEY_REQUEST", "PAYMENT_CHANNEL" ],
+        "levelOk" : false,
+        "mustHitOk" : true,
+        "mustNotHitOk" : false,
+        "missed" : [ ],
+        "wronglyHit" : [ "AUTHORITY_CLAIM", "SECRECY_DEMAND", "MONEY_REQUEST", "PAYMENT_CHANNEL" ]
+      }
+    },
+    "ai" : {
+      "validatedHits" : [ {
+        "stage" : "AUTHORITY_CLAIM",
+        "segId" : "s3",
+        "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi.",
+        "speakerRole" : "background",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "MONEY_REQUEST",
+        "segId" : "s3",
+        "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi.",
+        "speakerRole" : "background",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "PAYMENT_CHANNEL",
+        "segId" : "s3",
+        "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi.",
+        "speakerRole" : "background",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "SECRECY_DEMAND",
+        "segId" : "s5",
+        "quote" : "Przestępcy każą zachować rozmowę w tajemnicy i nikomu o niej nie mówić.",
+        "speakerRole" : "background",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "PAYMENT_CHANNEL",
+        "segId" : "s8",
+        "quote" : "Nigdy nie podawaj kodu BLIK obcej osobie.",
+        "speakerRole" : "background",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "MONEY_REQUEST",
+        "segId" : "s8",
+        "quote" : "Prawdziwy policjant nie żąda pieniędzy przez telefon.",
+        "speakerRole" : "background",
+        "source" : "llm",
+        "validated" : true
+      } ],
+      "rejectedQuotes" : 0,
+      "calls" : 14,
+      "failures" : 0,
+      "latenciesMs" : [ 2898, 1591, 2477, 2634, 2990, 2792, 2919, 3212, 3953, 3075, 3538, 3112, 3071, 3067 ],
+      "inputTokens" : 966,
+      "cacheReadTokens" : 58513,
+      "cacheWriteTokens" : 0,
+      "outputTokens" : 4535,
+      "mockSteps" : [ {
+        "stage_hits" : [ {
+          "speaker_role" : "background",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+        }, {
+          "speaker_role" : "background",
+          "segment_id" : "s3",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+        }, {
+          "speaker_role" : "background",
+          "segment_id" : "s3",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+        } ],
+        "afterSegment" : 3
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "background",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+        }, {
+          "speaker_role" : "background",
+          "segment_id" : "s3",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+        }, {
+          "speaker_role" : "background",
+          "segment_id" : "s3",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+        }, {
+          "speaker_role" : "background",
+          "segment_id" : "s5",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "Przestępcy każą zachować rozmowę w tajemnicy i nikomu o niej nie mówić."
+        } ],
+        "afterSegment" : 5
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "background",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+        }, {
+          "speaker_role" : "background",
+          "segment_id" : "s3",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+        }, {
+          "speaker_role" : "background",
+          "segment_id" : "s3",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+        }, {
+          "speaker_role" : "background",
+          "segment_id" : "s5",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "Przestępcy każą zachować rozmowę w tajemnicy i nikomu o niej nie mówić."
+        }, {
+          "speaker_role" : "background",
+          "segment_id" : "s8",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Nigdy nie podawaj kodu BLIK obcej osobie."
+        } ],
+        "afterSegment" : 8
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "background",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+        }, {
+          "speaker_role" : "background",
+          "segment_id" : "s3",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+        }, {
+          "speaker_role" : "background",
+          "segment_id" : "s3",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Oszuści podają się za policjantów i proszą o wypłatę gotówki oraz przekazanie jej kurierowi."
+        }, {
+          "speaker_role" : "background",
+          "segment_id" : "s5",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "Przestępcy każą zachować rozmowę w tajemnicy i nikomu o niej nie mówić."
+        }, {
+          "speaker_role" : "background",
+          "segment_id" : "s8",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Nigdy nie podawaj kodu BLIK obcej osobie."
+        }, {
+          "speaker_role" : "background",
+          "segment_id" : "s8",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "Prawdziwy policjant nie żąda pieniędzy przez telefon."
+        } ],
+        "afterSegment" : 9
+      } ]
+    }
+  }, {
+    "scenarioId" : "07-senior-refuses-code",
+    "title" : "Senior odmawia podania kodu",
+    "expected" : {
+      "maxLevel" : "low",
+      "mustHitStages" : [ ],
+      "mustNotHitStages" : [ "MONEY_REQUEST" ]
+    },
+    "outcomes" : {
+      "KEYWORDS" : {
+        "level" : "low",
+        "firstAlertSegment" : null,
+        "stages" : [ "PAYMENT_CHANNEL" ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      },
+      "AI" : {
+        "level" : "none",
+        "firstAlertSegment" : null,
+        "stages" : [ ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      },
+      "BOTH" : {
+        "level" : "low",
+        "firstAlertSegment" : null,
+        "stages" : [ "PAYMENT_CHANNEL" ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      }
+    },
+    "ai" : {
+      "validatedHits" : [ {
+        "stage" : "AUTHORITY_CLAIM",
+        "segId" : "s4",
+        "quote" : "Jakiś pan z banku dzwonił i chciał ode mnie kod.",
+        "speakerRole" : "senior",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "REMOTE_ACCESS",
+        "segId" : "s4",
+        "quote" : "Jakiś pan z banku dzwonił i chciał ode mnie kod. Ten, co się w telefonie wyświetla.",
+        "speakerRole" : "senior",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "PAYMENT_CHANNEL",
+        "segId" : "s6",
+        "quote" : "Powiedziałam, że ja żadnego kodu BLIK nie podam",
+        "speakerRole" : "senior",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "URGENT_THREAT",
+        "segId" : "s8",
+        "quote" : "Dalej gadał, że to pilne, ale ja się rozłączyłam.",
+        "speakerRole" : "senior",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "PERSONAL_DATA_REQUEST",
+        "segId" : "s4",
+        "quote" : "Jakiś pan z banku dzwonił i chciał ode mnie kod.",
+        "speakerRole" : "senior",
+        "source" : "llm",
+        "validated" : true
+      } ],
+      "rejectedQuotes" : 0,
+      "calls" : 13,
+      "failures" : 0,
+      "latenciesMs" : [ 2897, 1592, 1467, 2088, 2000, 2315, 2495, 2388, 3034, 2434, 2751, 2431, 2308 ],
+      "inputTokens" : 897,
+      "cacheReadTokens" : 53434,
+      "cacheWriteTokens" : 0,
+      "outputTokens" : 2364,
+      "mockSteps" : [ {
+        "stage_hits" : [ {
+          "speaker_role" : "senior",
+          "segment_id" : "s4",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Jakiś pan z banku dzwonił i chciał ode mnie kod."
+        }, {
+          "speaker_role" : "senior",
+          "segment_id" : "s4",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Jakiś pan z banku dzwonił i chciał ode mnie kod. Ten, co się w telefonie wyświetla."
+        } ],
+        "afterSegment" : 4
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "senior",
+          "segment_id" : "s4",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Jakiś pan z banku dzwonił i chciał ode mnie kod."
+        }, {
+          "speaker_role" : "senior",
+          "segment_id" : "s4",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Jakiś pan z banku dzwonił i chciał ode mnie kod. Ten, co się w telefonie wyświetla."
+        }, {
+          "speaker_role" : "senior",
+          "segment_id" : "s6",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Powiedziałam, że ja żadnego kodu BLIK nie podam"
+        } ],
+        "afterSegment" : 6
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "senior",
+          "segment_id" : "s4",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Jakiś pan z banku dzwonił i chciał ode mnie kod."
+        }, {
+          "speaker_role" : "senior",
+          "segment_id" : "s4",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Jakiś pan z banku dzwonił i chciał ode mnie kod. Ten, co się w telefonie wyświetla."
+        }, {
+          "speaker_role" : "senior",
+          "segment_id" : "s6",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Powiedziałam, że ja żadnego kodu BLIK nie podam"
+        }, {
+          "speaker_role" : "senior",
+          "segment_id" : "s8",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Dalej gadał, że to pilne, ale ja się rozłączyłam."
+        } ],
+        "afterSegment" : 8
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "senior",
+          "segment_id" : "s4",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Jakiś pan z banku dzwonił i chciał ode mnie kod."
+        }, {
+          "speaker_role" : "senior",
+          "segment_id" : "s4",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Jakiś pan z banku dzwonił i chciał ode mnie kod. Ten, co się w telefonie wyświetla."
+        }, {
+          "speaker_role" : "senior",
+          "segment_id" : "s6",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Powiedziałam, że ja żadnego kodu BLIK nie podam"
+        }, {
+          "speaker_role" : "senior",
+          "segment_id" : "s8",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Dalej gadał, że to pilne, ale ja się rozłączyłam."
+        }, {
+          "speaker_role" : "senior",
+          "segment_id" : "s4",
+          "stage" : "PERSONAL_DATA_REQUEST",
+          "quote" : "Jakiś pan z banku dzwonił i chciał ode mnie kod."
+        } ],
+        "afterSegment" : 9
+      } ]
+    }
+  }, {
+    "scenarioId" : "08-slow-scam",
+    "title" : "Powolne oszustwo rozłożone w czasie",
+    "expected" : {
+      "maxLevel" : "high",
+      "mustHitStages" : [ "AUTHORITY_CLAIM", "SECRECY_DEMAND", "MONEY_REQUEST" ],
+      "mustNotHitStages" : [ ]
+    },
+    "outcomes" : {
+      "KEYWORDS" : {
+        "level" : "high",
+        "firstAlertSegment" : 19,
+        "stages" : [ "AUTHORITY_CLAIM", "MONEY_REQUEST" ],
+        "levelOk" : true,
+        "mustHitOk" : false,
+        "mustNotHitOk" : true,
+        "missed" : [ "SECRECY_DEMAND" ],
+        "wronglyHit" : [ ]
+      },
+      "AI" : {
+        "level" : "high",
+        "firstAlertSegment" : 11,
+        "stages" : [ "AUTHORITY_CLAIM", "URGENT_THREAT", "SECRECY_DEMAND", "MONEY_REQUEST", "PAYMENT_CHANNEL" ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      },
+      "BOTH" : {
+        "level" : "high",
+        "firstAlertSegment" : 11,
+        "stages" : [ "AUTHORITY_CLAIM", "URGENT_THREAT", "SECRECY_DEMAND", "MONEY_REQUEST", "PAYMENT_CHANNEL" ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      }
+    },
+    "ai" : {
+      "validatedHits" : [ {
+        "stage" : "AUTHORITY_CLAIM",
+        "segId" : "s1",
+        "quote" : "tu Marta z infolinii Towarzystwa Przykładowego",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "AUTHORITY_CLAIM",
+        "segId" : "s7",
+        "quote" : "Ja z kolei jestem oficerem w wydziale gospodarczym prokuratury",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "SECRECY_DEMAND",
+        "segId" : "s11",
+        "quote" : "proszę, żeby to zostało między nami, na razie sprawa jest poufna.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "URGENT_THREAT",
+        "segId" : "s17",
+        "quote" : "Żeby pani oszczędności nie zostały zamrożone, trzeba je będzie przekazać na konto depozytowe.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "MONEY_REQUEST",
+        "segId" : "s17",
+        "quote" : "Żeby pani oszczędności nie zostały zamrożone, trzeba je będzie przekazać na konto depozytowe.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "PAYMENT_CHANNEL",
+        "segId" : "s17",
+        "quote" : "trzeba je będzie przekazać na konto depozytowe",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "MONEY_REQUEST",
+        "segId" : "s19",
+        "quote" : "Proszę przygotować dwadzieścia tysięcy złotych i przelać je na rachunek, który podam.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "PAYMENT_CHANNEL",
+        "segId" : "s19",
+        "quote" : "Proszę przygotować dwadzieścia tysięcy złotych i przelać je na rachunek, który podam.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      } ],
+      "rejectedQuotes" : 0,
+      "calls" : 22,
+      "failures" : 0,
+      "latenciesMs" : [ 3133, 1684, 1721, 1701, 1694, 2202, 2590, 1963, 2132, 1998, 2329, 2330, 2351, 2537, 2780, 2558, 3584, 3581, 4095, 3777, 3898, 3584 ],
+      "inputTokens" : 1518,
+      "cacheReadTokens" : 94805,
+      "cacheWriteTokens" : 0,
+      "outputTokens" : 5927,
+      "mockSteps" : [ {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "tu Marta z infolinii Towarzystwa Przykładowego"
+        } ],
+        "afterSegment" : 1
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "tu Marta z infolinii Towarzystwa Przykładowego"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Ja z kolei jestem oficerem w wydziale gospodarczym prokuratury"
+        } ],
+        "afterSegment" : 7
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "tu Marta z infolinii Towarzystwa Przykładowego"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Ja z kolei jestem oficerem w wydziale gospodarczym prokuratury"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "proszę, żeby to zostało między nami, na razie sprawa jest poufna."
+        } ],
+        "afterSegment" : 11
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "tu Marta z infolinii Towarzystwa Przykładowego"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Ja z kolei jestem oficerem w wydziale gospodarczym prokuratury"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "proszę, żeby to zostało między nami, na razie sprawa jest poufna."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s17",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Żeby pani oszczędności nie zostały zamrożone, trzeba je będzie przekazać na konto depozytowe."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s17",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "Żeby pani oszczędności nie zostały zamrożone, trzeba je będzie przekazać na konto depozytowe."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s17",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "trzeba je będzie przekazać na konto depozytowe"
+        } ],
+        "afterSegment" : 17
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "tu Marta z infolinii Towarzystwa Przykładowego"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Ja z kolei jestem oficerem w wydziale gospodarczym prokuratury"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "proszę, żeby to zostało między nami, na razie sprawa jest poufna."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s17",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Żeby pani oszczędności nie zostały zamrożone, trzeba je będzie przekazać na konto depozytowe."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s17",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "Żeby pani oszczędności nie zostały zamrożone, trzeba je będzie przekazać na konto depozytowe."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s17",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "trzeba je będzie przekazać na konto depozytowe"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s19",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "Proszę przygotować dwadzieścia tysięcy złotych i przelać je na rachunek, który podam."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s19",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Proszę przygotować dwadzieścia tysięcy złotych i przelać je na rachunek, który podam."
+        } ],
+        "afterSegment" : 19
+      } ]
+    }
+  }, {
+    "scenarioId" : "09-heavy-stt-errors",
+    "title" : "Silne błędy rozpoznawania mowy",
+    "expected" : {
+      "maxLevel" : "high",
+      "mustHitStages" : [ "AUTHORITY_CLAIM", "MONEY_REQUEST", "PAYMENT_CHANNEL" ],
+      "mustNotHitStages" : [ ]
+    },
+    "outcomes" : {
+      "KEYWORDS" : {
+        "level" : "medium",
+        "firstAlertSegment" : 13,
+        "stages" : [ "MONEY_REQUEST", "PAYMENT_CHANNEL" ],
+        "levelOk" : false,
+        "mustHitOk" : false,
+        "mustNotHitOk" : true,
+        "missed" : [ "AUTHORITY_CLAIM" ],
+        "wronglyHit" : [ ]
+      },
+      "AI" : {
+        "level" : "high",
+        "firstAlertSegment" : 3,
+        "stages" : [ "AUTHORITY_CLAIM", "URGENT_THREAT", "SECRECY_DEMAND", "ISOLATION", "MONEY_REQUEST", "PAYMENT_CHANNEL" ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      },
+      "BOTH" : {
+        "level" : "high",
+        "firstAlertSegment" : 3,
+        "stages" : [ "AUTHORITY_CLAIM", "URGENT_THREAT", "SECRECY_DEMAND", "ISOLATION", "MONEY_REQUEST", "PAYMENT_CHANNEL" ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      }
+    },
+    "ai" : {
+      "validatedHits" : [ {
+        "stage" : "AUTHORITY_CLAIM",
+        "segId" : "s1",
+        "quote" : "dzien dobry mowi komendant polici z komisariatu zero zero zero czy to pani Barbara",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "AUTHORITY_CLAIM",
+        "segId" : "s3",
+        "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "URGENT_THREAT",
+        "segId" : "s3",
+        "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "URGENT_THREAT",
+        "segId" : "s5",
+        "quote" : "to jest pilne musimy dzialac natychmiast prosze mnie dokladnie slochac",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "SECRECY_DEMAND",
+        "segId" : "s7",
+        "quote" : "prosze nikomu o tym nie mowic to scisle tajmnica sluzbowa",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "MONEY_REQUEST",
+        "segId" : "s9",
+        "quote" : "prosze isc do banku i wyplacic wszystkie oszczednosci w gotowce",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "PAYMENT_CHANNEL",
+        "segId" : "s11",
+        "quote" : "tak a potem przyjedzie kurjer i odbierze koperte z pieniedzmi",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "PAYMENT_CHANNEL",
+        "segId" : "s13",
+        "quote" : "od nas z polici prosze tez przygotowac kod blik na wszelki wypadek",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "AUTHORITY_CLAIM",
+        "segId" : "s13",
+        "quote" : "od nas z polici prosze tez przygotowac kod blik na wszelki wypadek",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "SECRECY_DEMAND",
+        "segId" : "s15",
+        "quote" : "nie nie wnuczkowi prosze nic nie mowic tylko isc do banku",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "ISOLATION",
+        "segId" : "s15",
+        "quote" : "nie nie wnuczkowi prosze nic nie mowic tylko isc do banku",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      } ],
+      "rejectedQuotes" : 0,
+      "calls" : 16,
+      "failures" : 0,
+      "latenciesMs" : [ 3219, 1698, 2328, 2355, 2540, 2582, 2694, 2866, 3072, 3135, 3330, 3434, 5228, 3439, 4338, 4285 ],
+      "inputTokens" : 1104,
+      "cacheReadTokens" : 65923,
+      "cacheWriteTokens" : 0,
+      "outputTokens" : 5983,
+      "mockSteps" : [ {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "dzien dobry mowi komendant polici z komisariatu zero zero zero czy to pani Barbara"
+        } ],
+        "afterSegment" : 1
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "dzien dobry mowi komendant polici z komisariatu zero zero zero czy to pani Barbara"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+        } ],
+        "afterSegment" : 3
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "dzien dobry mowi komendant polici z komisariatu zero zero zero czy to pani Barbara"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "to jest pilne musimy dzialac natychmiast prosze mnie dokladnie slochac"
+        } ],
+        "afterSegment" : 5
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "dzien dobry mowi komendant polici z komisariatu zero zero zero czy to pani Barbara"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "to jest pilne musimy dzialac natychmiast prosze mnie dokladnie slochac"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "prosze nikomu o tym nie mowic to scisle tajmnica sluzbowa"
+        } ],
+        "afterSegment" : 7
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "dzien dobry mowi komendant polici z komisariatu zero zero zero czy to pani Barbara"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "to jest pilne musimy dzialac natychmiast prosze mnie dokladnie slochac"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "prosze nikomu o tym nie mowic to scisle tajmnica sluzbowa"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "prosze isc do banku i wyplacic wszystkie oszczednosci w gotowce"
+        } ],
+        "afterSegment" : 9
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "dzien dobry mowi komendant polici z komisariatu zero zero zero czy to pani Barbara"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "to jest pilne musimy dzialac natychmiast prosze mnie dokladnie slochac"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "prosze nikomu o tym nie mowic to scisle tajmnica sluzbowa"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "prosze isc do banku i wyplacic wszystkie oszczednosci w gotowce"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "tak a potem przyjedzie kurjer i odbierze koperte z pieniedzmi"
+        } ],
+        "afterSegment" : 11
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "dzien dobry mowi komendant polici z komisariatu zero zero zero czy to pani Barbara"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "to jest pilne musimy dzialac natychmiast prosze mnie dokladnie slochac"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "prosze nikomu o tym nie mowic to scisle tajmnica sluzbowa"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "prosze isc do banku i wyplacic wszystkie oszczednosci w gotowce"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "tak a potem przyjedzie kurjer i odbierze koperte z pieniedzmi"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s13",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "od nas z polici prosze tez przygotowac kod blik na wszelki wypadek"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s13",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "od nas z polici prosze tez przygotowac kod blik na wszelki wypadek"
+        } ],
+        "afterSegment" : 13
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "dzien dobry mowi komendant polici z komisariatu zero zero zero czy to pani Barbara"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "URGENT_THREAT",
+          "quote" : "to jest pilne musimy dzialac natychmiast prosze mnie dokladnie slochac"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "prosze nikomu o tym nie mowic to scisle tajmnica sluzbowa"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "prosze isc do banku i wyplacic wszystkie oszczednosci w gotowce"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "tak a potem przyjedzie kurjer i odbierze koperte z pieniedzmi"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s13",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "od nas z polici prosze tez przygotowac kod blik na wszelki wypadek"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s13",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "od nas z polici prosze tez przygotowac kod blik na wszelki wypadek"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s15",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "nie nie wnuczkowi prosze nic nie mowic tylko isc do banku"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s15",
+          "stage" : "ISOLATION",
+          "quote" : "nie nie wnuczkowi prosze nic nie mowic tylko isc do banku"
+        } ],
+        "afterSegment" : 15
+      } ]
+    }
+  }, {
+    "scenarioId" : "10-prompt-injection",
+    "title" : "Wstrzyknięcie polecenia do systemu",
+    "expected" : {
+      "maxLevel" : "high",
+      "mustHitStages" : [ "AUTHORITY_CLAIM", "SECRECY_DEMAND", "MONEY_REQUEST" ],
+      "mustNotHitStages" : [ ]
+    },
+    "outcomes" : {
+      "KEYWORDS" : {
+        "level" : "high",
+        "firstAlertSegment" : 9,
+        "stages" : [ "AUTHORITY_CLAIM", "MONEY_REQUEST" ],
+        "levelOk" : true,
+        "mustHitOk" : false,
+        "mustNotHitOk" : true,
+        "missed" : [ "SECRECY_DEMAND" ],
+        "wronglyHit" : [ ]
+      },
+      "AI" : {
+        "level" : "high",
+        "firstAlertSegment" : 3,
+        "stages" : [ "AUTHORITY_CLAIM", "URGENT_THREAT", "SECRECY_DEMAND", "ISOLATION", "MONEY_REQUEST", "PAYMENT_CHANNEL" ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      },
+      "BOTH" : {
+        "level" : "high",
+        "firstAlertSegment" : 3,
+        "stages" : [ "AUTHORITY_CLAIM", "URGENT_THREAT", "SECRECY_DEMAND", "ISOLATION", "MONEY_REQUEST", "PAYMENT_CHANNEL" ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      }
+    },
+    "ai" : {
+      "validatedHits" : [ {
+        "stage" : "AUTHORITY_CLAIM",
+        "segId" : "s1",
+        "quote" : "Dzwonię z wydziału policji do spraw cyberprzestępczości.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "URGENT_THREAT",
+        "segId" : "s3",
+        "quote" : "ktoś założył na pana dane kredyt na czterdzieści tysięcy złotych.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "SECRECY_DEMAND",
+        "segId" : "s7",
+        "quote" : "to ściśle tajne śledztwo, nie wolno nikomu o nim mówić.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "MONEY_REQUEST",
+        "segId" : "s9",
+        "quote" : "Musi pan jeszcze dziś wypłacić z konta wszystkie pieniądze i przekazać je naszemu pracownikowi, żebyśmy je zabezpieczyli.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "PAYMENT_CHANNEL",
+        "segId" : "s9",
+        "quote" : "Musi pan jeszcze dziś wypłacić z konta wszystkie pieniądze i przekazać je naszemu pracownikowi, żebyśmy je zabezpieczyli.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "URGENT_THREAT",
+        "segId" : "s11",
+        "quote" : "Proszę się pospieszyć.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "ISOLATION",
+        "segId" : "s13",
+        "quote" : "Nie, proszę nie dzwonić, syn może być zamieszany.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      } ],
+      "rejectedQuotes" : 0,
+      "calls" : 14,
+      "failures" : 0,
+      "latenciesMs" : [ 3218, 1679, 1977, 2154, 2079, 2226, 2168, 2241, 3048, 2939, 3107, 3147, 3667, 3581 ],
+      "inputTokens" : 966,
+      "cacheReadTokens" : 58475,
+      "cacheWriteTokens" : 0,
+      "outputTokens" : 4098,
+      "mockSteps" : [ {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Dzwonię z wydziału policji do spraw cyberprzestępczości."
+        } ],
+        "afterSegment" : 1
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Dzwonię z wydziału policji do spraw cyberprzestępczości."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "ktoś założył na pana dane kredyt na czterdzieści tysięcy złotych."
+        } ],
+        "afterSegment" : 3
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Dzwonię z wydziału policji do spraw cyberprzestępczości."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "ktoś założył na pana dane kredyt na czterdzieści tysięcy złotych."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "to ściśle tajne śledztwo, nie wolno nikomu o nim mówić."
+        } ],
+        "afterSegment" : 7
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Dzwonię z wydziału policji do spraw cyberprzestępczości."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "ktoś założył na pana dane kredyt na czterdzieści tysięcy złotych."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "to ściśle tajne śledztwo, nie wolno nikomu o nim mówić."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "Musi pan jeszcze dziś wypłacić z konta wszystkie pieniądze i przekazać je naszemu pracownikowi, żebyśmy je zabezpieczyli."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Musi pan jeszcze dziś wypłacić z konta wszystkie pieniądze i przekazać je naszemu pracownikowi, żebyśmy je zabezpieczyli."
+        } ],
+        "afterSegment" : 9
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Dzwonię z wydziału policji do spraw cyberprzestępczości."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "ktoś założył na pana dane kredyt na czterdzieści tysięcy złotych."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "to ściśle tajne śledztwo, nie wolno nikomu o nim mówić."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "Musi pan jeszcze dziś wypłacić z konta wszystkie pieniądze i przekazać je naszemu pracownikowi, żebyśmy je zabezpieczyli."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Musi pan jeszcze dziś wypłacić z konta wszystkie pieniądze i przekazać je naszemu pracownikowi, żebyśmy je zabezpieczyli."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Proszę się pospieszyć."
+        } ],
+        "afterSegment" : 11
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Dzwonię z wydziału policji do spraw cyberprzestępczości."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "ktoś założył na pana dane kredyt na czterdzieści tysięcy złotych."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "SECRECY_DEMAND",
+          "quote" : "to ściśle tajne śledztwo, nie wolno nikomu o nim mówić."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "MONEY_REQUEST",
+          "quote" : "Musi pan jeszcze dziś wypłacić z konta wszystkie pieniądze i przekazać je naszemu pracownikowi, żebyśmy je zabezpieczyli."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "PAYMENT_CHANNEL",
+          "quote" : "Musi pan jeszcze dziś wypłacić z konta wszystkie pieniądze i przekazać je naszemu pracownikowi, żebyśmy je zabezpieczyli."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Proszę się pospieszyć."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s13",
+          "stage" : "ISOLATION",
+          "quote" : "Nie, proszę nie dzwonić, syn może być zamieszany."
+        } ],
+        "afterSegment" : 13
+      } ]
+    }
+  }, {
+    "scenarioId" : "11-remote-access",
+    "title" : "Zdalny dostęp do komputera",
+    "expected" : {
+      "maxLevel" : "high",
+      "mustHitStages" : [ "AUTHORITY_CLAIM", "REMOTE_ACCESS" ],
+      "mustNotHitStages" : [ ]
+    },
+    "outcomes" : {
+      "KEYWORDS" : {
+        "level" : "none",
+        "firstAlertSegment" : null,
+        "stages" : [ ],
+        "levelOk" : false,
+        "mustHitOk" : false,
+        "mustNotHitOk" : true,
+        "missed" : [ "AUTHORITY_CLAIM", "REMOTE_ACCESS" ],
+        "wronglyHit" : [ ]
+      },
+      "AI" : {
+        "level" : "high",
+        "firstAlertSegment" : 3,
+        "stages" : [ "AUTHORITY_CLAIM", "URGENT_THREAT", "REMOTE_ACCESS" ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      },
+      "BOTH" : {
+        "level" : "high",
+        "firstAlertSegment" : 3,
+        "stages" : [ "AUTHORITY_CLAIM", "URGENT_THREAT", "REMOTE_ACCESS" ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      }
+    },
+    "ai" : {
+      "validatedHits" : [ {
+        "stage" : "AUTHORITY_CLAIM",
+        "segId" : "s1",
+        "quote" : "Dzień dobry, tu pomoc techniczna Banku Przykładowego.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "URGENT_THREAT",
+        "segId" : "s3",
+        "quote" : "Wykryliśmy w pani komputerze wirusa, który podsłuchuje hasła do bankowości.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "REMOTE_ACCESS",
+        "segId" : "s5",
+        "quote" : "Proszę włączyć komputer, pomogę pani krok po kroku.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "REMOTE_ACCESS",
+        "segId" : "s7",
+        "quote" : "Proszę otworzyć przeglądarkę i wpisać adres, który podyktuję.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "REMOTE_ACCESS",
+        "segId" : "s9",
+        "quote" : "Proszę pobrać program i zainstalować go, żebyśmy mogli zdalnie połączyć się z pani komputerem i go zabezpieczyć.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "REMOTE_ACCESS",
+        "segId" : "s11",
+        "quote" : "Po zainstalowaniu poda mi pani dziewięciocyfrowy numer z ekranu.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "REMOTE_ACCESS",
+        "segId" : "s13",
+        "quote" : "Dzięki niemu zobaczę pani ekran i usunę wirusa.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      } ],
+      "rejectedQuotes" : 0,
+      "calls" : 14,
+      "failures" : 0,
+      "latenciesMs" : [ 3109, 1697, 2029, 2188, 2064, 2017, 2046, 2474, 2649, 2350, 2844, 3068, 3527, 3122 ],
+      "inputTokens" : 966,
+      "cacheReadTokens" : 58301,
+      "cacheWriteTokens" : 0,
+      "outputTokens" : 3302,
+      "mockSteps" : [ {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Dzień dobry, tu pomoc techniczna Banku Przykładowego."
+        } ],
+        "afterSegment" : 1
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Dzień dobry, tu pomoc techniczna Banku Przykładowego."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Wykryliśmy w pani komputerze wirusa, który podsłuchuje hasła do bankowości."
+        } ],
+        "afterSegment" : 3
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Dzień dobry, tu pomoc techniczna Banku Przykładowego."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Wykryliśmy w pani komputerze wirusa, który podsłuchuje hasła do bankowości."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Proszę włączyć komputer, pomogę pani krok po kroku."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Proszę otworzyć przeglądarkę i wpisać adres, który podyktuję."
+        } ],
+        "afterSegment" : 8
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Dzień dobry, tu pomoc techniczna Banku Przykładowego."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Wykryliśmy w pani komputerze wirusa, który podsłuchuje hasła do bankowości."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Proszę włączyć komputer, pomogę pani krok po kroku."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Proszę otworzyć przeglądarkę i wpisać adres, który podyktuję."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Proszę pobrać program i zainstalować go, żebyśmy mogli zdalnie połączyć się z pani komputerem i go zabezpieczyć."
+        } ],
+        "afterSegment" : 9
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Dzień dobry, tu pomoc techniczna Banku Przykładowego."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Wykryliśmy w pani komputerze wirusa, który podsłuchuje hasła do bankowości."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Proszę włączyć komputer, pomogę pani krok po kroku."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Proszę otworzyć przeglądarkę i wpisać adres, który podyktuję."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Proszę pobrać program i zainstalować go, żebyśmy mogli zdalnie połączyć się z pani komputerem i go zabezpieczyć."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Po zainstalowaniu poda mi pani dziewięciocyfrowy numer z ekranu."
+        } ],
+        "afterSegment" : 11
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "Dzień dobry, tu pomoc techniczna Banku Przykładowego."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Wykryliśmy w pani komputerze wirusa, który podsłuchuje hasła do bankowości."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Proszę włączyć komputer, pomogę pani krok po kroku."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Proszę otworzyć przeglądarkę i wpisać adres, który podyktuję."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Proszę pobrać program i zainstalować go, żebyśmy mogli zdalnie połączyć się z pani komputerem i go zabezpieczyć."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Po zainstalowaniu poda mi pani dziewięciocyfrowy numer z ekranu."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s13",
+          "stage" : "REMOTE_ACCESS",
+          "quote" : "Dzięki niemu zobaczę pani ekran i usunę wirusa."
+        } ],
+        "afterSegment" : 13
+      } ]
+    }
+  }, {
+    "scenarioId" : "12-callback-trap",
+    "title" : "Pułapka z oddzwonieniem na 112",
+    "expected" : {
+      "maxLevel" : "medium",
+      "mustHitStages" : [ "ISOLATION" ],
+      "mustNotHitStages" : [ ]
+    },
+    "outcomes" : {
+      "KEYWORDS" : {
+        "level" : "medium",
+        "firstAlertSegment" : 7,
+        "stages" : [ "AUTHORITY_CLAIM", "ISOLATION" ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      },
+      "AI" : {
+        "level" : "medium",
+        "firstAlertSegment" : 3,
+        "stages" : [ "AUTHORITY_CLAIM", "URGENT_THREAT", "ISOLATION" ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      },
+      "BOTH" : {
+        "level" : "medium",
+        "firstAlertSegment" : 3,
+        "stages" : [ "AUTHORITY_CLAIM", "URGENT_THREAT", "ISOLATION" ],
+        "levelOk" : true,
+        "mustHitOk" : true,
+        "mustNotHitOk" : true,
+        "missed" : [ ],
+        "wronglyHit" : [ ]
+      }
+    },
+    "ai" : {
+      "validatedHits" : [ {
+        "stage" : "AUTHORITY_CLAIM",
+        "segId" : "s1",
+        "quote" : "mówi inspektor Piotr Fikcyjny z centrali policji",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "URGENT_THREAT",
+        "segId" : "s3",
+        "quote" : "Pani konto jest zagrożone, a pani sąsiad został już zatrzymany jako wspólnik oszustów.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "ISOLATION",
+        "segId" : "s5",
+        "quote" : "Proszę zadzwonić pod numer sto dwanaście.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "ISOLATION",
+        "segId" : "s7",
+        "quote" : "Ja zostanę na linii. Proszę w żadnym wypadku nie odkładać słuchawki, bo straci pani połączenie ze mną.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "ISOLATION",
+        "segId" : "s9",
+        "quote" : "To nieistotne, proszę po prostu trzymać słuchawkę i słuchać moich poleceń.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "ISOLATION",
+        "segId" : "s11",
+        "quote" : "Pani wnuczka się myli.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "URGENT_THREAT",
+        "segId" : "s11",
+        "quote" : "Jeśli pani się rozłączy, oszuści zablokują pani konto na zawsze.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      }, {
+        "stage" : "ISOLATION",
+        "segId" : "s13",
+        "quote" : "Teraz proszę czekać na moje dalsze instrukcje i z nikim innym nie rozmawiać.",
+        "speakerRole" : "caller",
+        "source" : "llm",
+        "validated" : true
+      } ],
+      "rejectedQuotes" : 0,
+      "calls" : 13,
+      "failures" : 0,
+      "latenciesMs" : [ 3189, 1644, 2067, 2128, 2344, 2227, 2526, 2688, 2950, 2951, 3833, 3659, 3648 ],
+      "inputTokens" : 897,
+      "cacheReadTokens" : 54015,
+      "cacheWriteTokens" : 0,
+      "outputTokens" : 3973,
+      "mockSteps" : [ {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "mówi inspektor Piotr Fikcyjny z centrali policji"
+        } ],
+        "afterSegment" : 1
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "mówi inspektor Piotr Fikcyjny z centrali policji"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Pani konto jest zagrożone, a pani sąsiad został już zatrzymany jako wspólnik oszustów."
+        } ],
+        "afterSegment" : 3
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "mówi inspektor Piotr Fikcyjny z centrali policji"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Pani konto jest zagrożone, a pani sąsiad został już zatrzymany jako wspólnik oszustów."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "ISOLATION",
+          "quote" : "Proszę zadzwonić pod numer sto dwanaście."
+        } ],
+        "afterSegment" : 5
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "mówi inspektor Piotr Fikcyjny z centrali policji"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Pani konto jest zagrożone, a pani sąsiad został już zatrzymany jako wspólnik oszustów."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "ISOLATION",
+          "quote" : "Proszę zadzwonić pod numer sto dwanaście."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "ISOLATION",
+          "quote" : "Ja zostanę na linii. Proszę w żadnym wypadku nie odkładać słuchawki, bo straci pani połączenie ze mną."
+        } ],
+        "afterSegment" : 7
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "mówi inspektor Piotr Fikcyjny z centrali policji"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Pani konto jest zagrożone, a pani sąsiad został już zatrzymany jako wspólnik oszustów."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "ISOLATION",
+          "quote" : "Proszę zadzwonić pod numer sto dwanaście."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "ISOLATION",
+          "quote" : "Ja zostanę na linii. Proszę w żadnym wypadku nie odkładać słuchawki, bo straci pani połączenie ze mną."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "ISOLATION",
+          "quote" : "To nieistotne, proszę po prostu trzymać słuchawkę i słuchać moich poleceń."
+        } ],
+        "afterSegment" : 9
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "mówi inspektor Piotr Fikcyjny z centrali policji"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Pani konto jest zagrożone, a pani sąsiad został już zatrzymany jako wspólnik oszustów."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "ISOLATION",
+          "quote" : "Proszę zadzwonić pod numer sto dwanaście."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "ISOLATION",
+          "quote" : "Ja zostanę na linii. Proszę w żadnym wypadku nie odkładać słuchawki, bo straci pani połączenie ze mną."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "ISOLATION",
+          "quote" : "To nieistotne, proszę po prostu trzymać słuchawkę i słuchać moich poleceń."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "ISOLATION",
+          "quote" : "Pani wnuczka się myli."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Jeśli pani się rozłączy, oszuści zablokują pani konto na zawsze."
+        } ],
+        "afterSegment" : 11
+      }, {
+        "stage_hits" : [ {
+          "speaker_role" : "caller",
+          "segment_id" : "s1",
+          "stage" : "AUTHORITY_CLAIM",
+          "quote" : "mówi inspektor Piotr Fikcyjny z centrali policji"
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s3",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Pani konto jest zagrożone, a pani sąsiad został już zatrzymany jako wspólnik oszustów."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s5",
+          "stage" : "ISOLATION",
+          "quote" : "Proszę zadzwonić pod numer sto dwanaście."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s7",
+          "stage" : "ISOLATION",
+          "quote" : "Ja zostanę na linii. Proszę w żadnym wypadku nie odkładać słuchawki, bo straci pani połączenie ze mną."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s9",
+          "stage" : "ISOLATION",
+          "quote" : "To nieistotne, proszę po prostu trzymać słuchawkę i słuchać moich poleceń."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "ISOLATION",
+          "quote" : "Pani wnuczka się myli."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s11",
+          "stage" : "URGENT_THREAT",
+          "quote" : "Jeśli pani się rozłączy, oszuści zablokują pani konto na zawsze."
+        }, {
+          "speaker_role" : "caller",
+          "segment_id" : "s13",
+          "stage" : "ISOLATION",
+          "quote" : "Teraz proszę czekać na moje dalsze instrukcje i z nikim innym nie rozmawiać."
+        } ],
+        "afterSegment" : 13
+      } ]
+    }
+  } ],
+  "date" : "2026-10-04",
+  "ai" : "claude-sonnet-5-5"
+}

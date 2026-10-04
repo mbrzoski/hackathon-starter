@@ -1,0 +1,13 @@
+{
+  "scenarioId" : "04-real-grandson",
+  "description" : "Recorded answers of the real model (2026-10-04, EvalRunner --write-mocks), only quotes that QuoteValidator accepted. Used in MOCK mode.",
+  "steps" : [ {
+    "afterSegment" : 5,
+    "stage_hits" : [ {
+      "stage" : "MONEY_REQUEST",
+      "segment_id" : "s5",
+      "speaker_role" : "caller",
+      "quote" : "Po prostu bilet na pociąg kosztuje dwieście złotych i mi trochę brakuje do wypłaty."
+    } ]
+  } ]
+}

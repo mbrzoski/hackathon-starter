@@ -1,0 +1,259 @@
+{
+  "scenarioId" : "09-heavy-stt-errors",
+  "description" : "Recorded answers of the real model (2026-10-04, EvalRunner --write-mocks), only quotes that QuoteValidator accepted. Used in MOCK mode.",
+  "steps" : [ {
+    "afterSegment" : 1,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "dzien dobry mowi komendant polici z komisariatu zero zero zero czy to pani Barbara"
+    } ]
+  }, {
+    "afterSegment" : 3,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "dzien dobry mowi komendant polici z komisariatu zero zero zero czy to pani Barbara"
+    }, {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+    } ]
+  }, {
+    "afterSegment" : 5,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "dzien dobry mowi komendant polici z komisariatu zero zero zero czy to pani Barbara"
+    }, {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s5",
+      "speaker_role" : "caller",
+      "quote" : "to jest pilne musimy dzialac natychmiast prosze mnie dokladnie slochac"
+    } ]
+  }, {
+    "afterSegment" : 7,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "dzien dobry mowi komendant polici z komisariatu zero zero zero czy to pani Barbara"
+    }, {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s5",
+      "speaker_role" : "caller",
+      "quote" : "to jest pilne musimy dzialac natychmiast prosze mnie dokladnie slochac"
+    }, {
+      "stage" : "SECRECY_DEMAND",
+      "segment_id" : "s7",
+      "speaker_role" : "caller",
+      "quote" : "prosze nikomu o tym nie mowic to scisle tajmnica sluzbowa"
+    } ]
+  }, {
+    "afterSegment" : 9,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "dzien dobry mowi komendant polici z komisariatu zero zero zero czy to pani Barbara"
+    }, {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s5",
+      "speaker_role" : "caller",
+      "quote" : "to jest pilne musimy dzialac natychmiast prosze mnie dokladnie slochac"
+    }, {
+      "stage" : "SECRECY_DEMAND",
+      "segment_id" : "s7",
+      "speaker_role" : "caller",
+      "quote" : "prosze nikomu o tym nie mowic to scisle tajmnica sluzbowa"
+    }, {
+      "stage" : "MONEY_REQUEST",
+      "segment_id" : "s9",
+      "speaker_role" : "caller",
+      "quote" : "prosze isc do banku i wyplacic wszystkie oszczednosci w gotowce"
+    } ]
+  }, {
+    "afterSegment" : 11,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "dzien dobry mowi komendant polici z komisariatu zero zero zero czy to pani Barbara"
+    }, {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s5",
+      "speaker_role" : "caller",
+      "quote" : "to jest pilne musimy dzialac natychmiast prosze mnie dokladnie slochac"
+    }, {
+      "stage" : "SECRECY_DEMAND",
+      "segment_id" : "s7",
+      "speaker_role" : "caller",
+      "quote" : "prosze nikomu o tym nie mowic to scisle tajmnica sluzbowa"
+    }, {
+      "stage" : "MONEY_REQUEST",
+      "segment_id" : "s9",
+      "speaker_role" : "caller",
+      "quote" : "prosze isc do banku i wyplacic wszystkie oszczednosci w gotowce"
+    }, {
+      "stage" : "PAYMENT_CHANNEL",
+      "segment_id" : "s11",
+      "speaker_role" : "caller",
+      "quote" : "tak a potem przyjedzie kurjer i odbierze koperte z pieniedzmi"
+    } ]
+  }, {
+    "afterSegment" : 13,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "dzien dobry mowi komendant polici z komisariatu zero zero zero czy to pani Barbara"
+    }, {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s5",
+      "speaker_role" : "caller",
+      "quote" : "to jest pilne musimy dzialac natychmiast prosze mnie dokladnie slochac"
+    }, {
+      "stage" : "SECRECY_DEMAND",
+      "segment_id" : "s7",
+      "speaker_role" : "caller",
+      "quote" : "prosze nikomu o tym nie mowic to scisle tajmnica sluzbowa"
+    }, {
+      "stage" : "MONEY_REQUEST",
+      "segment_id" : "s9",
+      "speaker_role" : "caller",
+      "quote" : "prosze isc do banku i wyplacic wszystkie oszczednosci w gotowce"
+    }, {
+      "stage" : "PAYMENT_CHANNEL",
+      "segment_id" : "s11",
+      "speaker_role" : "caller",
+      "quote" : "tak a potem przyjedzie kurjer i odbierze koperte z pieniedzmi"
+    }, {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s13",
+      "speaker_role" : "caller",
+      "quote" : "od nas z polici prosze tez przygotowac kod blik na wszelki wypadek"
+    }, {
+      "stage" : "PAYMENT_CHANNEL",
+      "segment_id" : "s13",
+      "speaker_role" : "caller",
+      "quote" : "od nas z polici prosze tez przygotowac kod blik na wszelki wypadek"
+    } ]
+  }, {
+    "afterSegment" : 15,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "dzien dobry mowi komendant polici z komisariatu zero zero zero czy to pani Barbara"
+    }, {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "komendant polici pani Basiu dzwonie bo ktos wlamal sie na pani konto"
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s5",
+      "speaker_role" : "caller",
+      "quote" : "to jest pilne musimy dzialac natychmiast prosze mnie dokladnie slochac"
+    }, {
+      "stage" : "SECRECY_DEMAND",
+      "segment_id" : "s7",
+      "speaker_role" : "caller",
+      "quote" : "prosze nikomu o tym nie mowic to scisle tajmnica sluzbowa"
+    }, {
+      "stage" : "MONEY_REQUEST",
+      "segment_id" : "s9",
+      "speaker_role" : "caller",
+      "quote" : "prosze isc do banku i wyplacic wszystkie oszczednosci w gotowce"
+    }, {
+      "stage" : "PAYMENT_CHANNEL",
+      "segment_id" : "s11",
+      "speaker_role" : "caller",
+      "quote" : "tak a potem przyjedzie kurjer i odbierze koperte z pieniedzmi"
+    }, {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s13",
+      "speaker_role" : "caller",
+      "quote" : "od nas z polici prosze tez przygotowac kod blik na wszelki wypadek"
+    }, {
+      "stage" : "PAYMENT_CHANNEL",
+      "segment_id" : "s13",
+      "speaker_role" : "caller",
+      "quote" : "od nas z polici prosze tez przygotowac kod blik na wszelki wypadek"
+    }, {
+      "stage" : "SECRECY_DEMAND",
+      "segment_id" : "s15",
+      "speaker_role" : "caller",
+      "quote" : "nie nie wnuczkowi prosze nic nie mowic tylko isc do banku"
+    }, {
+      "stage" : "ISOLATION",
+      "segment_id" : "s15",
+      "speaker_role" : "caller",
+      "quote" : "nie nie wnuczkowi prosze nic nie mowic tylko isc do banku"
+    } ]
+  } ]
+}

@@ -1,0 +1,148 @@
+{
+  "scenarioId" : "11-remote-access",
+  "description" : "Recorded answers of the real model (2026-10-04, EvalRunner --write-mocks), only quotes that QuoteValidator accepted. Used in MOCK mode.",
+  "steps" : [ {
+    "afterSegment" : 1,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "Dzień dobry, tu pomoc techniczna Banku Przykładowego."
+    } ]
+  }, {
+    "afterSegment" : 3,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "Dzień dobry, tu pomoc techniczna Banku Przykładowego."
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "Wykryliśmy w pani komputerze wirusa, który podsłuchuje hasła do bankowości."
+    } ]
+  }, {
+    "afterSegment" : 8,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "Dzień dobry, tu pomoc techniczna Banku Przykładowego."
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "Wykryliśmy w pani komputerze wirusa, który podsłuchuje hasła do bankowości."
+    }, {
+      "stage" : "REMOTE_ACCESS",
+      "segment_id" : "s5",
+      "speaker_role" : "caller",
+      "quote" : "Proszę włączyć komputer, pomogę pani krok po kroku."
+    }, {
+      "stage" : "REMOTE_ACCESS",
+      "segment_id" : "s7",
+      "speaker_role" : "caller",
+      "quote" : "Proszę otworzyć przeglądarkę i wpisać adres, który podyktuję."
+    } ]
+  }, {
+    "afterSegment" : 9,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "Dzień dobry, tu pomoc techniczna Banku Przykładowego."
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "Wykryliśmy w pani komputerze wirusa, który podsłuchuje hasła do bankowości."
+    }, {
+      "stage" : "REMOTE_ACCESS",
+      "segment_id" : "s5",
+      "speaker_role" : "caller",
+      "quote" : "Proszę włączyć komputer, pomogę pani krok po kroku."
+    }, {
+      "stage" : "REMOTE_ACCESS",
+      "segment_id" : "s7",
+      "speaker_role" : "caller",
+      "quote" : "Proszę otworzyć przeglądarkę i wpisać adres, który podyktuję."
+    }, {
+      "stage" : "REMOTE_ACCESS",
+      "segment_id" : "s9",
+      "speaker_role" : "caller",
+      "quote" : "Proszę pobrać program i zainstalować go, żebyśmy mogli zdalnie połączyć się z pani komputerem i go zabezpieczyć."
+    } ]
+  }, {
+    "afterSegment" : 11,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "Dzień dobry, tu pomoc techniczna Banku Przykładowego."
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "Wykryliśmy w pani komputerze wirusa, który podsłuchuje hasła do bankowości."
+    }, {
+      "stage" : "REMOTE_ACCESS",
+      "segment_id" : "s5",
+      "speaker_role" : "caller",
+      "quote" : "Proszę włączyć komputer, pomogę pani krok po kroku."
+    }, {
+      "stage" : "REMOTE_ACCESS",
+      "segment_id" : "s7",
+      "speaker_role" : "caller",
+      "quote" : "Proszę otworzyć przeglądarkę i wpisać adres, który podyktuję."
+    }, {
+      "stage" : "REMOTE_ACCESS",
+      "segment_id" : "s9",
+      "speaker_role" : "caller",
+      "quote" : "Proszę pobrać program i zainstalować go, żebyśmy mogli zdalnie połączyć się z pani komputerem i go zabezpieczyć."
+    }, {
+      "stage" : "REMOTE_ACCESS",
+      "segment_id" : "s11",
+      "speaker_role" : "caller",
+      "quote" : "Po zainstalowaniu poda mi pani dziewięciocyfrowy numer z ekranu."
+    } ]
+  }, {
+    "afterSegment" : 13,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "Dzień dobry, tu pomoc techniczna Banku Przykładowego."
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s3",
+      "speaker_role" : "caller",
+      "quote" : "Wykryliśmy w pani komputerze wirusa, który podsłuchuje hasła do bankowości."
+    }, {
+      "stage" : "REMOTE_ACCESS",
+      "segment_id" : "s5",
+      "speaker_role" : "caller",
+      "quote" : "Proszę włączyć komputer, pomogę pani krok po kroku."
+    }, {
+      "stage" : "REMOTE_ACCESS",
+      "segment_id" : "s7",
+      "speaker_role" : "caller",
+      "quote" : "Proszę otworzyć przeglądarkę i wpisać adres, który podyktuję."
+    }, {
+      "stage" : "REMOTE_ACCESS",
+      "segment_id" : "s9",
+      "speaker_role" : "caller",
+      "quote" : "Proszę pobrać program i zainstalować go, żebyśmy mogli zdalnie połączyć się z pani komputerem i go zabezpieczyć."
+    }, {
+      "stage" : "REMOTE_ACCESS",
+      "segment_id" : "s11",
+      "speaker_role" : "caller",
+      "quote" : "Po zainstalowaniu poda mi pani dziewięciocyfrowy numer z ekranu."
+    }, {
+      "stage" : "REMOTE_ACCESS",
+      "segment_id" : "s13",
+      "speaker_role" : "caller",
+      "quote" : "Dzięki niemu zobaczę pani ekran i usunę wirusa."
+    } ]
+  } ]
+}

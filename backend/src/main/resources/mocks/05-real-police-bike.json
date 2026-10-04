@@ -1,0 +1,13 @@
+{
+  "scenarioId" : "05-real-police-bike",
+  "description" : "Recorded answers of the real model (2026-10-04, EvalRunner --write-mocks), only quotes that QuoteValidator accepted. Used in MOCK mode.",
+  "steps" : [ {
+    "afterSegment" : 1,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "Dzień dobry, mówi sierżant Marek Przykładowy z komisariatu numer zero zero zero."
+    } ]
+  } ]
+}

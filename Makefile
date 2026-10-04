@@ -1,4 +1,4 @@
-.PHONY: build test run-backend run-frontend demo demo-tunnel smoke e2e e2e-demo clean-demo recordings
+.PHONY: build test run-backend run-frontend demo demo-tunnel smoke e2e e2e-demo clean-demo recordings eval
 
 # Build the backend without running tests.
 build:
@@ -49,3 +49,9 @@ clean-demo:
 # REPLAY recordings (EV-04 stand-in): synthetic Polish speech of every scenario, backend/recordings/*.wav (macOS).
 recordings:
 	node scripts/make-demo-recordings.mjs
+
+# Evaluation (BE-12, EV-03): 12 scenarios, keywords vs AI vs both; real Claude when ANTHROPIC_API_KEY is set
+# (in the environment or in .env). Writes docs/eval/wyniki-ewaluacji.md and .json.
+eval:
+	cd backend && ./mvnw -q -DskipTests compile dependency:build-classpath -Dmdep.outputFile=target/eval.classpath
+	cd backend && set -a && { [ ! -f ../.env ] || . ../.env; } && set +a && java -cp target/classes:$$(cat target/eval.classpath) pl.aniolstroz.demo.EvalRunner $(ARGS)

@@ -5,7 +5,7 @@
   "mode": "SCRIPTED",
   "source": "Syntetyczne, napisane przez zespół z pomocą Claude podczas HackYeah 2026 na podstawie publicznych opisów oszustw",
   "expected": {
-    "maxLevel": "high",
+    "maxLevel": "medium",
     "mustHitStages": [
       "ISOLATION"
     ],

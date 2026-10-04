@@ -1,0 +1,168 @@
+{
+  "scenarioId" : "08-slow-scam",
+  "description" : "Recorded answers of the real model (2026-10-04, EvalRunner --write-mocks), only quotes that QuoteValidator accepted. Used in MOCK mode.",
+  "steps" : [ {
+    "afterSegment" : 1,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "tu Marta z infolinii Towarzystwa Przykładowego"
+    } ]
+  }, {
+    "afterSegment" : 7,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "tu Marta z infolinii Towarzystwa Przykładowego"
+    }, {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s7",
+      "speaker_role" : "caller",
+      "quote" : "Ja z kolei jestem oficerem w wydziale gospodarczym prokuratury"
+    } ]
+  }, {
+    "afterSegment" : 11,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "tu Marta z infolinii Towarzystwa Przykładowego"
+    }, {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s7",
+      "speaker_role" : "caller",
+      "quote" : "Ja z kolei jestem oficerem w wydziale gospodarczym prokuratury"
+    }, {
+      "stage" : "SECRECY_DEMAND",
+      "segment_id" : "s11",
+      "speaker_role" : "caller",
+      "quote" : "proszę, żeby to zostało między nami, na razie sprawa jest poufna."
+    } ]
+  }, {
+    "afterSegment" : 17,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "tu Marta z infolinii Towarzystwa Przykładowego"
+    }, {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s7",
+      "speaker_role" : "caller",
+      "quote" : "Ja z kolei jestem oficerem w wydziale gospodarczym prokuratury"
+    }, {
+      "stage" : "SECRECY_DEMAND",
+      "segment_id" : "s11",
+      "speaker_role" : "caller",
+      "quote" : "proszę, żeby to zostało między nami, na razie sprawa jest poufna."
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s17",
+      "speaker_role" : "caller",
+      "quote" : "Żeby pani oszczędności nie zostały zamrożone, trzeba je będzie przekazać na konto depozytowe."
+    }, {
+      "stage" : "MONEY_REQUEST",
+      "segment_id" : "s17",
+      "speaker_role" : "caller",
+      "quote" : "Żeby pani oszczędności nie zostały zamrożone, trzeba je będzie przekazać na konto depozytowe."
+    }, {
+      "stage" : "PAYMENT_CHANNEL",
+      "segment_id" : "s17",
+      "speaker_role" : "caller",
+      "quote" : "trzeba je będzie przekazać na konto depozytowe."
+    } ]
+  }, {
+    "afterSegment" : 19,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "tu Marta z infolinii Towarzystwa Przykładowego"
+    }, {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s7",
+      "speaker_role" : "caller",
+      "quote" : "Ja z kolei jestem oficerem w wydziale gospodarczym prokuratury"
+    }, {
+      "stage" : "SECRECY_DEMAND",
+      "segment_id" : "s11",
+      "speaker_role" : "caller",
+      "quote" : "proszę, żeby to zostało między nami, na razie sprawa jest poufna."
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s17",
+      "speaker_role" : "caller",
+      "quote" : "Żeby pani oszczędności nie zostały zamrożone, trzeba je będzie przekazać na konto depozytowe."
+    }, {
+      "stage" : "MONEY_REQUEST",
+      "segment_id" : "s17",
+      "speaker_role" : "caller",
+      "quote" : "Żeby pani oszczędności nie zostały zamrożone, trzeba je będzie przekazać na konto depozytowe."
+    }, {
+      "stage" : "PAYMENT_CHANNEL",
+      "segment_id" : "s17",
+      "speaker_role" : "caller",
+      "quote" : "trzeba je będzie przekazać na konto depozytowe."
+    }, {
+      "stage" : "MONEY_REQUEST",
+      "segment_id" : "s19",
+      "speaker_role" : "caller",
+      "quote" : "Proszę przygotować dwadzieścia tysięcy złotych i przelać je na rachunek, który podam."
+    }, {
+      "stage" : "PAYMENT_CHANNEL",
+      "segment_id" : "s19",
+      "speaker_role" : "caller",
+      "quote" : "Proszę przygotować dwadzieścia tysięcy złotych i przelać je na rachunek, który podam."
+    } ]
+  }, {
+    "afterSegment" : 21,
+    "stage_hits" : [ {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s1",
+      "speaker_role" : "caller",
+      "quote" : "tu Marta z infolinii Towarzystwa Przykładowego"
+    }, {
+      "stage" : "AUTHORITY_CLAIM",
+      "segment_id" : "s7",
+      "speaker_role" : "caller",
+      "quote" : "Ja z kolei jestem oficerem w wydziale gospodarczym prokuratury"
+    }, {
+      "stage" : "SECRECY_DEMAND",
+      "segment_id" : "s11",
+      "speaker_role" : "caller",
+      "quote" : "proszę, żeby to zostało między nami, na razie sprawa jest poufna."
+    }, {
+      "stage" : "URGENT_THREAT",
+      "segment_id" : "s17",
+      "speaker_role" : "caller",
+      "quote" : "Żeby pani oszczędności nie zostały zamrożone, trzeba je będzie przekazać na konto depozytowe."
+    }, {
+      "stage" : "MONEY_REQUEST",
+      "segment_id" : "s17",
+      "speaker_role" : "caller",
+      "quote" : "Żeby pani oszczędności nie zostały zamrożone, trzeba je będzie przekazać na konto depozytowe."
+    }, {
+      "stage" : "PAYMENT_CHANNEL",
+      "segment_id" : "s17",
+      "speaker_role" : "caller",
+      "quote" : "trzeba je będzie przekazać na konto depozytowe."
+    }, {
+      "stage" : "MONEY_REQUEST",
+      "segment_id" : "s19",
+      "speaker_role" : "caller",
+      "quote" : "Proszę przygotować dwadzieścia tysięcy złotych i przelać je na rachunek, który podam."
+    }, {
+      "stage" : "PAYMENT_CHANNEL",
+      "segment_id" : "s19",
+      "speaker_role" : "caller",
+      "quote" : "Proszę przygotować dwadzieścia tysięcy złotych i przelać je na rachunek, który podam."
+    }, {
+      "stage" : "MONEY_REQUEST",
+      "segment_id" : "s21",
+      "speaker_role" : "caller",
+      "quote" : "Zadzwonię jutro po numer rachunku, proszę być gotową."
+    } ]
+  } ]
+}
