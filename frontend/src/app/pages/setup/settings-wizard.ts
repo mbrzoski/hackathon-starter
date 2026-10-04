@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { SettingsService } from '../../api/api/settings.service';
 import { Sensitivity, Settings } from '../../api/model/models';
@@ -42,8 +43,9 @@ export const SENSITIVITY_TEXT: Record<Sensitivity, { label: string; text: string
 
 /**
  * Setup wizard (FE-06, architecture 6.4): consents in plain language, trusted contacts, sensitivity, retention.
- * Saved with PUT /api/settings. Without both consents the listening device does not start (AUD-07). The settings
- * never go to the AI (rule 5): the screen says so.
+ * Every field is required: both consents, the senior's name, at least one trusted contact, sensitivity and retention.
+ * Saved with PUT /api/settings, then back to the family panel. Without both consents the listening device does not
+ * start (AUD-07). The settings never go to the AI (rule 5): the screen says so.
  */
 @Component({
   selector: 'app-settings-wizard',
@@ -77,24 +79,28 @@ export const SENSITIVITY_TEXT: Record<Sensitivity, { label: string; text: string
                 <li>Przy ostrzeżeniu informowana jest rodzina. System nigdy sam nie rozłącza, nie dzwoni i nie blokuje numerów.</li>
               </ul>
               <label class="check">
-                <input type="checkbox" [checked]="seniorConsent()" (change)="seniorConsent.set($any($event.target).checked)" />
-                Senior zgadza się na nasłuch rozmów.
+                <input type="checkbox" required [checked]="seniorConsent()" (change)="seniorConsent.set($any($event.target).checked)" />
+                Senior zgadza się na nasłuch rozmów. <span class="req">(wymagane)</span>
               </label>
               <label class="check">
-                <input type="checkbox" [checked]="familyConsent()" (change)="familyConsent.set($any($event.target).checked)" />
-                Rodzina zgadza się na otrzymywanie ostrzeżeń.
+                <input type="checkbox" required [checked]="familyConsent()" (change)="familyConsent.set($any($event.target).checked)" />
+                Rodzina zgadza się na otrzymywanie ostrzeżeń. <span class="req">(wymagane)</span>
               </label>
               @if (!seniorConsent() || !familyConsent()) {
                 <p class="note warn" role="status">Bez obu zgód Nasłuch nie włączy mikrofonu.</p>
               }
-              <label for="senior-name">Jak nazywacie seniora (opcjonalnie, np. „Mama”)</label>
-              <input id="senior-name" maxlength="60" [value]="seniorName()" (input)="seniorName.set($any($event.target).value)" />
+              <label for="senior-name">Jak nazywacie seniora, np. „Mama” <span class="req">(wymagane)</span></label>
+              <input id="senior-name" required maxlength="60" [value]="seniorName()" [attr.aria-invalid]="!nameValid()"
+                     (input)="seniorName.set($any($event.target).value)" />
             </div>
           }
           @case ('contacts') {
             <div class="panel">
               <h3>Zaufane kontakty</h3>
-              <p class="note">Do tych osób senior może zadzwonić po ostrzeżeniu. Najwyżej {{ maxContacts }}.</p>
+              <p class="note">Do tych osób senior może zadzwonić po ostrzeżeniu. Co najmniej jedna, najwyżej {{ maxContacts }}. <span class="req">(wymagane)</span></p>
+              @if (!contacts().length) {
+                <p class="problem" role="alert">Dodaj co najmniej jeden zaufany kontakt.</p>
+              }
               @for (c of contacts(); track $index; let i = $index) {
                 <div class="contact">
                   <label [for]="'contact-name-' + i">Imię</label>
@@ -115,7 +121,7 @@ export const SENSITIVITY_TEXT: Record<Sensitivity, { label: string; text: string
           }
           @case ('sensitivity') {
             <div class="panel" role="radiogroup" aria-labelledby="sens-title">
-              <h3 id="sens-title">Czułość ostrzeżeń</h3>
+              <h3 id="sens-title">Czułość ostrzeżeń <span class="req">(wymagane)</span></h3>
               @for (s of sensitivities; track s) {
                 <label class="radio">
                   <input type="radio" name="sensitivity" [value]="s" [checked]="sensitivity() === s" (change)="sensitivity.set(s)" />
@@ -127,7 +133,7 @@ export const SENSITIVITY_TEXT: Record<Sensitivity, { label: string; text: string
           @case ('retention') {
             <div class="panel">
               <h3>Jak długo przechowywać ostrzeżenia</h3>
-              <label for="retention">Liczba dni (1 do 90)</label>
+              <label for="retention">Liczba dni (1 do 90) <span class="req">(wymagane)</span></label>
               <input id="retention" type="number" min="1" max="90" [value]="retentionDays()"
                      [attr.aria-invalid]="!retentionValid()" (input)="retentionDays.set(+$any($event.target).value)" />
               <p class="note">Starsze ostrzeżenia, fragmenty rozmów, decyzje i audyt są usuwane automatycznie.</p>
@@ -158,6 +164,16 @@ export const SENSITIVITY_TEXT: Record<Sensitivity, { label: string; text: string
           }
           <button type="button" class="primary" [disabled]="!valid() || saving()" (click)="save()">Zapisz ustawienia</button>
         </div>
+        @if (missing().length) {
+          <div class="missing" role="status">
+            <p>Wszystkie pola są wymagane. Uzupełnij:</p>
+            <ul>
+              @for (m of missing(); track m.text) {
+                <li><button type="button" class="step-link" (click)="go(m.step)">{{ m.text }}</button></li>
+              }
+            </ul>
+          </div>
+        }
         @if (saved()) {
           <p class="ok" role="status"><app-icon name="check" [size]="24" /> Zapisano ustawienia.</p>
         }
@@ -185,6 +201,10 @@ export const SENSITIVITY_TEXT: Record<Sensitivity, { label: string; text: string
     .contact button { grid-column: 2; justify-self: start; }
     .note { margin: 0; color: var(--muted); font-size: 14px; }
     .note.warn { color: var(--warn-deep); font-weight: 700; }
+    .req { font-weight: 600; color: var(--muted); font-size: 14px; }
+    .missing { padding: 10px 14px; border-radius: 8px; background: var(--bg); }
+    .missing p { margin: 0 0 6px; font-weight: 700; }
+    .missing ul { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
     .problem { display: flex; align-items: center; gap: 8px; margin: 0; padding: 8px 12px; border-radius: 8px; background: var(--warn-bg); color: var(--warn-deep); font-weight: 700; }
     .ok { display: flex; align-items: center; gap: 8px; margin: 0; font-weight: 700; }
     .actions { display: flex; flex-wrap: wrap; gap: 12px; }
@@ -198,6 +218,7 @@ export const SENSITIVITY_TEXT: Record<Sensitivity, { label: string; text: string
 export class SettingsWizard {
   private readonly api = inject(SettingsService);
   private readonly store = inject(SettingsStore);
+  private readonly router = inject(Router);
 
   protected readonly steps = STEPS;
   protected readonly sensitivities: Sensitivity[] = [Sensitivity.calm, Sensitivity.standard, Sensitivity.sensitive];
@@ -226,7 +247,19 @@ export class SettingsWizard {
     const days = this.retentionDays();
     return Number.isInteger(days) && days >= 1 && days <= 90;
   });
-  protected readonly valid = computed(() => this.contactsValid() && this.retentionValid());
+  protected readonly nameValid = computed(() => this.seniorName().trim().length > 0);
+  /** What is still missing, with the step where it is filled in. Every field is required. */
+  protected readonly missing = computed(() => {
+    const list: { text: string; step: Step }[] = [];
+    if (!this.seniorConsent()) list.push({ text: 'zgoda seniora', step: 'consent' });
+    if (!this.familyConsent()) list.push({ text: 'zgoda rodziny', step: 'consent' });
+    if (!this.nameValid()) list.push({ text: 'jak nazywacie seniora', step: 'consent' });
+    if (!this.contacts().length) list.push({ text: 'co najmniej jeden zaufany kontakt', step: 'contacts' });
+    else if (!this.contactsValid()) list.push({ text: 'poprawne imię i numer każdego kontaktu', step: 'contacts' });
+    if (!this.retentionValid()) list.push({ text: 'czas przechowywania (1 do 90 dni)', step: 'retention' });
+    return list;
+  });
+  protected readonly valid = computed(() => this.missing().length === 0);
 
   constructor() {
     void this.load();
@@ -287,6 +320,8 @@ export class SettingsWizard {
       this.apply(stored);
       this.store.applySettings(stored);
       this.saved.set(true);
+      // Saved: back to the main view of the family panel.
+      await this.router.navigateByUrl('/family');
     } catch (err) {
       this.saveError.set(problemDetailText(err));
     } finally {

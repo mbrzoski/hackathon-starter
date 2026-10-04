@@ -18,7 +18,7 @@
       Brak zgód seniora i rodziny: Nasłuch nie włączy mikrofonu. <a routerLink="/setup">Dokończ konfigurację</a>
     </p>
   }
-  <details class="config">
+  <details class="config" [open]="configOpen()" (toggle)="configOpen.set($any($event.target).open)">
     <summary>Konfiguracja konta seniora</summary>
     <form (submit)="$event.preventDefault(); saveConfig()">
       <label for="family-phone">Numer telefonu osoby z rodziny</label>

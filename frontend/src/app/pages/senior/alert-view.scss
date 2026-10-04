@@ -6,13 +6,13 @@
 .body { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
 .head { display: grid; gap: 4px; }
 .eyebrow { margin: 0; display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.12em; }
-.text { margin: 0; font-size: clamp(30px, 5vmin, 56px); line-height: 1.15; font-weight: 800; }
-.advice { margin: 0; font-size: clamp(28px, 3.5vmin, 40px); line-height: 1.2; font-weight: 700; }
+.text { margin: 0; font-size: clamp(30px, 5cqmin, 56px); line-height: 1.15; font-weight: 800; }
+.advice { margin: 0; font-size: clamp(28px, 3.5cqmin, 40px); line-height: 1.2; font-weight: 700; }
 .source { margin: 0; opacity: 0.95; }
 .tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 
 // On its side: decisions in their own column next to the text.
-@media (orientation: landscape) {
+@container senior-screen (orientation: landscape) {
   .alert { grid-template-columns: minmax(0, 1fr) minmax(260px, 40%); grid-template-rows: minmax(0, 1fr); }
   app-decision-buttons { align-content: center; }
 }

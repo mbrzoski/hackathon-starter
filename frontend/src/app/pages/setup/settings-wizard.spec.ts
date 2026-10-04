@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
+import { Router, provideRouter } from '@angular/router';
 import { SeniorConfigService } from '../../api/api/senior-config.service';
 import { SettingsService } from '../../api/api/settings.service';
 import { Settings } from '../../api/model/models';
@@ -18,6 +19,7 @@ const SAVED: Settings = {
 
 describe('SettingsWizard (FE-06)', () => {
   let api: { getSettings: ReturnType<typeof vi.fn>; setSettings: ReturnType<typeof vi.fn> };
+  let navigate: ReturnType<typeof vi.spyOn>;
 
   const el = (f: ComponentFixture<SettingsWizard>) => f.nativeElement as HTMLElement;
   const text = (f: ComponentFixture<SettingsWizard>) => el(f).textContent?.replace(/\s+/g, ' ') ?? '';
@@ -40,9 +42,11 @@ describe('SettingsWizard (FE-06)', () => {
       providers: [
         { provide: SettingsService, useValue: api },
         { provide: SeniorConfigService, useValue: { getSeniorConfig: () => of({ familyPhone: '', keywords: [] }) } },
+        provideRouter([]),
       ],
     });
     const fixture = TestBed.createComponent(SettingsWizard);
+    navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     await fixture.whenStable();
     return fixture;
   }
@@ -97,8 +101,8 @@ describe('SettingsWizard (FE-06)', () => {
       sensitivity: 'sensitive',
       retentionDays: 14,
     });
-    expect(text(fixture)).toContain('Zapisano ustawienia.');
     expect(TestBed.inject(SettingsStore).consented()).toBe(true);
+    expect(navigate).toHaveBeenCalledWith('/family'); // back to the main view of the family panel
   });
 
   it('does not save a contact without a valid number, nor a retention outside 1..90', async () => {
@@ -117,7 +121,32 @@ describe('SettingsWizard (FE-06)', () => {
     expect(button(fixture, 'Zapisz ustawienia').disabled).toBe(true);
   });
 
+  it('makes every field required and lists what is missing', async () => {
+    api.getSettings.mockReturnValue(of({ ...SAVED, contacts: [] }));
+    const fixture = await open();
+    expect(button(fixture, 'Zapisz ustawienia').disabled).toBe(true);
+    const missing = el(fixture).querySelector('.missing')!.textContent!;
+    expect(missing).toContain('zgoda seniora');
+    expect(missing).toContain('zgoda rodziny');
+    expect(missing).toContain('jak nazywacie seniora');
+    expect(missing).toContain('co najmniej jeden zaufany kontakt');
+
+    el(fixture).querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach((c) => c.click());
+    await type(fixture, '#senior-name', 'Mama');
+    button(fixture, '2. Zaufane kontakty').click();
+    await fixture.whenStable();
+    expect(text(fixture)).toContain('Dodaj co najmniej jeden zaufany kontakt.');
+    button(fixture, 'Dodaj kontakt').click();
+    await fixture.whenStable();
+    await type(fixture, '#contact-name-0', 'Ela');
+    await type(fixture, '#contact-phone-0', '500 600 700');
+
+    expect(el(fixture).querySelector('.missing')).toBeNull();
+    expect(button(fixture, 'Zapisz ustawienia').disabled).toBe(false);
+  });
+
   it('says so when saving failed (never silent)', async () => {
+    api.getSettings.mockReturnValue(of({ ...SAVED, seniorConsent: true, familyConsent: true, seniorName: 'Mama' }));
     api.setSettings.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
     const fixture = await open();
     button(fixture, 'Zapisz ustawienia').click();

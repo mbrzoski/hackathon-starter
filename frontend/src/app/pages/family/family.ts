@@ -49,6 +49,8 @@ export class Family {
   protected readonly maxKeywordLength = MAX_KEYWORD_LENGTH;
   protected readonly phoneValid = computed(() => FAMILY_PHONE_PATTERN.test(this.phoneDraft().trim()));
   protected readonly configState = signal<'idle' | 'saving' | 'saved' | 'failed'>('idle');
+  /** The configuration dropdown; it closes after a save, back to the main view of the panel. */
+  protected readonly configOpen = signal(false);
 
   constructor() {
     this.settings.load();
@@ -88,6 +90,7 @@ export class Family {
       next: (config) => {
         this.phoneDraft.set(config.familyPhone);
         this.keywordsDraft.set(config.keywords.join('\n'));
+        this.configOpen.set(false);
         this.configState.set('saved');
       },
       error: () => this.configState.set('failed'),

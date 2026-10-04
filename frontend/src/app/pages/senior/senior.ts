@@ -35,6 +35,7 @@ type View =
   selector: 'app-senior',
   imports: [AlertView, DecisionOutcome, Icon, ModeBadge, StatusPanel, TranscriptDebugPanel],
   template: `
+    <div class="phone"><div class="screen">
     <header>
       <div class="brand"><span class="logo"><app-icon name="shield" [size]="32" /></span><span class="name">Anioł Stróż</span></div>
       <app-mode-badge [large]="true" [compact]="true" />
@@ -102,6 +103,7 @@ type View =
         <app-transcript-debug-panel [segments]="events.segments()" [highlights]="highlights()" />
       </div>
     }
+    </div></div>
   `,
   styleUrl: './senior.scss',
   host: { '(document:pointerdown)': 'unlockVoice()' },

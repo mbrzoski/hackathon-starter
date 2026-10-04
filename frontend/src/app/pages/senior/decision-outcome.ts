@@ -38,8 +38,8 @@ import { Icon } from '../../shared/icon';
       border-radius: 24px; background: var(--bg); color: var(--text); }
     .body { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; justify-content: safe center; }
     p { margin: 0; }
-    .big { font-size: clamp(32px, 5.5vmin, 56px); line-height: 1.2; font-weight: 800; }
-    .number { font-size: clamp(44px, 9vmin, 80px); font-weight: 800; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
+    .big { font-size: clamp(32px, 5.5cqmin, 56px); line-height: 1.2; font-weight: 800; }
+    .number { font-size: clamp(44px, 9cqmin, 80px); font-weight: 800; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
     .decision { font: inherit; font-size: 28px; font-weight: 800; min-height: 72px; width: 100%; border-radius: 16px;
       display: flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer; text-decoration: none;
       background: var(--surface); color: var(--primary); border: 3px solid var(--primary); }
