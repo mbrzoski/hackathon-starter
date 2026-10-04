@@ -112,16 +112,20 @@ export class Listen {
       }
     });
 
+    // "Rozmowa zakończona" is shown for a moment, whether or not the phone call goes on (it usually ends with it).
     effect((onCleanup) => {
-      if (!this.events.online() || !this.phoneOn()) {
+      if (this.hungUp()) {
+        const timer = setTimeout(() => this.hungUp.set(false), NEXT_CALL_MS);
+        onCleanup(() => clearTimeout(timer));
+      }
+    });
+
+    effect((onCleanup) => {
+      if (!this.events.online() || !this.phoneOn() || this.hungUp()) {
         return;
       }
       const state = this.audio.state();
-      if (this.hungUp()) {
-        // Protection stays on: after a short "Rozmowa zakończona" the microphone starts again for the next call.
-        const timer = setTimeout(() => this.hungUp.set(false), NEXT_CALL_MS);
-        onCleanup(() => clearTimeout(timer));
-      } else if (state === 'idle') {
+      if (state === 'idle') {
         untracked(() => void this.audio.start());
       } else if (state === 'error') {
         // Never silent (the screen says why), never given up: a cable, a cut connection or a late consent heals itself.

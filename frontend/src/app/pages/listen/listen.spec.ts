@@ -99,6 +99,23 @@ describe('Listen', () => {
     expect(audio.state()).toBe('listening');
   });
 
+  it('after a hang-up without a phone call it says so for a moment and then waits again', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    events.phoneCall.set(null);
+    const fixture = await open();
+    events.activeCall.set(CALL);
+    events.alerts.set([ALERT]);
+    events.decisions.set([{ alertId: 'a1', actor: 'senior', decision: 'hung_up', at: AT } as Decision]);
+    await fixture.whenStable();
+    expect(heading(fixture)).toBe('Rozmowa zakończona');
+
+    events.activeCall.set({ ...CALL, endedAt: AT, hadAlert: true });
+    await vi.advanceTimersByTimeAsync(3000);
+    await fixture.whenStable();
+    expect(heading(fixture)).toBe('Czekam na rozmowę');
+    expect(audio.start).not.toHaveBeenCalled();
+  });
+
   it('switches the microphone off when the phone call ends', async () => {
     const fixture = await open();
     expect(audio.state()).toBe('listening');

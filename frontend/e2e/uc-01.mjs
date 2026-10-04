@@ -167,7 +167,8 @@ try {
     const statusBar = `document.querySelector('app-system-status-bar')?.innerText.includes('Nie słyszę rozmowy')`;
     check(await senior.waitFor(`document.body.innerText.includes('Nie słyszę rozmowy')`, 5_000), 'audio down: senior "Nie słyszę rozmowy"', (await senior.text()).slice(0, 80));
     check(await family.waitFor(statusBar, 5_000), 'audio down: family status bar');
-    check(await listen.waitFor(`document.body.innerText.includes('Nie słyszę rozmowy')`, 5_000), 'audio down: listen "Nie słyszę rozmowy"');
+    // Without the simulated phone call the listening device has its microphone off and says so, not "listening".
+    check(await listen.waitFor(`document.body.innerText.includes('Mikrofon jest wyłączony')`, 5_000), 'audio down: listen does not claim to listen (microphone off)');
     await emit('audio', 'ok');
     check(await senior.waitFor(`document.body.innerText.includes('Anioł Stróż słucha')`, 5_000), 'audio back: senior green again');
   } else {
