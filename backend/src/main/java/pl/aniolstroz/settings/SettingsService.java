@@ -66,6 +66,14 @@ public class SettingsService {
         return clean;
     }
 
+    /** Back to the defaults (no consents, no contacts): the setup wizard starts again. */
+    public Settings reset() {
+        jdbc.sql("DELETE FROM settings").update();
+        Settings defaults = defaults();
+        events.publishEvent(new SettingsChanged(defaults));
+        return defaults;
+    }
+
     public boolean hasConsent() {
         Settings s = current();
         return s.seniorConsent() && s.familyConsent();

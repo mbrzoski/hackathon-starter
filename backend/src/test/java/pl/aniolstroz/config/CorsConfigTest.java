@@ -33,4 +33,14 @@ class CorsConfigTest {
                         .header("Access-Control-Request-Method", "GET"))
                 .andExpect(status().isForbidden());
     }
+
+    /** The family panel erases one call or resets the settings with DELETE (a 403 here broke it in the dev setup). */
+    @Test
+    void allowsDeleteFromThePublicOrigin() throws Exception {
+        mockMvc.perform(options("/api/calls/call-1")
+                        .header("Origin", "https://demo.example")
+                        .header("Access-Control-Request-Method", "DELETE"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "https://demo.example"));
+    }
 }

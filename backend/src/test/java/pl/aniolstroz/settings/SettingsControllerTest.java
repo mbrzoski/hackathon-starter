@@ -98,4 +98,19 @@ class SettingsControllerTest {
         mockMvc.perform(delete("/api/data")).andExpect(status().isNoContent());
         assertThat(settings.current().seniorName()).isEqualTo("Mama");
     }
+
+    @Test
+    void resetGoesBackToTheDefaultsAndWithdrawsTheConsent() throws Exception {
+        save(FULL).andExpect(status().isOk());
+        assertThat(consent.hasConsent()).isTrue();
+
+        mockMvc.perform(delete("/api/settings"))
+                .andExpect(status().isOk())
+                .andExpect(openApi().isValid(SPEC))
+                .andExpect(jsonPath("$.seniorConsent").value(false))
+                .andExpect(jsonPath("$.contacts.length()").value(0))
+                .andExpect(jsonPath("$.seniorName").value(""));
+        assertThat(consent.hasConsent()).isFalse();
+        assertThat(sensitivity.current()).isEqualTo(Sensitivity.STANDARD);
+    }
 }

@@ -17,7 +17,7 @@ const SAVED: Settings = {
 };
 
 describe('SettingsWizard (FE-06)', () => {
-  let api: { getSettings: ReturnType<typeof vi.fn>; setSettings: ReturnType<typeof vi.fn> };
+  let api: { getSettings: ReturnType<typeof vi.fn>; setSettings: ReturnType<typeof vi.fn>; resetSettings: ReturnType<typeof vi.fn> };
   let navigate: ReturnType<typeof vi.spyOn>;
 
   const el = (f: ComponentFixture<SettingsWizard>) => f.nativeElement as HTMLElement;
@@ -50,7 +50,11 @@ describe('SettingsWizard (FE-06)', () => {
   }
 
   beforeEach(() => {
-    api = { getSettings: vi.fn(() => of(SAVED)), setSettings: vi.fn((s: Settings) => of(s)) };
+    api = {
+      getSettings: vi.fn(() => of(SAVED)),
+      setSettings: vi.fn((s: Settings) => of(s)),
+      resetSettings: vi.fn(() => of({ ...SAVED, contacts: [], seniorName: '' })),
+    };
   });
 
   it('starts with the consents in plain language and warns that nothing listens without them', async () => {
@@ -150,5 +154,35 @@ describe('SettingsWizard (FE-06)', () => {
     button(fixture, 'Zapisz ustawienia').click();
     await fixture.whenStable();
     expect(el(fixture).querySelector('[role="alert"]')?.textContent).toContain('Nie udało się zapisać');
+  });
+
+  it('resets the senior settings after a confirmation, so they can be entered again', async () => {
+    api.getSettings.mockReturnValue(of({ ...SAVED, seniorConsent: true, familyConsent: true, seniorName: 'Mama' }));
+    const fixture = await open();
+    button(fixture, '3. Czułość').click();
+    await fixture.whenStable();
+
+    button(fixture, 'Zresetuj ustawienia seniora').click();
+    await fixture.whenStable();
+    expect(api.resetSettings).not.toHaveBeenCalled();
+    expect(text(fixture)).toContain('Nasłuch nie włączy mikrofonu');
+
+    button(fixture, 'Tak, zresetuj').click();
+    await fixture.whenStable();
+
+    expect(api.resetSettings).toHaveBeenCalled();
+    expect(text(fixture)).toContain('Ustawienia zresetowane. Wypełnij je ponownie.');
+    expect(text(fixture)).toContain('Na co się zgadzacie'); // back at the first step
+    expect(el(fixture).querySelector<HTMLInputElement>('#senior-name')!.value).toBe('');
+    expect(TestBed.inject(SettingsStore).consented()).toBe(false);
+  });
+
+  it('"Anuluj" resets nothing', async () => {
+    const fixture = await open();
+    button(fixture, 'Zresetuj ustawienia seniora').click();
+    await fixture.whenStable();
+    button(fixture, 'Anuluj').click();
+    await fixture.whenStable();
+    expect(api.resetSettings).not.toHaveBeenCalled();
   });
 });

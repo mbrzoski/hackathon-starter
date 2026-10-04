@@ -21,6 +21,11 @@ class SettingsController implements SettingsApi {
     }
 
     @Override
+    public ResponseEntity<Settings> resetSettings() {
+        return ResponseEntity.ok(settings.reset());
+    }
+
+    @Override
     public ResponseEntity<Settings> setSettings(Settings body) {
         return ResponseEntity.ok(settings.save(body));
     }

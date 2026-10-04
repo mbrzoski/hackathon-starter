@@ -177,6 +177,19 @@ export const SENSITIVITY_TEXT: Record<Sensitivity, { label: string; text: string
         @if (saved()) {
           <p class="ok" role="status"><app-icon name="check" [size]="24" /> Zapisano ustawienia.</p>
         }
+        <div class="reset">
+          @if (confirmingReset()) {
+            <p>Zresetować ustawienia seniora? Zgody, kontakty i imię zostaną usunięte, a Nasłuch nie włączy mikrofonu,
+              dopóki nie wypełnicie kreatora ponownie.</p>
+            <button type="button" class="danger" [disabled]="saving()" (click)="reset()">Tak, zresetuj</button>
+            <button type="button" class="secondary" (click)="confirmingReset.set(false)">Anuluj</button>
+          } @else {
+            <button type="button" class="secondary" (click)="confirmingReset.set(true)">Zresetuj ustawienia seniora</button>
+          }
+        </div>
+        @if (resetDone()) {
+          <p class="ok" role="status"><app-icon name="check" [size]="24" /> Ustawienia zresetowane. Wypełnij je ponownie.</p>
+        }
         @if (saveError(); as error) {
           <p class="problem" role="alert"><app-icon name="warning" [size]="24" /> Nie udało się zapisać: {{ error }}</p>
         }
@@ -210,6 +223,9 @@ export const SENSITIVITY_TEXT: Record<Sensitivity, { label: string; text: string
     .actions { display: flex; flex-wrap: wrap; gap: 12px; }
     button { font: inherit; font-weight: 700; min-height: 48px; padding: 0 22px; border-radius: 10px; border: 2px solid var(--primary); cursor: pointer; }
     .primary { background: var(--primary); color: #fff; }
+    .danger { background: var(--warn-deep); border-color: var(--warn-deep); color: #fff; }
+    .reset { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; border-top: 1px solid var(--border); padding-top: 12px; }
+    .reset p { margin: 0; flex-basis: 100%; font-weight: 700; }
     .secondary { background: var(--surface); color: var(--primary); }
     button:disabled { opacity: 0.6; cursor: default; }
     button:focus-visible { outline: 3px solid var(--highlight); outline-offset: 2px; }
@@ -233,6 +249,9 @@ export class SettingsWizard {
   protected readonly saving = signal(false);
   protected readonly saved = signal(false);
   protected readonly saveError = signal<string | null>(null);
+  /** Reset asks once more: it withdraws the consents. */
+  protected readonly confirmingReset = signal(false);
+  protected readonly resetDone = signal(false);
 
   protected readonly seniorConsent = signal(false);
   protected readonly familyConsent = signal(false);
@@ -324,6 +343,25 @@ export class SettingsWizard {
       await this.router.navigateByUrl('/family');
     } catch (err) {
       this.saveError.set(problemDetailText(err));
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  /** Back to the defaults (DELETE /api/settings) and to the first step, to fill the wizard in again. */
+  protected async reset(): Promise<void> {
+    this.saving.set(true);
+    this.saveError.set(null);
+    this.resetDone.set(false);
+    try {
+      const defaults = await firstValueFrom(this.api.resetSettings());
+      this.apply(defaults);
+      this.store.applySettings(defaults);
+      this.confirmingReset.set(false);
+      this.step.set('consent');
+      this.resetDone.set(true);
+    } catch (err) {
+      this.saveError.set(`Nie udało się zresetować ustawień: ${problemDetailText(err)}`);
     } finally {
       this.saving.set(false);
     }

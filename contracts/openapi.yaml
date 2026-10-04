@@ -332,6 +332,18 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
+    delete:
+      operationId: resetSettings
+      tags:
+        - settings
+      summary: "Reset the household settings to the defaults, so the setup wizard can be filled in again: no consents (listening is refused until they are given again), no contacts, standard sensitivity, default retention."
+      responses:
+        "200":
+          description: The default settings now in force.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
   /api/dev/emit:
     post:
       operationId: emitDevEvent
