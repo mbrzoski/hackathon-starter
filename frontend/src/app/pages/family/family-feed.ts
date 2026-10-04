@@ -32,6 +32,8 @@ export class FamilyFeed {
   /** Live high alerts the family has not decided on yet: they keep "⚠ Alert" in the tab title. */
   private readonly attention = signal<ReadonlySet<string>>(new Set());
   private loaded = false;
+  /** Calls whose data the family erased: their alerts are not shown again, even if an event repeats them. */
+  private readonly removedCalls = new Set<string>();
   private wasOpen = false;
   private reconnecting = false;
 
@@ -101,7 +103,17 @@ export class FamilyFeed {
     this.loading.set(false);
   }
 
+  /** The family erased everything stored about this call: its alerts and decisions leave the panel. */
+  removeCall(callId: string): void {
+    this.removedCalls.add(callId);
+    const removedAlerts = new Set([...this.alerts().values()].filter((a) => a.callId === callId).map((a) => a.alertId));
+    this.alerts.update((map) => new Map([...map].filter(([, a]) => a.callId !== callId)));
+    this.decisions.update((map) => new Map([...map].filter(([, d]) => !removedAlerts.has(d.alertId))));
+    this.attention.update((set) => new Set([...set].filter((id) => !removedAlerts.has(id))));
+  }
+
   private addAlerts(list: Alert[], live: boolean): void {
+    list = list.filter((a) => !this.removedCalls.has(a.callId));
     untracked(() => {
       const known = this.alerts();
       const fresh = list.filter((a) => !known.has(a.alertId));

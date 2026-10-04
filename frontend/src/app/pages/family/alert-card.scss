@@ -16,3 +16,9 @@ h3 { margin: 0 0 8px; font-size: 13px; letter-spacing: 0.06em; text-transform: u
   color: var(--alarm-deep); cursor: pointer; }
 .end-call:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
 .confirmed { color: var(--text); background: var(--bg); padding: 10px 12px; border-radius: 8px; font-size: 15px; font-weight: 600; }
+.erase { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; border-top: 1px solid var(--border); padding-top: 10px; }
+.erase .note { flex-basis: 100%; }
+.erase button { font: inherit; font-size: 15px; font-weight: 700; min-height: 40px; padding: 0 14px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+.erase .erase-confirm { background: var(--alarm-deep); border-color: var(--alarm-deep); color: #fff; }
+.erase button:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }

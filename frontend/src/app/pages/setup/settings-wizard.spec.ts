@@ -2,7 +2,6 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 import { Router, provideRouter } from '@angular/router';
-import { SeniorConfigService } from '../../api/api/senior-config.service';
 import { SettingsService } from '../../api/api/settings.service';
 import { Settings } from '../../api/model/models';
 import { SettingsStore } from '../../core/settings.store';
@@ -41,7 +40,6 @@ describe('SettingsWizard (FE-06)', () => {
       imports: [SettingsWizard],
       providers: [
         { provide: SettingsService, useValue: api },
-        { provide: SeniorConfigService, useValue: { getSeniorConfig: () => of({ familyPhone: '', keywords: [] }) } },
         provideRouter([]),
       ],
     });

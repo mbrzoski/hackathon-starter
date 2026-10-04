@@ -18,37 +18,6 @@
       Brak zgód seniora i rodziny: Nasłuch nie włączy mikrofonu. <a routerLink="/setup">Dokończ konfigurację</a>
     </p>
   }
-  <details class="config" [open]="configOpen()" (toggle)="configOpen.set($any($event.target).open)">
-    <summary>Konfiguracja konta seniora</summary>
-    <form (submit)="$event.preventDefault(); saveConfig()">
-      <label for="family-phone">Numer telefonu osoby z rodziny</label>
-      <input id="family-phone" type="tel" inputmode="tel" autocomplete="off" placeholder="np. +48 602 000 222"
-             [value]="phoneDraft()" (input)="editPhone($any($event.target).value)" [attr.aria-invalid]="!phoneValid()" />
-      <p class="note">Na ten numer senior zadzwoni po dotknięciu „Zadzwoń do bliskiej osoby”. Aplikacja sama nie dzwoni. Puste pole usuwa numer.</p>
-      @if (!phoneValid()) {
-        <p class="error" role="alert">Podaj numer w formacie +48 602 000 222 (9 do 15 cyfr).</p>
-      }
-
-      <label for="family-keywords">Słowa kluczowe, na które ten profil ma być wrażliwy</label>
-      <textarea id="family-keywords" rows="4" placeholder="np. akt własności&#10;testament&#10;wnuczek w szpitalu"
-                [value]="keywordsDraft()" (input)="editKeywords($any($event.target).value)"
-                [attr.aria-invalid]="!keywordsValid()"></textarea>
-      <p class="note">
-        Po jednym w linii albo po przecinku (do {{ maxKeywords }}). Gdy ktoś w rozmowie użyje takiego słowa, senior i rodzina
-        dostaną ostrzeżenie. Słowa zostają na serwerze i nie są wysyłane do AI. Teraz: {{ keywordList().length }}.
-      </p>
-      @if (!keywordsValid()) {
-        <p class="error" role="alert">Najwyżej {{ maxKeywords }} słów, każde do {{ maxKeywordLength }} znaków.</p>
-      }
-
-      <button type="submit" class="btn-primary" [disabled]="!phoneValid() || !keywordsValid() || configState() === 'saving'">Zapisz</button>
-      @switch (configState()) {
-        @case ('saved') { <p class="note" role="status">Zapisano.</p> }
-        @case ('failed') { <p class="error" role="alert">Nie udało się zapisać. Spróbuj ponownie.</p> }
-      }
-    </form>
-  </details>
-
   <section class="simulate">
     <!-- Demo: only a tap switches it. On: /senior shows who is calling and /listen listens. Nothing is dialled. -->
     <button type="button" [class]="phoneCall() ? 'btn-neutral' : 'btn-primary'" [disabled]="simulating()" (click)="toggleCall()">
@@ -70,8 +39,11 @@
     </div>
   }
 
+  @if (deleteMessage(); as message) {
+    <p [class]="message.ok ? 'note deleted' : 'error'" [attr.role]="message.ok ? 'status' : 'alert'">{{ message.text }}</p>
+  }
   @for (item of feed.items(); track item.alert.alertId) {
-    <app-alert-card [item]="item" [segments]="segmentsFor(item.alert.callId)" [live]="isLive(item.alert.callId)" (endCall)="endCall()" />
+    <app-alert-card [item]="item" [segments]="segmentsFor(item.alert.callId)" [live]="isLive(item.alert.callId)" (endCall)="endCall()" (deleteCall)="deleteCall($event)" />
   } @empty {
     @if (feed.loading()) {
       <p class="note">Wczytuję alerty…</p>

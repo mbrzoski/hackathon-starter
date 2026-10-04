@@ -64,6 +64,11 @@ class DecisionServiceTest {
         }
 
         @Override
+        public boolean isActive(String callId) {
+            return callActive;
+        }
+
+        @Override
         public boolean ignoreStages(String callId, Set<StageId> stages) {
             ignoreRequests.add(new Object[] {callId, stages});
             return callActive;

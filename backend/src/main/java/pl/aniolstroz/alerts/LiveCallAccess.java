@@ -18,4 +18,7 @@ public interface LiveCallAccess {
      * This is the one way a call's risk level can drop (DET-05 exception).
      */
     boolean ignoreStages(String callId, Set<StageId> stages);
+
+    /** True while the call with this id is the active one. */
+    boolean isActive(String callId);
 }

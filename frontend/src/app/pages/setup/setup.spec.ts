@@ -2,7 +2,6 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Observable, of, throwError } from 'rxjs';
 import { ProtectionService } from '../../api/api/protection.service';
-import { SeniorConfigService } from '../../api/api/senior-config.service';
 import { SettingsService } from '../../api/api/settings.service';
 import { provideRouter } from '@angular/router';
 import { Alert, Decision, Mode, Protection, SystemStatus, TranscriptSegment } from '../../api/model/models';
@@ -38,7 +37,6 @@ describe('Setup: protection switch', () => {
         setSettings: vi.fn(),
       },
     },
-    { provide: SeniorConfigService, useValue: { getSeniorConfig: () => of({ familyPhone: '', keywords: [] }) } },
     provideRouter([]),
   ];
 
@@ -57,7 +55,6 @@ describe('Setup: protection switch', () => {
             setSettings: vi.fn(),
           },
         },
-        { provide: SeniorConfigService, useValue: { getSeniorConfig: () => of({ familyPhone: '', keywords: [] }) } },
         provideRouter([]),
       ],
     });

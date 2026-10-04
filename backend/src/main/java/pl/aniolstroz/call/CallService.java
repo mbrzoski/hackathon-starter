@@ -174,6 +174,12 @@ public class CallService implements LiveCallAccess {
     }
 
     /** Lock-free on purpose, see {@link #slotLock}. */
+    @Override
+    public boolean isActive(String callId) {
+        CallState call = active;
+        return call != null && call.callId().equals(callId);
+    }
+
     public Optional<CallState> active() {
         return Optional.ofNullable(active);
     }

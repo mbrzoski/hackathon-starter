@@ -155,7 +155,6 @@
                                 <importMapping>RiskLevel=pl.aniolstroz.contracts.RiskLevel</importMapping>
                                 <importMapping>Protection=pl.aniolstroz.contracts.Protection</importMapping>
                                 <importMapping>PhoneCall=pl.aniolstroz.contracts.PhoneCall</importMapping>
-                                <importMapping>SeniorConfig=pl.aniolstroz.contracts.SeniorConfig</importMapping>
                                 <importMapping>Settings=pl.aniolstroz.contracts.Settings</importMapping>
                             </importMappings>
                             <configOptions>

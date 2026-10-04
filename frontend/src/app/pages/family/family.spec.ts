@@ -4,8 +4,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
 import { Observable, defer, of, throwError } from 'rxjs';
 import { AlertsService } from '../../api/api/alerts.service';
+import { DataService } from '../../api/api/data.service';
 import { DemoService } from '../../api/api/demo.service';
-import { SeniorConfigService } from '../../api/api/senior-config.service';
 import { SettingsService } from '../../api/api/settings.service';
 import { provideRouter } from '@angular/router';
 import {
@@ -80,8 +80,8 @@ describe('Family', () => {
   let notifier: { beep: ReturnType<typeof vi.fn> };
   let submit: () => Observable<unknown>;
   let demo: { setPhoneCall: ReturnType<typeof vi.fn>; stopReplay: ReturnType<typeof vi.fn> };
+  let data: { deleteCallData: ReturnType<typeof vi.fn> };
   let settingsApi: { getSettings: ReturnType<typeof vi.fn>; setSettings: ReturnType<typeof vi.fn> };
-  let config: { getSeniorConfig: ReturnType<typeof vi.fn>; setSeniorConfig: ReturnType<typeof vi.fn> };
 
   const el = (f: ComponentFixture<Family>) => f.nativeElement as HTMLElement;
   const text = (e: Element | null) => e?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
@@ -102,19 +102,16 @@ describe('Family', () => {
     submit = () => of({});
     notifier = { beep: vi.fn() };
     demo = { setPhoneCall: vi.fn(() => of({})), stopReplay: vi.fn(() => of({})) };
+    data = { deleteCallData: vi.fn(() => of({})) };
     settingsApi = { getSettings: vi.fn(() => of({ seniorConsent: true, familyConsent: true, contacts: [], sensitivity: 'standard', retentionDays: 30, seniorName: '' })), setSettings: vi.fn() };
-    config = {
-      getSeniorConfig: vi.fn(() => of({ familyPhone: '+48 602 000 222', keywords: ['testament'] })),
-      setSeniorConfig: vi.fn((c: { familyPhone: string; keywords: string[] }) => of(c)),
-    };
     TestBed.configureTestingModule({
       imports: [Family],
       providers: [
         { provide: EventsService, useValue: events },
         { provide: AlertNotifier, useValue: notifier },
         { provide: DemoService, useValue: demo },
-        { provide: SeniorConfigService, useValue: config },
         { provide: SettingsService, useValue: settingsApi },
+        { provide: DataService, useValue: data },
         provideRouter([]),
         {
           provide: AlertsService,
@@ -362,144 +359,6 @@ describe('Family', () => {
     });
   });
 
-  describe('configuration of the senior\'s account', () => {
-    const input = (f: ComponentFixture<Family>) => el(f).querySelector<HTMLInputElement>('#family-phone')!;
-    const submit = (f: ComponentFixture<Family>) => button(el(f).querySelector('.config')!, 'Zapisz');
-    const type = async (f: ComponentFixture<Family>, value: string) => {
-      input(f).value = value;
-      input(f).dispatchEvent(new Event('input'));
-      await f.whenStable();
-    };
-
-    it('is a dropdown that shows the saved family number', async () => {
-      const fixture = await render();
-      expect(text(el(fixture).querySelector('.config summary'))).toBe('Konfiguracja konta seniora');
-      expect(el(fixture).querySelector('.config label')?.textContent).toContain('Numer telefonu osoby z rodziny');
-      expect(input(fixture).value).toBe('+48 602 000 222');
-    });
-
-    it('shows the saved words and saves new ones, one per line or separated by commas', async () => {
-      const fixture = await render();
-      const words = () => el(fixture).querySelector<HTMLTextAreaElement>('#family-keywords')!;
-      expect(words().value).toBe('testament');
-      expect(el(fixture).querySelector('.config')!.textContent).toContain('Słowa kluczowe, na które ten profil ma być wrażliwy');
-
-      words().value = 'akt własności\nDowód osobisty, akt własności; x';
-      words().dispatchEvent(new Event('input'));
-      await fixture.whenStable();
-      submit(fixture).click();
-      await fixture.whenStable();
-
-      expect(config.setSeniorConfig).toHaveBeenCalledWith({
-        familyPhone: '+48 602 000 222',
-        keywords: ['akt własności', 'Dowód osobisty'],
-      });
-    });
-
-    it('does not save more than 30 words', async () => {
-      const fixture = await render();
-      const words = el(fixture).querySelector<HTMLTextAreaElement>('#family-keywords')!;
-      words.value = Array.from({ length: 31 }, (_, i) => `słowo${i}`).join(',');
-      words.dispatchEvent(new Event('input'));
-      await fixture.whenStable();
-
-      expect(submit(fixture).disabled).toBe(true);
-      expect(text(el(fixture).querySelector('.config [role="alert"]'))).toContain('Najwyżej 30 słów');
-    });
-
-    it('saves a new number', async () => {
-      const fixture = await render();
-      await type(fixture, '+48 601 111 333');
-
-      submit(fixture).click();
-      await fixture.whenStable();
-
-      expect(config.setSeniorConfig).toHaveBeenCalledWith({ familyPhone: '+48 601 111 333', keywords: ['testament'] });
-      expect(text(el(fixture).querySelector('.config [role="status"]'))).toBe('Zapisano.');
-    });
-
-    it('does not save a malformed number', async () => {
-      const fixture = await render();
-      await type(fixture, 'abc');
-
-      expect(submit(fixture).disabled).toBe(true);
-      expect(text(el(fixture).querySelector('.config [role="alert"]'))).toContain('Podaj numer');
-      expect(config.setSeniorConfig).not.toHaveBeenCalled();
-    });
-
-    it('an empty number removes it', async () => {
-      const fixture = await render();
-      await type(fixture, '');
-      submit(fixture).click();
-      await fixture.whenStable();
-      expect(config.setSeniorConfig).toHaveBeenCalledWith({ familyPhone: '', keywords: ['testament'] });
-    });
-
-    it('says so when saving failed (never silent)', async () => {
-      config.setSeniorConfig.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
-      const fixture = await render();
-      await type(fixture, '+48 601 111 333');
-      submit(fixture).click();
-      await fixture.whenStable();
-      expect(text(el(fixture).querySelector('.config [role="alert"]'))).toContain('Nie udało się zapisać');
-    });
-  });
-
-  describe('ending the call from an alert', () => {
-    const endButton = (f: ComponentFixture<Family>) => button(el(f), 'Zakończ połączenie');
-
-    it('is offered on the alert of the ongoing call only', async () => {
-      events.alerts.set([alert('live', T0, 'high', 'c1')]);
-      const fixture = await render();
-      expect(endButton(fixture)).toBeUndefined();
-
-      events.activeCall.set({ callId: 'c1', startedAt: T0, endedAt: null, hadAlert: true });
-      await fixture.whenStable();
-      expect(endButton(fixture)).toBeTruthy();
-
-      events.activeCall.set({ callId: 'c1', startedAt: T0, endedAt: T0, hadAlert: true });
-      await fixture.whenStable();
-      expect(endButton(fixture)).toBeUndefined();
-    });
-
-    it('ends the simulated phone call, so /listen stops listening', async () => {
-      events.alerts.set([alert('live', T0, 'high', 'c1')]);
-      events.activeCall.set({ callId: 'c1', startedAt: T0, endedAt: null, hadAlert: true });
-      const fixture = await render();
-
-      endButton(fixture).click();
-      await fixture.whenStable();
-
-      expect(demo.setPhoneCall).toHaveBeenCalledWith({ active: false });
-      expect(demo.stopReplay).toHaveBeenCalled();
-    });
-  });
-
-  describe('confirming a scam', () => {
-    const MESSAGE =
-      'Numer został wysłany do bazy numerów podejrzanych. Jeśli masz więcej pytań, możesz także zgłosić sprawę na policję.';
-
-    it('tells what happens with the number once "Potwierdzam oszustwo" is stored', async () => {
-      events.alerts.set([alert('a1', T0)]);
-      const fixture = await render();
-      expect(text(el(fixture))).not.toContain('bazy numerów podejrzanych');
-
-      button(cards(fixture)[0], 'Potwierdzam oszustwo').click();
-      await fixture.whenStable();
-      events.decisions.set([{ alertId: 'a1', actor: 'family', decision: 'confirmed_scam', at: T0 } as Decision]);
-      await fixture.whenStable();
-
-      expect(text(cards(fixture)[0].querySelector('.confirmed'))).toBe(MESSAGE);
-    });
-
-    it('does not show it after other decisions', async () => {
-      events.alerts.set([alert('a1', T0)]);
-      events.decisions.set([{ alertId: 'a1', actor: 'family', decision: 'false_alarm', at: T0 } as Decision]);
-      const fixture = await render();
-      expect(cards(fixture)[0].querySelector('.confirmed')).toBeNull();
-    });
-  });
-
   describe('consent', () => {
     it('asks to finish the setup when the consents are missing (AUD-07)', async () => {
       settingsApi.getSettings.mockReturnValue(
@@ -514,6 +373,63 @@ describe('Family', () => {
     it('says nothing when both consents are given', async () => {
       const fixture = await render();
       expect(el(fixture).querySelector('.consent')).toBeNull();
+    });
+  });
+
+  describe('erasing the data of one call', () => {
+    const erase = (card: Element) => button(card, 'Usuń dane tego połączenia');
+
+    it('asks once more, erases the call on the backend and removes all its cards', async () => {
+      history = of([
+        { alert: alert('a1', '2026-10-01T10:00:00Z', 'high', 'call-1'), decisions: [] },
+        { alert: alert('a2', '2026-10-01T10:05:00Z', 'medium', 'call-1'), decisions: [] },
+        { alert: alert('b1', '2026-10-02T10:00:00Z', 'high', 'call-2'), decisions: [] },
+      ] as AlertWithDecisions[]);
+      const fixture = await render();
+      expect(cards(fixture)).toHaveLength(3);
+      const call1 = cards(fixture).find((c) => text(c.querySelector('h2')) === 'Alert a1')!;
+
+      erase(call1).click();
+      await fixture.whenStable();
+      expect(data.deleteCallData).not.toHaveBeenCalled();
+      expect(text(call1)).toContain('Tego nie da się cofnąć.');
+
+      button(call1, 'Tak, usuń').click();
+      await fixture.whenStable();
+
+      expect(data.deleteCallData).toHaveBeenCalledWith('call-1');
+      expect(cards(fixture).map((c) => text(c.querySelector('h2')))).toEqual(['Alert b1']);
+      expect(text(el(fixture).querySelector('.deleted'))).toBe('Usunięto dane połączenia.');
+    });
+
+    it('"Anuluj" erases nothing', async () => {
+      history = of([{ alert: alert('a1', T0, 'high', 'call-1'), decisions: [] }] as AlertWithDecisions[]);
+      const fixture = await render();
+      erase(cards(fixture)[0]).click();
+      await fixture.whenStable();
+      button(cards(fixture)[0], 'Anuluj').click();
+      await fixture.whenStable();
+      expect(data.deleteCallData).not.toHaveBeenCalled();
+      expect(cards(fixture)).toHaveLength(1);
+    });
+
+    it('is not offered for the call that is still going on', async () => {
+      events.alerts.set([alert('live', T0, 'high', 'c1')]);
+      events.activeCall.set({ callId: 'c1', startedAt: T0, endedAt: null, hadAlert: true });
+      const fixture = await render();
+      expect(erase(cards(fixture)[0])).toBeUndefined();
+    });
+
+    it('says so when the backend refuses, and keeps the cards', async () => {
+      data.deleteCallData.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+      history = of([{ alert: alert('a1', T0, 'high', 'call-1'), decisions: [] }] as AlertWithDecisions[]);
+      const fixture = await render();
+      erase(cards(fixture)[0]).click();
+      await fixture.whenStable();
+      button(cards(fixture)[0], 'Tak, usuń').click();
+      await fixture.whenStable();
+      expect(text(el(fixture).querySelector('main > .error[role="alert"]'))).toContain('Nie udało się usunąć danych połączenia');
+      expect(cards(fixture)).toHaveLength(1);
     });
   });
 });

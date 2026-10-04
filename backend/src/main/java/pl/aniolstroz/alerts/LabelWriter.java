@@ -58,6 +58,25 @@ public class LabelWriter {
         }
     }
 
+    /** Removes the labels of one call (its data was erased by the family). */
+    public void deleteCall(String callId) throws IOException {
+        lock.lock();
+        try {
+            if (!Files.exists(file)) {
+                return;
+            }
+            List<String> kept = new java.util.ArrayList<>();
+            for (String line : Files.readAllLines(file)) {
+                if (line.isBlank() || !callId.equals(mapper.readTree(line).path("callId").asText())) {
+                    kept.add(line);
+                }
+            }
+            Files.write(file, kept);
+        } finally {
+            lock.unlock();
+        }
+    }
+
     public void append(Alert alert, Decision decision) throws IOException {
         List<StageId> stages = List.copyOf(RiskEngine.stagesOf(alert.stages()));
         String line = mapper.writeValueAsString(new Label(alert.alertId(), alert.callId(), alert.mode(), stages,

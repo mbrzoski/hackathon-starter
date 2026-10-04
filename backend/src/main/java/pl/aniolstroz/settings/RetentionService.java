@@ -87,6 +87,30 @@ public class RetentionService {
         });
     }
 
+    /**
+     * Deletes everything stored about one call: its alerts with their excerpts and decisions, its audit rows and its
+     * evaluation labels (DELETE /api/calls/{callId}). Returns false when nothing was stored about it.
+     */
+    public boolean deleteCall(String callId) {
+        Integer removed = transactions.execute(status -> {
+            String alertsOfCall = "SELECT alert_id FROM alerts WHERE call_id = :call";
+            int rows = 0;
+            rows += jdbc.sql("DELETE FROM alert_segments WHERE alert_id IN (" + alertsOfCall + ")").param("call", callId).update();
+            rows += jdbc.sql("DELETE FROM decisions WHERE alert_id IN (" + alertsOfCall + ")").param("call", callId).update();
+            rows += jdbc.sql("DELETE FROM alerts WHERE call_id = :call").param("call", callId).update();
+            rows += jdbc.sql("DELETE FROM audit_records WHERE call_id = :call").param("call", callId).update();
+            rows += jdbc.sql("DELETE FROM audit_calls WHERE call_id = :call").param("call", callId).update();
+            return rows;
+        });
+        try {
+            labels.deleteCall(callId);
+        } catch (java.io.IOException e) {
+            log.error("Deleting the evaluation labels of a call failed: {}", e.getClass().getName());
+            throw new IllegalStateException("Nie udało się usunąć etykiet ewaluacji tej rozmowy.", e);
+        }
+        return removed != null && removed > 0;
+    }
+
     /** Deletes all stored alerts, excerpts, decisions, audit rows and evaluation labels (DELETE /api/data). */
     public void deleteAll() {
         transactions.executeWithoutResult(status -> {

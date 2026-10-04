@@ -1,7 +1,6 @@
 import { computed, signal } from '@angular/core';
 import { of } from 'rxjs';
 import { DemoService } from '../../api/api/demo.service';
-import { SeniorConfigService } from '../../api/api/senior-config.service';
 import { SettingsService } from '../../api/api/settings.service';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Alert, Decision, Mode, SystemStatus, TranscriptSegment } from '../../api/model/models';
@@ -67,7 +66,7 @@ describe('Senior', () => {
   let settings: SettingsStore;
   let synth: FakeSynth | null;
   let demo: { setPhoneCall: ReturnType<typeof vi.fn> };
-  let config: { getSeniorConfig: ReturnType<typeof vi.fn>; setSeniorConfig: ReturnType<typeof vi.fn> };
+  let settingsApi: { getSettings: ReturnType<typeof vi.fn>; setSettings: ReturnType<typeof vi.fn> };
 
   const text = (f: ComponentFixture<Senior>) => (f.nativeElement as HTMLElement).textContent?.replace(/\s+/g, ' ') ?? '';
   const $ = (f: ComponentFixture<Senior>, selector: string) => (f.nativeElement as HTMLElement).querySelector(selector);
@@ -82,8 +81,7 @@ describe('Senior', () => {
         { provide: DecisionOutbox, useValue: outbox },
         { provide: SPEECH_SYNTHESIS, useValue: synth },
         { provide: DemoService, useValue: demo },
-        { provide: SeniorConfigService, useValue: config },
-        { provide: SettingsService, useValue: { getSettings: vi.fn(() => of({ seniorConsent: true, familyConsent: true, contacts: [], sensitivity: 'standard', retentionDays: 30, seniorName: '' })), setSettings: vi.fn() } },
+        { provide: SettingsService, useValue: settingsApi },
       ],
     });
     settings = TestBed.inject(SettingsStore);
@@ -120,7 +118,12 @@ describe('Senior', () => {
     outbox = { send: vi.fn(), unsaved, acknowledge: () => unsaved.set(false) };
     synth = new FakeSynth();
     demo = { setPhoneCall: vi.fn(() => of({})) };
-    config = { getSeniorConfig: vi.fn(() => of({ familyPhone: '', keywords: [] })), setSeniorConfig: vi.fn() };
+    settingsApi = {
+      getSettings: vi.fn(() =>
+        of({ seniorConsent: true, familyConsent: true, contacts: [], sensitivity: 'standard', retentionDays: 30, seniorName: '' }),
+      ),
+      setSettings: vi.fn(),
+    };
   });
 
   afterEach(() => vi.unstubAllGlobals());
@@ -300,12 +303,14 @@ describe('Senior', () => {
       expect(outbox.send).not.toHaveBeenCalled();
     });
 
-    it('offers the family number from the senior configuration as a tel: link, with the button label unchanged', async () => {
-      config.getSeniorConfig.mockReturnValue(of({ familyPhone: '+48 602 000 222', keywords: [] }));
+    it('offers the first trusted contact of the settings as a tel: link (FE-10)', async () => {
+      settingsApi.getSettings.mockReturnValue(
+        of({ seniorConsent: true, familyConsent: true, contacts: [{ name: 'Ela', phone: '+48 602 000 222' }],
+          sensitivity: 'standard', retentionDays: 30, seniorName: '' }),
+      );
       const fixture = await withAlert();
-      expect(button(fixture, 'Zadzwoń do bliskiej osoby')).toBeTruthy();
 
-      button(fixture, 'Zadzwoń do bliskiej osoby').click();
+      button(fixture, 'Zadzwoń do: Ela').click();
       await fixture.whenStable();
 
       expect(outbox.send).toHaveBeenCalledWith('a1', 'called_trusted');

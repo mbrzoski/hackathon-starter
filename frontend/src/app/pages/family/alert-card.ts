@@ -50,6 +50,10 @@ export class AlertCard {
   readonly live = input(false);
   /** The family asks to end the ongoing call (the panel ends the simulated call and so the listening). */
   readonly endCall = output<void>();
+  /** The family asks to erase everything stored about this alert's call (after confirming). */
+  readonly deleteCall = output<string>();
+  /** The delete button asks once more: erasing cannot be undone. */
+  protected readonly confirmingDelete = signal(false);
 
   protected readonly ignored = signal<ReadonlySet<StageId>>(new Set());
   /** Sent from this card, waiting for alert.decision from the backend. */

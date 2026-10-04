@@ -1,14 +1,10 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { DataService } from '../../api/api/data.service';
 import { DemoService } from '../../api/api/demo.service';
 import { EventsService } from '../../core/events.service';
-import {
-  FAMILY_PHONE_PATTERN,
-  MAX_KEYWORDS,
-  MAX_KEYWORD_LENGTH,
-  SettingsStore,
-  parseKeywords,
-} from '../../core/settings.store';
+import { SettingsStore } from '../../core/settings.store';
 import { Icon } from '../../shared/icon';
 import { ModeBadge } from '../../shared/mode-badge';
 import { problemDetailText } from '../../shared/problem-detail';
@@ -27,74 +23,20 @@ export class Family {
   protected readonly feed = inject(FamilyFeed);
   private readonly events = inject(EventsService);
   private readonly demo = inject(DemoService);
+  private readonly data = inject(DataService);
+  /** The result of the last "Usuń dane tego połączenia"; never silent. */
+  protected readonly deleteMessage = signal<{ ok: boolean; text: string } | null>(null);
 
   protected readonly simulating = signal(false);
   protected readonly simulateError = signal<string | null>(null);
   protected readonly phoneCall = this.events.phoneCall;
 
   private readonly settings = inject(SettingsStore);
-  /** The number being typed; starts as the saved one. */
   /** Both consents missing in the saved settings: listening will be refused (AUD-07). */
   protected readonly consentMissing = computed(() => this.settings.consented() === false);
-  protected readonly phoneDraft = signal('');
-  private draftTouched = false;
-  /** The words being typed, one per line or separated by commas. */
-  protected readonly keywordsDraft = signal('');
-  private keywordsTouched = false;
-  protected readonly keywordList = computed(() => parseKeywords(this.keywordsDraft()));
-  protected readonly keywordsValid = computed(
-    () => this.keywordList().length <= MAX_KEYWORDS && this.keywordList().every((w) => w.length <= MAX_KEYWORD_LENGTH),
-  );
-  protected readonly maxKeywords = MAX_KEYWORDS;
-  protected readonly maxKeywordLength = MAX_KEYWORD_LENGTH;
-  protected readonly phoneValid = computed(() => FAMILY_PHONE_PATTERN.test(this.phoneDraft().trim()));
-  protected readonly configState = signal<'idle' | 'saving' | 'saved' | 'failed'>('idle');
-  /** The configuration dropdown; it closes after a save, back to the main view of the panel. */
-  protected readonly configOpen = signal(false);
 
   constructor() {
     this.settings.load();
-    effect(() => {
-      const saved = this.settings.familyPhone();
-      if (saved !== null && !this.draftTouched) {
-        this.phoneDraft.set(saved);
-      }
-    });
-    effect(() => {
-      const saved = this.settings.keywords();
-      if (saved !== null && !this.keywordsTouched) {
-        this.keywordsDraft.set(saved.join('\n'));
-      }
-    });
-  }
-
-  protected editPhone(value: string): void {
-    this.draftTouched = true;
-    this.phoneDraft.set(value);
-    this.configState.set('idle');
-  }
-
-  protected editKeywords(value: string): void {
-    this.keywordsTouched = true;
-    this.keywordsDraft.set(value);
-    this.configState.set('idle');
-  }
-
-  /** Saves the number the senior's "Zadzwoń do bliskiej osoby" offers (empty removes it) and the family's words. */
-  protected saveConfig(): void {
-    if (!this.phoneValid() || !this.keywordsValid()) {
-      return;
-    }
-    this.configState.set('saving');
-    this.settings.save(this.phoneDraft(), this.keywordList()).subscribe({
-      next: (config) => {
-        this.phoneDraft.set(config.familyPhone);
-        this.keywordsDraft.set(config.keywords.join('\n'));
-        this.configOpen.set(false);
-        this.configState.set('saved');
-      },
-      error: () => this.configState.set('failed'),
-    });
   }
 
   /**
@@ -118,6 +60,26 @@ export class Family {
       error: (err: unknown) => {
         this.simulating.set(false);
         this.simulateError.set(`Nie udało się zmienić symulacji połączenia. ${problemDetailText(err)}`);
+      },
+    });
+  }
+
+  /** Erases everything stored about one call (DELETE /api/calls/{callId}); its cards leave the panel. */
+  protected deleteCall(callId: string): void {
+    this.deleteMessage.set(null);
+    this.data.deleteCallData(callId).subscribe({
+      next: () => {
+        this.feed.removeCall(callId);
+        this.deleteMessage.set({ ok: true, text: 'Usunięto dane połączenia.' });
+      },
+      error: (err: unknown) => {
+        if (err instanceof HttpErrorResponse && err.status === 404) {
+          // Nothing stored on the server (already erased or never kept): drop the cards here too.
+          this.feed.removeCall(callId);
+          this.deleteMessage.set({ ok: true, text: 'Usunięto dane połączenia.' });
+          return;
+        }
+        this.deleteMessage.set({ ok: false, text: `Nie udało się usunąć danych połączenia. ${problemDetailText(err)}` });
       },
     });
   }

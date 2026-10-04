@@ -43,6 +43,17 @@
   @if (pending()) {
     <p class="note" role="status">Zapisuję decyzję…</p>
   }
+  @if (!live()) {
+    <div class="erase">
+      @if (confirmingDelete()) {
+        <p class="note">Usunąć wszystkie dane tego połączenia: ostrzeżenia, fragmenty rozmowy, decyzje i audyt? Tego nie da się cofnąć.</p>
+        <button type="button" class="erase-confirm" (click)="confirmingDelete.set(false); deleteCall.emit(alert().callId)">Tak, usuń</button>
+        <button type="button" class="erase-cancel" (click)="confirmingDelete.set(false)">Anuluj</button>
+      } @else {
+        <button type="button" class="erase-start" (click)="confirmingDelete.set(true)">Usuń dane tego połączenia</button>
+      }
+    </div>
+  }
   @if (scamConfirmed()) {
     <p class="note confirmed" role="status">
       Numer został wysłany do bazy numerów podejrzanych. Jeśli masz więcej pytań, możesz także zgłosić sprawę na policję.

@@ -12,14 +12,7 @@ main { max-width: 960px; margin: 0 auto; padding: 16px; display: grid; gap: 16px
 .privacy { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; margin: 0; }
 .simulate { display: grid; gap: 8px; }
 .simulate button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-.config { padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
-.config summary { cursor: pointer; font-weight: 700; }
-.config form { display: grid; gap: 8px; margin-top: 12px; }
-.config label { font-weight: 600; }
-.config input { font: inherit; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; min-height: 44px; }
-.config input[aria-invalid='true'] { border-color: var(--alarm); }
-.config textarea { font: inherit; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; resize: vertical; }
-.config textarea[aria-invalid='true'] { border-color: var(--alarm); }
 .nav { display: flex; gap: 16px; font-weight: 700; }
 .nav a { color: var(--primary); }
 .consent a { color: inherit; font-weight: 700; }
+.deleted { margin: 0; padding: 8px 12px; border-radius: 8px; background: var(--bg); font-weight: 700; color: var(--text); }

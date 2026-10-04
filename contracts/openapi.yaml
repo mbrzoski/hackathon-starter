@@ -104,6 +104,34 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
+  /api/calls/{callId}:
+    delete:
+      operationId: deleteCallData
+      tags:
+        - data
+      summary: "Erase everything stored about one call: its alerts, transcript excerpts, decisions, audit rows and evaluation labels (DAT-02, family panel)."
+      parameters:
+        - name: callId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        "204":
+          description: Nothing about the call is stored any more.
+        "404":
+          description: Nothing is stored about this call.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: The call is still going on; its data can be erased after it ends.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
   /api/calls/{callId}/audit:
     get:
       operationId: getCallAudit
@@ -358,43 +386,6 @@ paths:
                 $ref: "#/components/schemas/Protection"
         "400":
           description: The body is not a valid Protection.
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/ProblemDetail"
-  /api/senior-config:
-    get:
-      operationId: getSeniorConfig
-      tags:
-        - senior-config
-      summary: The configuration of the senior's account (family panel). Empty familyPhone means none is set.
-      responses:
-        "200":
-          description: The current configuration.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SeniorConfig"
-    put:
-      operationId: setSeniorConfig
-      tags:
-        - senior-config
-      summary: Save the configuration of the senior's account. The number is only shown to the senior as a tel link after a tap.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SeniorConfig"
-      responses:
-        "200":
-          description: The saved configuration.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SeniorConfig"
-        "400":
-          description: The body is not a valid SeniorConfig, for example a malformed phone number.
           content:
             application/problem+json:
               schema:
@@ -943,27 +934,6 @@ components:
                   minLength: 1
                 hadAlert:
                   type: boolean
-    SeniorConfig:
-      title: SeniorConfig
-      description: Configuration of the senior's account, set on the family panel. Never sent to Claude or STT.
-      type: object
-      additionalProperties: false
-      required:
-        - familyPhone
-        - keywords
-      properties:
-        keywords:
-          type: array
-          maxItems: 30
-          description: "Words and phrases the family wants this profile to be sensitive to. Matched on the backend in the transcript, never sent to Claude. A match raises at least a MEDIUM alert."
-          items:
-            type: string
-            minLength: 2
-            maxLength: 60
-        familyPhone:
-          type: string
-          pattern: ^(\+?[0-9 ]{9,15})?$
-          description: "Number of a family member that the senior's \"Zadzwoń do bliskiej osoby\" button offers to call. Empty: none."
     PhoneCall:
       title: PhoneCall
       description: The simulated incoming phone call of the demo. While active, the senior screen shows the caller's number and the listening device (/listen) listens. Nothing is dialled.
@@ -1321,7 +1291,7 @@ components:
                   - unclear
     StageId:
       title: StageId
-      description: "Manipulation stage recognised in a call. FAMILY_KEYWORD is not a manipulation stage: it marks a word the family asked to be warned about (SeniorConfig.keywords). Only the backend sets it; the model never returns it."
+      description: "Manipulation stage recognised in a call. FAMILY_KEYWORD is reserved (the family's own warning words were removed); the model never returns it."
       type: string
       enum:
         - AUTHORITY_CLAIM
