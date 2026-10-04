@@ -28,21 +28,21 @@ Numer to kolejność, w jakiej warto zaczynać zadania. W kolumnie „Ścieżka�
 | 13 | BE-07 | Log audytu AI | A | 12 | ✅ zrobione |
 | 14 | FE-04 | Panel rodziny | D | 6, 8, 9 | ✅ zrobione (uwaga: FF-15) |
 | | | **M2: alert z dowodami od AI widoczny u seniora i rodziny** | | | ✅ osiągnięty wg kodu (4cfd095), opis w `docs/milestone-2.md`; test UC-01 w trybie MOCK, jeden przebieg z prawdziwym Claude |
-| 15 | BE-08 | Tryb LIVE: odbiór audio i lokalne STT (Vosk) | B | 7 | ⏳ do zrobienia |
-| 16 | WEB-01 | Serwer WWW: HTTPS, reverse proxy, nagłówki bezpieczeństwa | C | 6, 5 | ⏳ do zrobienia |
-| 17 | FE-05 | Mikrofon i transkrypcja na żywo | C | 15, 16 | ⏳ do zrobienia |
-| | | **M3: mówienie do tabletu daje alert na żywo** | | | |
-| 18 | BE-09 | Ustawienia, zgody, czułość, retencja | B | 8 | ⏳ do zrobienia (częściowo: retencja DAT-02 i `DELETE /api/data` już są; brak ustawień, zgód, czułości i kasowania `labels.jsonl`) |
-| 19 | FE-06 | Kreator konfiguracji i zgód | D | 18 | ⏳ do zrobienia |
-| 20 | BE-10 | Odporność i uczciwe statusy błędów | B | 12, 15 | ⏳ do zrobienia |
-| 21 | FE-07 | Ekran audytu i wybór scenariusza demo | D | 13 | ⏳ do zrobienia |
-| 22 | EV-04 | Nagrania demo zespołu | D | 7 | ⏳ do zrobienia |
-| 23 | BE-11 | Tryb REPLAY: nagranie przez lokalne STT (Vosk) i prawdziwe AI | B | 15, 22 | ⏳ do zrobienia |
-| 24 | BE-12 | Runner ewaluacji: słowa kluczowe vs AI | A | 12, 4 | ⏳ do zrobienia |
-| 25 | EV-03 | Ewaluacja, mocki, tabela do PDF | A | 24 | ⏳ do zrobienia |
-| | | **M4: demo gotowe (LIVE, REPLAY, audyt, liczby do PDF)** | | | |
-| 26 | FE-08 | Dostępność, wygląd i zrzuty ekranów | C | 11, 14 | ⏳ do zrobienia |
-| 27 | AND-01 | Android: aplikacja seniora w trybie kiosku (Capacitor) | C | 17, 26 | ⏳ do zrobienia |
+| 15 | BE-08 | Tryb LIVE: odbiór audio i lokalne STT (Vosk) | B | 7 | ✅ zrobione (Vosk 0.3.38; mowa → rozmowa, 10 s ciszy kończy rozmowę) |
+| 16 | WEB-01 | Serwer WWW: HTTPS, reverse proxy, nagłówki bezpieczeństwa | C | 6, 5 | ✅ zrobione |
+| 17 | FE-05 | Mikrofon i transkrypcja na żywo | C | 15, 16 | ✅ zrobione (mikrofon tylko przy symulowanym połączeniu) |
+| | | **M3: mówienie do tabletu daje alert na żywo** | | | ✅ osiągnięty (LIVE z mikrofonu przez Vosk; sprawdzone ręcznie przez zespół) |
+| 18 | BE-09 | Ustawienia, zgody, czułość, retencja | B | 8 | ✅ zrobione 2026-10-04 (`/api/settings`, zgody, czułość, retencja, kasowanie etykiet) |
+| 19 | FE-06 | Kreator konfiguracji i zgód | D | 18 | ✅ zrobione 2026-10-04 (kreator w `/setup`) |
+| 20 | BE-10 | Odporność i uczciwe statusy błędów | B | 12, 15 | ✅ zrobione 2026-10-04 (F-03 heartbeat, FF-04 zawieszone połączenie, słowa kluczowe jako siatka przy awarii AI) |
+| 21 | FE-07 | Ekran audytu i wybór scenariusza demo | D | 13 | ✅ zrobione 2026-10-04 (`/audit`: scenariusze, liczby, wywołania AI) |
+| 22 | EV-04 | Nagrania demo zespołu | D | 7 | ⚠️ zastępczo 2026-10-04: synteza mowy (`make recordings`), nie nagrania zespołu |
+| 23 | BE-11 | Tryb REPLAY: nagranie przez lokalne STT (Vosk) i prawdziwe AI | B | 15, 22 | ✅ zrobione 2026-10-04 (REPLAY: nagranie → Vosk → AI) |
+| 24 | BE-12 | Runner ewaluacji: słowa kluczowe vs AI | A | 12, 4 | ✅ zrobione 2026-10-04 (`make eval`) |
+| 25 | EV-03 | Ewaluacja, mocki, tabela do PDF | A | 24 | ✅ zrobione 2026-10-04 (`docs/eval/`, prawdziwy Claude: AI 12/12, słowa kluczowe 3/12) |
+| | | **M4: demo gotowe (LIVE, REPLAY, audyt, liczby do PDF)** | | | ✅ osiągnięty 2026-10-04 (REPLAY na syntezie mowy; liczby w `docs/eval/do-pdf.md`) |
+| 26 | FE-08 | Dostępność, wygląd i zrzuty ekranów | C | 11, 14 | ✅ zrobione 2026-10-04 (axe-core WCAG 2.1 AA bez naruszeń, `docs/screenshots/`) |
+| 27 | AND-01 | Android: aplikacja seniora w trybie kiosku (Capacitor) | C | 17, 26 | ⚠️ kod gotowy 2026-10-04, APK niezbudowany (brak Android SDK na tej maszynie) |
 | 28 | AND-02 | (opcjonalnie) Android: powiadomienia push dla rodziny | D + B | 27, 9 | ⏳ do zrobienia |
 | 29 | BE-13 | (opcjonalnie) SMS do rodziny | B | 9, 18 | ⏳ do zrobienia |
 | 30 | FE-09 | (opcjonalnie) Wersja angielska UI dla jury | D | 26 | ⏳ do zrobienia |
