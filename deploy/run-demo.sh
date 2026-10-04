@@ -57,6 +57,11 @@ else
   PROFILE=(--profile tunnel)
 fi
 
+if [[ ! -d "$ROOT/backend/models/vosk-model-small-pl-0.22" ]]; then
+  echo "Note: no Vosk model in backend/models: LIVE and REPLAY will say speech recognition is unavailable."
+  echo "      Run 'make download-vosk-model' first if you need them."
+fi
+
 echo "== Building the frontend (senior, listen, family)"
 (cd "$ROOT/frontend" && npm install --no-audit --no-fund && npm run build)
 

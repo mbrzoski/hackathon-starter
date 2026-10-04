@@ -92,9 +92,14 @@ export async function launchChrome({ port = 9555, ignoreCertificateErrors = fals
 
   return {
     open,
+    /** Kills Chrome and deletes its temporary profile right away (callers exit the process just after). */
     close() {
-      chrome.kill();
-      setTimeout(() => rmSync(profile, { recursive: true, force: true }), 500);
+      chrome.kill('SIGKILL');
+      try {
+        rmSync(profile, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
+      } catch {
+        // A file still held by the dying browser: the OS temp cleaner removes the rest.
+      }
     },
   };
 }

@@ -5,6 +5,8 @@ name: aniol-stroz
 services:
   backend:
     build: ../backend
+    # The Vosk jar ships its Linux library for x86-64 only: on Apple silicon Docker runs this image through Rosetta.
+    platform: linux/amd64
     environment:
       SPRING_PROFILES_ACTIVE: prod
       APP_MODE: ${APP_MODE:-SCRIPTED}
@@ -17,6 +19,9 @@ services:
       LOGGING_LEVEL_PL_ANIOLSTROZ_TRACE_CONTENT: ${TRACE_CONTENT_LEVEL:-INFO}
     volumes:
       - backend-data:/data
+      # LIVE and REPLAY: the Vosk model and the REPLAY recordings from the repository folders (not in the image).
+      - ../backend/models:/app/models:ro
+      - ../backend/recordings:/app/recordings:ro
     expose:
       - "8080"
     restart: unless-stopped
