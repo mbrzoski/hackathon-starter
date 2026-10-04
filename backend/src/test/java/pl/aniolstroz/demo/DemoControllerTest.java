@@ -56,7 +56,21 @@ class DemoControllerTest {
                 .andExpect(jsonPath("$.length()").value(12))
                 .andExpect(jsonPath("$[0].scenarioId").value("01-fake-police-classic"))
                 .andExpect(jsonPath("$[0].title").value("Klasyczny fałszywy policjant"))
-                .andExpect(jsonPath("$[0].description").isNotEmpty());
+                .andExpect(jsonPath("$[0].description").isNotEmpty())
+                .andExpect(jsonPath("$[0].hasRecording").value(false)); // no recordings in target/test-recordings
+    }
+
+    @Test
+    void replayWithoutARecordingIsProblemDetail404() throws Exception {
+        replay("{\"scenarioId\":\"01-fake-police-classic\",\"mode\":\"REPLAY\"}")
+                .andExpect(status().isNotFound())
+                .andExpect(openApi().isValid(SPEC))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
+    }
+
+    @Test
+    void liveCannotBeAskedFor() throws Exception {
+        replay("{\"scenarioId\":\"01-fake-police-classic\",\"mode\":\"LIVE\"}").andExpect(status().isBadRequest());
     }
 
     @Test

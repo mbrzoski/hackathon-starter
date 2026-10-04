@@ -28,3 +28,6 @@ backend/data/
 
 ### Vosk speech model (not in the repository) ###
 backend/models/
+
+### REPLAY recordings: synthetic, made by scripts/make-demo-recordings.mjs (or the team's own) ###
+backend/recordings/*.wav

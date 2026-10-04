@@ -52,6 +52,16 @@ make e2e-demo       # UC-01 end to end against the running demo
 
 Details, the certificate on Android and iPhone, and troubleshooting: `deploy/README.md`.
 
+## REPLAY mode: recordings through local speech recognition
+
+REPLAY plays `backend/recordings/<scenarioId>.wav` (PCM 16 kHz, mono, 16-bit) through Vosk, the keywords, Claude and the risk rules, exactly like a LIVE call. Start it on the audit screen (`/audit`, "Odtwórz nagranie (REPLAY)") or with `POST /api/demo/replay` and `"mode": "REPLAY"`. Needs the Vosk model (`make download-vosk-model`).
+
+```bash
+make recordings      # macOS: synthetic speech (voice Zosia) for all 12 scenarios, ~33 MB, not committed
+```
+
+The recordings made this way are **synthetic speech**, not people; replace them with the team's own recordings (same name and format) when you have them. They are the only audio kept on disk (AUD-02).
+
 ## LIVE mode: local speech recognition (Vosk)
 
 LIVE mode transcribes the call on the machine itself with Vosk. It needs no key and no internet, and the audio never leaves the device (it is not stored or logged either). The model (about 50 MB, not in the repository) is downloaded once:

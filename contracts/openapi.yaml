@@ -165,7 +165,7 @@ paths:
       operationId: startReplay
       tags:
         - demo
-      summary: Start replaying a scenario as a call. Only SCRIPTED is supported for now.
+      summary: "Start a scenario as a call: SCRIPTED feeds the written transcript, REPLAY feeds the scenario's recording (recordings/<scenarioId>.wav) through local STT. Both use the real AI when a key is set; otherwise the call is labelled MOCK."
       requestBody:
         required: true
         content:
@@ -182,13 +182,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
         "404":
-          description: Unknown scenarioId.
+          description: Unknown scenarioId, or no recording for a REPLAY.
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
         "409":
           description: Another call is already active (BE-04).
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "503":
+          description: REPLAY needs speech recognition, which cannot start (for example the Vosk model is missing).
           content:
             application/problem+json:
               schema:
@@ -1181,6 +1187,7 @@ components:
         - scenarioId
         - title
         - description
+        - hasRecording
       properties:
         scenarioId:
           type: string
@@ -1189,6 +1196,9 @@ components:
           type: string
         description:
           type: string
+        hasRecording:
+          type: boolean
+          description: A recording exists, so the scenario can also be played in REPLAY mode.
     Sensitivity:
       title: Sensitivity
       description: Household sensitivity setting.

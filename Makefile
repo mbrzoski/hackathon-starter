@@ -1,4 +1,4 @@
-.PHONY: build test run-backend run-frontend demo demo-tunnel smoke e2e e2e-demo clean-demo
+.PHONY: build test run-backend run-frontend demo demo-tunnel smoke e2e e2e-demo clean-demo recordings
 
 # Build the backend without running tests.
 build:
@@ -45,3 +45,7 @@ download-vosk-model:
 clean-demo:
 	PATH="$$PATH:/Applications/Docker.app/Contents/Resources/bin" docker compose -f deploy/docker-compose.yml --profile tunnel down
 	rm -rf deploy/site deploy/ca.crt
+
+# REPLAY recordings (EV-04 stand-in): synthetic Polish speech of every scenario, backend/recordings/*.wav (macOS).
+recordings:
+	node scripts/make-demo-recordings.mjs
