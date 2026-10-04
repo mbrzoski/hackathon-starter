@@ -78,6 +78,7 @@ export async function launchChrome({ port = 9555, ignoreCertificateErrors = fals
         evaluate(`(() => { const el = [...document.querySelectorAll('button, a')].find(e => e.textContent.includes(${JSON.stringify(label)}));
           if (el) el.click(); return !!el; })()`),
       reload: () => send('Page.reload'),
+      screenshot: async () => (await send('Page.captureScreenshot', { format: 'png' })).data,
       async waitFor(expression, timeoutMs = 20_000) {
         const end = Date.now() + timeoutMs;
         while (Date.now() < end) {

@@ -11,7 +11,8 @@
     "build": "npm run generate:api && ng build -c production,senior && ng build -c production,listen && ng build -c production,family",
     "test": "npm run generate:api && ng test --watch=false",
     "e2e": "node e2e/uc-01.mjs",
-    "e2e:demo": "node e2e/uc-01.mjs --base https://localhost"
+    "e2e:demo": "node e2e/uc-01.mjs --base https://localhost",
+    "a11y": "node e2e/a11y.mjs"
   },
   "private": true,
   "packageManager": "npm@11.19.1",
@@ -35,6 +36,7 @@
     "@angular/cli": "^22.2.1",
     "@angular/compiler-cli": "^22.2.0",
     "@openapitools/openapi-generator-cli": "^2.41.0",
+    "axe-core": "^4.13.0",
     "jsdom": "^30.0.0",
     "prettier": "^3.8.1",
     "typescript": "~6.0.2",

@@ -23,7 +23,10 @@ Open http://localhost:4201/senior, http://localhost:4202/listen and http://local
 make test           # backend: unit, contract and ArchUnit tests (./mvnw verify)
 cd frontend && npm test   # frontend unit tests (Vitest)
 make e2e            # UC-01 end to end in Chrome against the dev servers above (both must be running)
+make a11y           # accessibility (axe-core, WCAG 2.1 AA) of every screen, at rest and during an alert
 ```
+
+Screenshots of every screen (from `make screenshots`, real AI, mode SCRIPTED) are in [`docs/screenshots/`](docs/screenshots/): senior at rest, during the simulated phone call and with an alert, the listening device waiting and alarmed, the family alert card, the setup wizard and the audit screen.
 
 ### Demo on real devices (HTTPS)
 
@@ -49,6 +52,9 @@ make e2e-demo       # UC-01 end to end against the running demo
 | `make clean-demo` | Stops the demo containers and deletes the generated `deploy/site/` and `deploy/ca.crt`. `make demo` does this itself on exit (Ctrl+C); use it after a hard kill. Volumes stay, so device certificates keep working. |
 | `make e2e-demo` | Use case UC-01 in Chrome against the running demo at `https://localhost` (failure states are skipped: no `/api/dev/emit` in prod). |
 | `deploy/trust-ca.sh` | Trusts the demo CA on this laptop (macOS asks for your password once). |
+| `make recordings` | REPLAY recordings: synthetic Polish speech of the 12 scenarios in `backend/recordings/` (macOS). |
+| `make eval` | Evaluation: 12 scenarios, keywords vs AI vs both, real Claude when `ANTHROPIC_API_KEY` is set (also read from `.env`); writes `docs/eval/wyniki-ewaluacji.md`. Costs about 0.7 to 0.9 USD per run. |
+| `make a11y` | Accessibility check (axe-core, WCAG 2.1 AA) of every screen at rest and during an alert, against the dev servers; `make screenshots` also saves `docs/screenshots/*.png`. |
 
 Details, the certificate on Android and iPhone, and troubleshooting: `deploy/README.md`.
 
@@ -130,9 +136,11 @@ Convert any recording first, for example `ffmpeg -i in.mp3 -ar 16000 -ac 1 -c:a 
 | Claude Sonnet 5.5 (`claude-sonnet-5-5`) via the Claude API | Anthropic terms | Stage detection with verbatim quotes (evidence only; risk, texts and decisions stay in code) |
 | `com.anthropic:anthropic-java` 2.68.0 (with OkHttp) | MIT (OkHttp: Apache 2.0) | Official Java client for the Claude API |
 | WireMock (`wiremock-standalone`) | Apache 2.0 | Tests: stands in for the Anthropic API, no real calls |
-| Vosk (`com.alphacephei:vosk` 0.3.45) | Apache 2.0 (confirmed in vosk-api `COPYING` and the POM) | Local, offline Polish speech-to-text in the backend (AUD-03); audio never leaves the device. The jar bundles the native libraries for Windows, Linux and macOS |
+| Vosk (`com.alphacephei:vosk` 0.3.38; 0.3.45 cannot load its own macOS library) | Apache 2.0 (confirmed in vosk-api `COPYING` and the POM) | Local, offline Polish speech-to-text in the backend (AUD-03); audio never leaves the device. The jar bundles the native libraries for Windows, Linux and macOS |
 | JNA (`net.java.dev.jna:jna` 5.17.0) | LGPL 2.1 or later, or Apache 2.0 (dual; `SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later`, confirmed in the JNA repository and POM; we use it under Apache 2.0) | Native access used by Vosk |
 | Vosk model `vosk-model-small-pl-0.22` | Apache 2.0 (confirmed on the Vosk models page) | Polish model for the recogniser (WER 11.6 to 18.4 on its test sets); downloaded by `scripts/download-vosk-model.*`, not part of the repository |
+| axe-core | MPL 2.0 | Tests only: accessibility check of the screens (`frontend/e2e/a11y.mjs`), not shipped in the apps |
+| macOS speech synthesis (voice Zosia) | Apple macOS terms | Synthetic speech of the written scenarios for REPLAY recordings (`make recordings`); not people, not shipped |
 | Claude / Claude Code (Anthropic) | Anthropic terms | Concept, architecture notes and coding assistance (pre-event architecture document disclosed as such) |
 | Angular, Angular CLI, Angular Material, CDK | MIT | Frontend framework and UI components |
 | RxJS | Apache 2.0 | Router events in the frontend |

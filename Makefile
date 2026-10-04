@@ -1,4 +1,4 @@
-.PHONY: build test run-backend run-frontend demo demo-tunnel smoke e2e e2e-demo clean-demo recordings eval
+.PHONY: build test run-backend run-frontend demo demo-tunnel smoke e2e e2e-demo clean-demo recordings eval a11y screenshots
 
 # Build the backend without running tests.
 build:
@@ -55,3 +55,11 @@ recordings:
 eval:
 	cd backend && ./mvnw -q -DskipTests compile dependency:build-classpath -Dmdep.outputFile=target/eval.classpath
 	cd backend && set -a && { [ ! -f ../.env ] || . ../.env; } && set +a && java -cp target/classes:$$(cat target/eval.classpath) pl.aniolstroz.demo.EvalRunner $(ARGS)
+
+# FE-08: accessibility check (axe-core, WCAG 2.1 AA) of every screen; needs make run-backend and make run-frontend.
+a11y:
+	cd frontend && node e2e/a11y.mjs
+
+# Same, and saves the screenshots to docs/screenshots/ (use a backend with ANTHROPIC_API_KEY for honest SCRIPTED badges).
+screenshots:
+	cd frontend && node e2e/a11y.mjs --shots ../docs/screenshots
